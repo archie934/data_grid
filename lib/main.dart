@@ -5,8 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:data_grid/data_grid/models/column.dart';
 import 'package:data_grid/data_grid/models/row.dart';
 
-
-
 void main() {
   runApp(const MainApp());
 }
@@ -48,6 +46,7 @@ class MainApp extends StatelessWidget {
                       child: Text(column.title),
                     ),
                   ),
+                //TODO: Handle case when child is rows in ColumnsLayoutDelegate
                 LayoutId(
                     id: 'rows_delegate',
                     child: CustomMultiChildLayout(
