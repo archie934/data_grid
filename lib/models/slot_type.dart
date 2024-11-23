@@ -1,0 +1,1 @@
+enum SlotType { COLUMNS, ROWS }

@@ -1,5 +1,7 @@
-import 'package:data_grid/data_grid/components/columns/columns_delegate.dart';
-import 'package:data_grid/data_grid/components/rows/rows_delegate.dart';
+import 'package:data_grid/data_grid/components/layout_delegates/columns_delegate.dart';
+import 'package:data_grid/data_grid/components/layout_delegates/data_grid.dart';
+import 'package:data_grid/data_grid/components/layout_delegates/rows_delegate.dart';
+import 'package:data_grid/models/slot_type.dart';
 import 'package:flutter/material.dart';
 
 import 'package:data_grid/data_grid/models/column.dart';
@@ -36,19 +38,25 @@ class MainApp extends StatelessWidget {
           height: MediaQuery.sizeOf(context).height,
           child: Center(
             child: CustomMultiChildLayout(
-              delegate: ColumnsLayoutDelegate(mockColumns),
+              delegate: DataGridLayoutDelegate(),
               children: [
-                for (var column in mockColumns)
-                  LayoutId(
-                    id: column.id,
-                    child: Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: Text(column.title),
-                    ),
-                  ),
-                //TODO: Handle case when child is rows in ColumnsLayoutDelegate
                 LayoutId(
-                    id: 'rows_delegate',
+                    id: SlotType.COLUMNS,
+                    child: CustomMultiChildLayout(
+                      delegate: ColumnsLayoutDelegate(mockColumns),
+                      children: [
+                        for (var column in mockColumns)
+                          LayoutId(
+                            id: column.id,
+                            child: Padding(
+                              padding: const EdgeInsets.all(8),
+                              child: Text(column.title),
+                            ),
+                          ),
+                      ],
+                    )),
+                LayoutId(
+                    id: SlotType.ROWS,
                     child: CustomMultiChildLayout(
                       delegate: RowsLayoutDelegate(columns: mockColumns),
                       children: [
