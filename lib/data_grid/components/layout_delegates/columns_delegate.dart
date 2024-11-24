@@ -1,7 +1,7 @@
 import 'package:data_grid/data_grid/models/column.dart';
 import 'package:flutter/material.dart';
 
-const columnWidth = 200.0;
+//TODO: Implement this https://github.com/estevez-dev/ha_client/blob/master/lib/plugins/dynamic_multi_column_layout.dart
 
 class ColumnsLayoutDelegate extends MultiChildLayoutDelegate {
   final List<DataGridColumn> columns;
@@ -14,17 +14,19 @@ class ColumnsLayoutDelegate extends MultiChildLayoutDelegate {
 
     ///Layout columns
     for (var element in columns.indexed) {
-      final columnId = element.$2.id;
-      var currentColumnSize = layoutChild(
+      final columnModel = element.$2;
+
+      final columnId = columnModel.id;
+      layoutChild(
         columnId,
-        const BoxConstraints(maxWidth: columnWidth),
+        BoxConstraints(maxWidth: columnModel.width),
       );
 
-      dx = dx + currentColumnSize.width;
       positionChild(
         columnId,
         Offset(dx, 0),
       );
+      dx = dx + columnModel.width;
     }
   }
 

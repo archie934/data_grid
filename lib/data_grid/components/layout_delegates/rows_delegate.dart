@@ -13,19 +13,20 @@ class RowsLayoutDelegate extends MultiChildLayoutDelegate {
 
     /// Layout columns
     for (var element in columns.indexed) {
-      final columnId = element.$2.id;
-      var currentColumnSize = layoutChild(
+      final columnModel = element.$2;
+      final columnId = columnModel.id;
+      layoutChild(
         columnId,
-        const BoxConstraints(
-          maxWidth: 200,
+        BoxConstraints(
+          maxWidth: columnModel.width,
         ),
       );
 
-      dx = dx + currentColumnSize.width;
       positionChild(
         columnId,
         Offset(dx, 0),
       );
+      dx = dx + columnModel.width;
     }
   }
 
