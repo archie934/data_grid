@@ -1,84 +1,65 @@
-import 'dart:math';
-
-import 'package:data_grid/data_grid/components/layout_delegates/columns_delegate.dart';
-import 'package:data_grid/data_grid/components/layout_delegates/data_grid.dart';
-import 'package:data_grid/data_grid/components/layout_delegates/rows_delegate.dart';
-import 'package:data_grid/models/slot_type.dart';
 import 'package:flutter/material.dart';
-
-import 'package:data_grid/data_grid/models/column.dart';
-import 'package:data_grid/data_grid/models/row.dart';
+import 'package:data_grid/data_grid/data_grid.dart';
 
 void main() {
   runApp(const MainApp());
 }
 
-final mockColumns = List.generate(
-  10,
-  (index) => DataGridColumn(id: index, title: 'title$index', width: 200),
-);
-
-final mockRows = List.generate(
-  4,
-  (index) => SomeRow(
-    id: index.toDouble(),
-  ),
-);
-
-class MainApp extends StatelessWidget {
+class MainApp extends StatefulWidget {
   const MainApp({super.key});
+
+  @override
+  State<MainApp> createState() => _MainAppState();
+}
+
+class _MainAppState extends State<MainApp> {
+  late DataGridController<SomeRow> controller;
+
+  @override
+  void initState() {
+    super.initState();
+
+    final columns = List.generate(20, (index) => DataGridColumn(id: index, title: 'Column $index', width: 150));
+
+    final rows = List.generate(100000, (index) => SomeRow(id: index.toDouble()));
+
+    controller = DataGridController<SomeRow>(
+      initialColumns: columns,
+      initialRows: rows,
+      rowHeight: 48.0,
+      cellValueAccessor: (row, column) {
+        return 'Row ${row.id.toInt()}, Col ${column.id}';
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      title: 'Data Grid Demo',
+      theme: ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue), useMaterial3: true),
       home: Scaffold(
-        body: SizedBox(
-          width: MediaQuery.sizeOf(context).width,
-          height: MediaQuery.sizeOf(context).height,
-          child: Center(
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 32, vertical: 32),
-              child: CustomMultiChildLayout(
-                delegate: DataGridLayoutDelegate(),
-                children: [
-                  LayoutId(
-                      id: SlotType.COLUMNS,
-                      child: CustomMultiChildLayout(
-                        delegate: ColumnsLayoutDelegate(mockColumns),
-                        children: [
-                          for (var column in mockColumns)
-                            LayoutId(
-                              id: column.id,
-                              child: Padding(
-                                padding: const EdgeInsets.all(8),
-                                child: Text(column.title),
-                              ),
-                            ),
-                        ],
-                      )),
-                  LayoutId(
-                      id: SlotType.ROWS,
-                      child: CustomMultiChildLayout(
-                        delegate: RowsLayoutDelegate(columns: mockColumns),
-                        children: [
-                          for (var mockColumn in mockColumns)
-                            LayoutId(
-                              id: mockColumn.id,
-                              child: Container(
-                                color: Color.fromRGBO(
-                                    Random().nextInt(255),
-                                    Random().nextInt(255),
-                                    Random().nextInt(255),
-                                    1),
-                                height: 60,
-                              ),
-                            )
-                        ],
-                      ))
-                ],
-              ),
-            ),
-          ),
+        appBar: AppBar(
+          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+          title: const Text('Flutter Data Grid'),
+        ),
+        body: DataGrid<SomeRow>(
+          controller: controller,
+          rowHeight: 48.0,
+          headerHeight: 48.0,
+          cellBuilder: (row, columnId) {
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              alignment: Alignment.centerLeft,
+              child: Text('Row ${row.id.toInt()}, Col $columnId'),
+            );
+          },
         ),
       ),
     );

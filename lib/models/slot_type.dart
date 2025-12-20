@@ -1,1 +1,1 @@
-enum SlotType { COLUMNS, ROWS }
+enum SlotType { columns, rows }
