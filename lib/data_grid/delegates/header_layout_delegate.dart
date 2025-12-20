@@ -11,29 +11,29 @@ class HeaderLayoutDelegate extends MultiChildLayoutDelegate {
     double offsetX = 0;
 
     for (var column in columns) {
+      if (!column.visible) continue;
+
       if (hasChild(column.id)) {
-        final childSize = layoutChild(
-          column.id,
-          BoxConstraints(
-            minWidth: column.width,
-            maxWidth: column.width,
-            minHeight: size.height,
-            maxHeight: size.height,
-          ),
-        );
+        layoutChild(column.id, BoxConstraints.tightFor(width: column.width, height: size.height));
 
         positionChild(column.id, Offset(offsetX, 0));
-        offsetX += childSize.width;
+        offsetX += column.width;
       }
     }
   }
 
   @override
-  bool shouldRelayout(HeaderLayoutDelegate oldDelegate) {
+  bool shouldRelayout(covariant HeaderLayoutDelegate oldDelegate) {
     if (columns.length != oldDelegate.columns.length) return true;
 
     for (var i = 0; i < columns.length; i++) {
-      if (columns[i].width != oldDelegate.columns[i].width || columns[i].id != oldDelegate.columns[i].id) {
+      final oldCol = oldDelegate.columns[i];
+      final newCol = columns[i];
+
+      if (oldCol.id != newCol.id ||
+          oldCol.width != newCol.width ||
+          oldCol.visible != newCol.visible ||
+          oldCol.pinned != newCol.pinned) {
         return true;
       }
     }

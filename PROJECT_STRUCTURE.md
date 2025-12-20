@@ -16,13 +16,11 @@ lib/data_grid/
 │
 ├── models/                        # Data Models (Organized by Type)
 │   ├── data/                             Core data structures
-│   │   ├── column.dart                   Column definition
+│   │   ├── column.dart                   Column definition (with state properties)
 │   │   └── row.dart                      Row interface
 │   ├── state/                            State models (Freezed)
 │   │   ├── grid_state.dart              Main grid state
-│   │   ├── grid_state.freezed.dart      Generated
-│   │   ├── column_state.dart            Column management state
-│   │   └── column_state.freezed.dart    Generated
+│   │   └── grid_state.freezed.dart      Generated
 │   └── events/                           Event definitions
 │       └── grid_events.dart             All grid events
 │
@@ -62,7 +60,6 @@ lib/data_grid/
 - **Purpose:** Immutable state containers
 - **Files:**
   - `grid_state.dart` - Root state (viewport, selection, sort, filter, group)
-  - `column_state.dart` - Column-specific state management
 
 #### `models/events/` - Events
 - **Purpose:** User interactions and system events
@@ -109,7 +106,6 @@ lib/data_grid/
 | `models/column.dart` | `models/data/column.dart` | Data |
 | `models/row.dart` | `models/data/row.dart` | Data |
 | `models/grid_state.dart` | `models/state/grid_state.dart` | State |
-| `models/column_state.dart` | `models/state/column_state.dart` | State |
 | `models/grid_events.dart` | `models/events/grid_events.dart` | Events |
 
 ### Usage (Single Import)
