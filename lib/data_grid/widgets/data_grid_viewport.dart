@@ -152,12 +152,16 @@ class RenderDataGridViewport extends RenderTwoDimensionalViewport {
     double accumulatedWidth = 0;
     int firstVisibleColumn = -1; // -1 means "not found yet"
     int lastVisibleColumn = columns.length;
+    double firstVisibleColumnOffset = 0; // How much of the first column is scrolled off-screen
 
     // Iterate through columns to find visible range
     for (int i = 0; i < columns.length; i++) {
       // Found the first column that extends past the left edge of viewport
       if (accumulatedWidth + columns[i].width > horizontalScrollOffset && firstVisibleColumn == -1) {
         firstVisibleColumn = i;
+        // Calculate starting offset: how far into the viewport does this column start?
+        // If part of it is scrolled off, this will be negative
+        firstVisibleColumnOffset = accumulatedWidth - horizontalScrollOffset;
       }
       accumulatedWidth += columns[i].width;
       // Found where columns extend past the right edge of viewport
@@ -170,13 +174,16 @@ class RenderDataGridViewport extends RenderTwoDimensionalViewport {
     // If no column was found (e.g., scrolled past all content), default to first column
     if (firstVisibleColumn == -1) {
       firstVisibleColumn = 0;
+      firstVisibleColumnOffset = 0;
     }
 
     // STEP 4: Layout all visible cells
-    // Note: Offsets are VIEWPORT-RELATIVE (starting at 0), not absolute positions
-    double yOffset = 0; // Vertical position within viewport
+    // Calculate starting Y offset accounting for partially scrolled rows
+    final double startingYOffset = (firstVisibleRow * rowHeight) - verticalScrollOffset;
+    
+    double yOffset = startingYOffset; // Vertical position within viewport (can be negative)
     for (int row = firstVisibleRow; row < lastVisibleRow; row++) {
-      double xOffset = 0; // Horizontal position within viewport
+      double xOffset = firstVisibleColumnOffset; // Horizontal position within viewport (can be negative)
 
       for (int col = firstVisibleColumn; col < lastVisibleColumn; col++) {
         // Create a "vicinity" (location identifier) for this cell
@@ -191,7 +198,7 @@ class RenderDataGridViewport extends RenderTwoDimensionalViewport {
           child.layout(BoxConstraints.tight(Size(columns[col].width, rowHeight)));
 
           // Position the child within the viewport at the calculated offset
-          // The viewport automatically translates this to screen coordinates
+          // The viewport automatically handles the coordinate system
           parentDataOf(child).layoutOffset = Offset(xOffset, yOffset);
         }
 

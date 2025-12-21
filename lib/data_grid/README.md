@@ -92,6 +92,8 @@ final controller = DataGridController<MyRow>(
   ],
   initialRows: myRows,
   rowHeight: 48.0,
+  sortDebounce: Duration(milliseconds: 300), // Optional: debounce sorting (default: 300ms)
+  useIsolateSorting: true, // Optional: enable isolate sorting for large datasets (default: true)
   cellValueAccessor: (row, column) {
     switch (column.id) {
       case 0: return row.name;
@@ -119,11 +121,13 @@ DataGrid<MyRow>(
 ### ✅ Implemented
 - **Virtualization** - Only visible rows rendered
 - **Column Resizing** - Drag column borders
-- **Sorting** - Multi-column sort support
-- **Filtering** - 11 filter operators
+- **Sorting** - Multi-column sort with isolate processing and debouncing
+- **Filtering** - 11 filter operators with loading overlay
 - **Row Selection** - Single/multi/range selection
 - **Horizontal Scrolling** - Synchronized header/body
 - **Reactive State** - RxDart streams
+- **Loading State** - Event-driven loading overlay (auto-triggers for >1000 rows)
+- **Isolate Sorting** - Non-blocking background sorting for large datasets
 - **100,000+ Rows** - Smooth 60fps scrolling
 
 ### 📊 Performance
@@ -131,7 +135,10 @@ DataGrid<MyRow>(
 - **Scrolling:** Maintains 60fps
 - **Selection:** <16ms (instant)
 - **Column Resize:** Instant visual feedback
-- **Sorting:** <200ms for 100k rows
+- **Sorting:** Non-blocking with isolate processing
+  - UI remains responsive during sort operations
+  - Background thread handles heavy computations
+  - Debounced to prevent excessive operations
 
 ## 🔧 Components
 
@@ -144,6 +151,26 @@ Event-driven controller with specialized streams:
 - `viewport$` - Viewport changes
 - `selection$` - Selection changes
 - `sort$` / `filter$` / `group$` - State slices
+
+**Loading State:**
+- Managed via `SetLoadingEvent` for consistent event-driven architecture
+- Automatically triggered for heavy operations on datasets >1000 rows
+- Optional custom loading message support
+- Example: `controller.addEvent(SetLoadingEvent(isLoading: true, message: 'Processing...'))`
+
+**Sort Debouncing:**
+- Sorting operations are debounced to prevent excessive recalculations
+- Default debounce: 300ms (customizable via `sortDebounce` parameter)
+- If user rapidly clicks column headers, only the last click triggers the sort
+- Improves performance and prevents UI jank on large datasets
+
+**Isolate Sorting:**
+- Heavy sorting operations run on a background isolate to prevent UI blocking
+- Automatically enabled for datasets >1000 rows (default: `useIsolateSorting: true`)
+- Uses Flutter's `compute()` function for efficient background processing
+- Cell values are extracted and passed to isolate for sorting
+- Keeps UI responsive during heavy operations
+- Can be disabled for smaller datasets or specific use cases
 
 ### Layout Delegates
 Efficient cell positioning with CustomMultiChildLayout:
@@ -182,6 +209,55 @@ controller.addEvent(SelectRowEvent(rowId: 123, multiSelect: true));
 ### Column Resize
 ```dart
 controller.addEvent(ColumnResizeEvent(columnId: 0, newWidth: 300));
+```
+
+### Loading State
+```dart
+// Show loading overlay
+controller.addEvent(SetLoadingEvent(isLoading: true, message: 'Loading data...'));
+
+// Perform heavy operation...
+
+// Hide loading overlay
+controller.addEvent(SetLoadingEvent(isLoading: false));
+
+// Note: Sorting and filtering automatically manage loading state for datasets >1000 rows
+```
+
+### Customizing Sort Behavior
+```dart
+// Custom debounce duration
+final controller = DataGridController<MyRow>(
+  initialColumns: columns,
+  initialRows: rows,
+  sortDebounce: Duration(milliseconds: 500), // Wait 500ms before sorting
+  cellValueAccessor: (row, column) => /* ... */,
+);
+
+// Disable debouncing (sort immediately)
+final instantController = DataGridController<MyRow>(
+  initialColumns: columns,
+  initialRows: rows,
+  sortDebounce: Duration.zero,
+  cellValueAccessor: (row, column) => /* ... */,
+);
+
+// Disable isolate sorting (run on main thread)
+final mainThreadController = DataGridController<MyRow>(
+  initialColumns: columns,
+  initialRows: rows,
+  useIsolateSorting: false, // For smaller datasets or specific needs
+  cellValueAccessor: (row, column) => /* ... */,
+);
+
+// Maximum performance configuration
+final performanceController = DataGridController<MyRow>(
+  initialColumns: columns,
+  initialRows: rows,
+  sortDebounce: Duration(milliseconds: 300), // Debounce user clicks
+  useIsolateSorting: true, // Run heavy sorts in background
+  cellValueAccessor: (row, column) => /* ... */,
+);
 ```
 
 ## 🎨 Customization

@@ -62,6 +62,7 @@ class DataGridBody<T extends DataGridRow> extends StatelessWidget {
             bottom: scrollbarWidth,
             child: _ScrollbarWrapper(
               axis: Axis.vertical,
+              controller: scrollController.verticalController,
               child: CustomVerticalScrollbar(controller: scrollController.verticalController, width: scrollbarWidth),
             ),
           ),
@@ -71,6 +72,7 @@ class DataGridBody<T extends DataGridRow> extends StatelessWidget {
             bottom: 0,
             child: _ScrollbarWrapper(
               axis: Axis.horizontal,
+              controller: scrollController.horizontalController,
               child: CustomHorizontalScrollbar(
                 controller: scrollController.horizontalController,
                 height: scrollbarWidth,
@@ -85,9 +87,14 @@ class DataGridBody<T extends DataGridRow> extends StatelessWidget {
 
 class _ScrollbarWrapper extends StatefulWidget {
   final Axis axis;
+  final ScrollController controller;
   final Widget child;
 
-  const _ScrollbarWrapper({required this.axis, required this.child});
+  const _ScrollbarWrapper({
+    required this.axis,
+    required this.controller,
+    required this.child,
+  });
 
   @override
   State<_ScrollbarWrapper> createState() => _ScrollbarWrapperState();
@@ -95,16 +102,35 @@ class _ScrollbarWrapper extends StatefulWidget {
 
 class _ScrollbarWrapperState extends State<_ScrollbarWrapper> {
   @override
+  void initState() {
+    super.initState();
+    widget.controller.addListener(_onScroll);
+  }
+
+  @override
+  void didUpdateWidget(_ScrollbarWrapper oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller != widget.controller) {
+      oldWidget.controller.removeListener(_onScroll);
+      widget.controller.addListener(_onScroll);
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.controller.removeListener(_onScroll);
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return NotificationListener<ScrollNotification>(
-      onNotification: (notification) {
-        if (notification.metrics.axis == widget.axis) {
-          setState(() {});
-        }
-        return false;
-      },
-      child: widget.child,
-    );
+    return widget.child;
   }
 }
 

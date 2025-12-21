@@ -16,10 +16,7 @@ class _CustomVerticalScrollbarState extends State<CustomVerticalScrollbar> {
 
   @override
   Widget build(BuildContext context) {
-    print('CustomVerticalScrollbar build - hasClients: ${widget.controller.hasClients}');
-
     if (!widget.controller.hasClients) {
-      print('CustomVerticalScrollbar - no clients');
       return Container(width: widget.width, color: Colors.grey.withOpacity(0.1));
     }
 
@@ -29,25 +26,17 @@ class _CustomVerticalScrollbarState extends State<CustomVerticalScrollbar> {
       final scrollOffset = position.pixels;
       final maxScrollExtent = position.maxScrollExtent;
 
-      print(
-        'CustomVerticalScrollbar - viewportSize: $viewportSize, scrollOffset: $scrollOffset, maxScrollExtent: $maxScrollExtent',
-      );
-
       if (viewportSize == 0 || maxScrollExtent <= 0) {
-        print('CustomVerticalScrollbar - invalid dimensions');
         return Container(width: widget.width, color: Colors.grey.withOpacity(0.1));
       }
 
       final contentSize = maxScrollExtent + viewportSize;
       if (contentSize <= viewportSize) {
-        print('CustomVerticalScrollbar - content fits in viewport');
         return Container(width: widget.width, color: Colors.grey.withOpacity(0.1));
       }
 
       final thumbHeight = (viewportSize / contentSize) * viewportSize;
       final thumbOffset = (scrollOffset / contentSize) * viewportSize;
-
-      print('CustomVerticalScrollbar - thumbHeight: $thumbHeight, thumbOffset: $thumbOffset');
 
       return GestureDetector(
         onVerticalDragStart: (details) {
@@ -93,10 +82,9 @@ class _CustomVerticalScrollbarState extends State<CustomVerticalScrollbar> {
           ),
         ),
       );
-    } catch (e, stackTrace) {
-      print('CustomVerticalScrollbar ERROR: $e');
-      print('Stack trace: $stackTrace');
-      return Container(width: widget.width, color: Colors.red.withOpacity(0.3));
+    } catch (e) {
+      // Return a subtle error indicator if scrollbar fails to build
+      return Container(width: widget.width, color: Colors.grey.withOpacity(0.1));
     }
   }
 }
@@ -117,10 +105,7 @@ class _CustomHorizontalScrollbarState extends State<CustomHorizontalScrollbar> {
 
   @override
   Widget build(BuildContext context) {
-    print('CustomHorizontalScrollbar build - hasClients: ${widget.controller.hasClients}');
-
     if (!widget.controller.hasClients) {
-      print('CustomHorizontalScrollbar - no clients');
       return Container(height: widget.height, color: Colors.grey.withOpacity(0.1));
     }
 
@@ -130,25 +115,17 @@ class _CustomHorizontalScrollbarState extends State<CustomHorizontalScrollbar> {
       final scrollOffset = position.pixels;
       final maxScrollExtent = position.maxScrollExtent;
 
-      print(
-        'CustomHorizontalScrollbar - viewportSize: $viewportSize, scrollOffset: $scrollOffset, maxScrollExtent: $maxScrollExtent',
-      );
-
       if (viewportSize == 0 || maxScrollExtent <= 0) {
-        print('CustomHorizontalScrollbar - invalid dimensions');
         return Container(height: widget.height, color: Colors.grey.withOpacity(0.1));
       }
 
       final contentSize = maxScrollExtent + viewportSize;
       if (contentSize <= viewportSize) {
-        print('CustomHorizontalScrollbar - content fits in viewport');
         return Container(height: widget.height, color: Colors.grey.withOpacity(0.1));
       }
 
       final thumbWidth = (viewportSize / contentSize) * viewportSize;
       final thumbOffset = (scrollOffset / contentSize) * viewportSize;
-
-      print('CustomHorizontalScrollbar - thumbWidth: $thumbWidth, thumbOffset: $thumbOffset');
 
       return GestureDetector(
         onHorizontalDragStart: (details) {
@@ -194,10 +171,9 @@ class _CustomHorizontalScrollbarState extends State<CustomHorizontalScrollbar> {
           ),
         ),
       );
-    } catch (e, stackTrace) {
-      print('CustomHorizontalScrollbar ERROR: $e');
-      print('Stack trace: $stackTrace');
-      return Container(height: widget.height, color: Colors.red.withOpacity(0.3));
+    } catch (e) {
+      // Return a subtle error indicator if scrollbar fails to build
+      return Container(height: widget.height, color: Colors.grey.withOpacity(0.1));
     }
   }
 }

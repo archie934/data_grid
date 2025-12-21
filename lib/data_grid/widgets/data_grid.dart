@@ -7,6 +7,7 @@ import 'package:data_grid/data_grid/models/state/grid_state.dart';
 import 'package:data_grid/data_grid/models/events/grid_events.dart';
 import 'package:data_grid/data_grid/widgets/data_grid_header.dart';
 import 'package:data_grid/data_grid/widgets/data_grid_body.dart';
+import 'package:data_grid/data_grid/widgets/custom_scrollbar.dart';
 import 'package:data_grid/data_grid/delegates/body_layout_delegate.dart';
 
 class DataGrid<T extends DataGridRow> extends StatefulWidget {
@@ -15,6 +16,18 @@ class DataGrid<T extends DataGridRow> extends StatefulWidget {
   final double headerHeight;
   final double rowHeight;
   final Widget Function(T row, int columnId)? cellBuilder;
+  
+  /// Whether to show the loading overlay (default: true)
+  final bool showLoadingOverlay;
+  
+  /// Custom loading overlay builder. If null, uses default overlay.
+  final Widget Function(BuildContext context, String? message)? loadingOverlayBuilder;
+  
+  /// Backdrop color for the loading overlay (default: black with 30% opacity)
+  final Color? loadingBackdropColor;
+  
+  /// Color of the loading indicator (default: theme primary color)
+  final Color? loadingIndicatorColor;
 
   const DataGrid({
     super.key,
@@ -23,6 +36,10 @@ class DataGrid<T extends DataGridRow> extends StatefulWidget {
     this.headerHeight = 48.0,
     this.rowHeight = 48.0,
     this.cellBuilder,
+    this.showLoadingOverlay = true,
+    this.loadingOverlayBuilder,
+    this.loadingBackdropColor,
+    this.loadingIndicatorColor,
   });
 
   @override
@@ -144,6 +161,56 @@ class _DataGridRowWithPinnedCells<T extends DataGridRow> extends StatelessWidget
   }
 }
 
+/// Widget that tracks scroll controller changes and rebuilds the scrollbar
+class _ScrollbarTracker extends StatefulWidget {
+  final Axis axis;
+  final ScrollController controller;
+  final Widget child;
+
+  const _ScrollbarTracker({
+    required this.axis,
+    required this.controller,
+    required this.child,
+  });
+
+  @override
+  State<_ScrollbarTracker> createState() => _ScrollbarTrackerState();
+}
+
+class _ScrollbarTrackerState extends State<_ScrollbarTracker> {
+  @override
+  void initState() {
+    super.initState();
+    widget.controller.addListener(_onScroll);
+  }
+
+  @override
+  void didUpdateWidget(_ScrollbarTracker oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller != widget.controller) {
+      oldWidget.controller.removeListener(_onScroll);
+      widget.controller.addListener(_onScroll);
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.controller.removeListener(_onScroll);
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return widget.child;
+  }
+}
+
 class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
   late GridScrollController _scrollController;
 
@@ -190,22 +257,42 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
             final unpinnedWidth = unpinnedColumns.fold<double>(0.0, (sum, col) => sum + col.width);
 
             // If no pinned columns, use simple layout
+            // DataGridBody handles its own scrolling internally
             if (pinnedColumns.isEmpty) {
-              return SingleChildScrollView(
-                controller: _scrollController.horizontalController,
-                scrollDirection: Axis.horizontal,
-                child: SizedBox(
-                  width: unpinnedWidth,
-                  child: Column(
+              return Stack(
+                children: [
+                  Column(
                     children: [
+                      // Header - synced with body's horizontal scroll via AnimatedBuilder
                       SizedBox(
                         height: widget.headerHeight,
-                        child: DataGridHeader<T>(
-                          state: state.copyWith(columns: unpinnedColumns),
-                          controller: widget.controller,
-                          scrollController: _scrollController,
+                        child: AnimatedBuilder(
+                          animation: _scrollController.horizontalController,
+                          builder: (context, child) {
+                            final horizontalOffset = _scrollController.horizontalController.hasClients
+                                ? _scrollController.horizontalController.offset
+                                : 0.0;
+                            return ClipRect(
+                              child: OverflowBox(
+                                alignment: Alignment.centerLeft,
+                                maxWidth: unpinnedWidth,
+                                child: Transform.translate(
+                                  offset: Offset(-horizontalOffset, 0),
+                                  child: SizedBox(
+                                    width: unpinnedWidth,
+                                    child: DataGridHeader<T>(
+                                      state: state.copyWith(columns: unpinnedColumns),
+                                      controller: widget.controller,
+                                      scrollController: _scrollController,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
                         ),
                       ),
+                      // Body with integrated scrollbars
                       Expanded(
                         child: DataGridBody<T>(
                           state: state.copyWith(columns: unpinnedColumns),
@@ -217,12 +304,23 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
                       ),
                     ],
                   ),
-                ),
+                  // Loading overlay
+                  if (state.isLoading && widget.showLoadingOverlay)
+                    widget.loadingOverlayBuilder != null
+                        ? widget.loadingOverlayBuilder!(context, state.loadingMessage)
+                        : _LoadingOverlay(
+                            message: state.loadingMessage,
+                            backdropColor: widget.loadingBackdropColor,
+                            indicatorColor: widget.loadingIndicatorColor,
+                          ),
+                ],
               );
             }
 
             // Layout with pinned columns
-            return Column(
+            return Stack(
+              children: [
+                Column(
               children: [
                 // Header row
                 SizedBox(
@@ -278,46 +376,150 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
                 ),
                 // Body with unified vertical scrolling and proper pinning
                 Expanded(
-                  child: AnimatedBuilder(
-                    animation: _scrollController.horizontalController,
-                    builder: (context, child) {
-                      final horizontalOffset = _scrollController.horizontalController.hasClients
-                          ? _scrollController.horizontalController.offset
-                          : 0.0;
+                  child: Stack(
+                    children: [
+                      // Main body content
+                      Positioned.fill(
+                        child: AnimatedBuilder(
+                          animation: _scrollController.horizontalController,
+                          builder: (context, child) {
+                            final horizontalOffset = _scrollController.horizontalController.hasClients
+                                ? _scrollController.horizontalController.offset
+                                : 0.0;
 
-                      return ListView.builder(
-                        controller: _scrollController.verticalController,
-                        itemCount: state.displayIndices.length,
-                        itemExtent: widget.rowHeight,
-                        addAutomaticKeepAlives: false,
-                        addRepaintBoundaries: true,
-                        itemBuilder: (context, index) {
-                          final rowIndex = state.displayIndices[index];
-                          final row = state.rows[rowIndex];
+                            return ListView.builder(
+                              controller: _scrollController.verticalController,
+                              itemCount: state.displayIndices.length,
+                              itemExtent: widget.rowHeight,
+                              addAutomaticKeepAlives: false,
+                              addRepaintBoundaries: true,
+                              itemBuilder: (context, index) {
+                                final rowIndex = state.displayIndices[index];
+                                final row = state.rows[rowIndex];
 
-                          return _DataGridRowWithPinnedCells<T>(
-                            key: ValueKey(row.id),
-                            row: row,
-                            index: index,
-                            pinnedColumns: pinnedColumns,
-                            unpinnedColumns: unpinnedColumns,
-                            pinnedWidth: pinnedWidth,
-                            unpinnedWidth: unpinnedWidth,
-                            horizontalOffset: horizontalOffset,
-                            controller: widget.controller,
-                            rowHeight: widget.rowHeight,
-                            cellBuilder: widget.cellBuilder,
-                          );
-                        },
-                      );
-                    },
+                                return _DataGridRowWithPinnedCells<T>(
+                                  key: ValueKey(row.id),
+                                  row: row,
+                                  index: index,
+                                  pinnedColumns: pinnedColumns,
+                                  unpinnedColumns: unpinnedColumns,
+                                  pinnedWidth: pinnedWidth,
+                                  unpinnedWidth: unpinnedWidth,
+                                  horizontalOffset: horizontalOffset,
+                                  controller: widget.controller,
+                                  rowHeight: widget.rowHeight,
+                                  cellBuilder: widget.cellBuilder,
+                                );
+                              },
+                            );
+                          },
+                        ),
+                      ),
+                      // Vertical scrollbar
+                      Positioned(
+                        right: 0,
+                        top: 0,
+                        bottom: 12,
+                        child: _ScrollbarTracker(
+                          axis: Axis.vertical,
+                          controller: _scrollController.verticalController,
+                          child: CustomVerticalScrollbar(
+                            controller: _scrollController.verticalController,
+                            width: 12,
+                          ),
+                        ),
+                      ),
+                      // Horizontal scrollbar
+                      Positioned(
+                        left: pinnedWidth,
+                        right: 12,
+                        bottom: 0,
+                        child: _ScrollbarTracker(
+                          axis: Axis.horizontal,
+                          controller: _scrollController.horizontalController,
+                          child: CustomHorizontalScrollbar(
+                            controller: _scrollController.horizontalController,
+                            height: 12,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
-            );
+            ),
+            // Loading overlay
+            if (state.isLoading && widget.showLoadingOverlay)
+              widget.loadingOverlayBuilder != null
+                  ? widget.loadingOverlayBuilder!(context, state.loadingMessage)
+                  : _LoadingOverlay(
+                      message: state.loadingMessage,
+                      backdropColor: widget.loadingBackdropColor,
+                      indicatorColor: widget.loadingIndicatorColor,
+                    ),
+          ],
+        );
           },
         );
       },
+    );
+  }
+}
+
+/// Default loading overlay widget displayed during heavy operations
+class _LoadingOverlay extends StatelessWidget {
+  final String? message;
+  final Color? backdropColor;
+  final Color? indicatorColor;
+
+  const _LoadingOverlay({
+    this.message,
+    this.backdropColor,
+    this.indicatorColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned.fill(
+      child: Container(
+        color: backdropColor ?? Colors.black.withValues(alpha: 0.3),
+        child: Center(
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.2),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 3,
+                    color: indicatorColor,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  message ?? 'Processing...',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

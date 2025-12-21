@@ -26,6 +26,7 @@ mixin _$DataGridState<T extends DataGridRow> {
   FilterState get filter => throw _privateConstructorUsedError;
   GroupState get group => throw _privateConstructorUsedError;
   bool get isLoading => throw _privateConstructorUsedError;
+  String? get loadingMessage => throw _privateConstructorUsedError;
 
   /// Create a copy of DataGridState
   /// with the given fields replaced by the non-null parameter values.
@@ -51,6 +52,7 @@ abstract class $DataGridStateCopyWith<T extends DataGridRow, $Res> {
     FilterState filter,
     GroupState group,
     bool isLoading,
+    String? loadingMessage,
   });
 
   $ViewportStateCopyWith<$Res> get viewport;
@@ -88,6 +90,7 @@ class _$DataGridStateCopyWithImpl<
     Object? filter = null,
     Object? group = null,
     Object? isLoading = null,
+    Object? loadingMessage = freezed,
   }) {
     return _then(
       _value.copyWith(
@@ -127,6 +130,10 @@ class _$DataGridStateCopyWithImpl<
                 ? _value.isLoading
                 : isLoading // ignore: cast_nullable_to_non_nullable
                       as bool,
+            loadingMessage: freezed == loadingMessage
+                ? _value.loadingMessage
+                : loadingMessage // ignore: cast_nullable_to_non_nullable
+                      as String?,
           )
           as $Val,
     );
@@ -202,6 +209,7 @@ abstract class _$$DataGridStateImplCopyWith<T extends DataGridRow, $Res>
     FilterState filter,
     GroupState group,
     bool isLoading,
+    String? loadingMessage,
   });
 
   @override
@@ -239,6 +247,7 @@ class __$$DataGridStateImplCopyWithImpl<T extends DataGridRow, $Res>
     Object? filter = null,
     Object? group = null,
     Object? isLoading = null,
+    Object? loadingMessage = freezed,
   }) {
     return _then(
       _$DataGridStateImpl<T>(
@@ -278,6 +287,10 @@ class __$$DataGridStateImplCopyWithImpl<T extends DataGridRow, $Res>
             ? _value.isLoading
             : isLoading // ignore: cast_nullable_to_non_nullable
                   as bool,
+        loadingMessage: freezed == loadingMessage
+            ? _value.loadingMessage
+            : loadingMessage // ignore: cast_nullable_to_non_nullable
+                  as String?,
       ),
     );
   }
@@ -296,6 +309,7 @@ class _$DataGridStateImpl<T extends DataGridRow> extends _DataGridState<T> {
     required this.filter,
     required this.group,
     this.isLoading = false,
+    this.loadingMessage,
   }) : _columns = columns,
        _rows = rows,
        _displayIndices = displayIndices,
@@ -338,10 +352,12 @@ class _$DataGridStateImpl<T extends DataGridRow> extends _DataGridState<T> {
   @override
   @JsonKey()
   final bool isLoading;
+  @override
+  final String? loadingMessage;
 
   @override
   String toString() {
-    return 'DataGridState<$T>(columns: $columns, rows: $rows, displayIndices: $displayIndices, viewport: $viewport, selection: $selection, sort: $sort, filter: $filter, group: $group, isLoading: $isLoading)';
+    return 'DataGridState<$T>(columns: $columns, rows: $rows, displayIndices: $displayIndices, viewport: $viewport, selection: $selection, sort: $sort, filter: $filter, group: $group, isLoading: $isLoading, loadingMessage: $loadingMessage)';
   }
 
   @override
@@ -363,7 +379,9 @@ class _$DataGridStateImpl<T extends DataGridRow> extends _DataGridState<T> {
             (identical(other.filter, filter) || other.filter == filter) &&
             (identical(other.group, group) || other.group == group) &&
             (identical(other.isLoading, isLoading) ||
-                other.isLoading == isLoading));
+                other.isLoading == isLoading) &&
+            (identical(other.loadingMessage, loadingMessage) ||
+                other.loadingMessage == loadingMessage));
   }
 
   @override
@@ -378,6 +396,7 @@ class _$DataGridStateImpl<T extends DataGridRow> extends _DataGridState<T> {
     filter,
     group,
     isLoading,
+    loadingMessage,
   );
 
   /// Create a copy of DataGridState
@@ -403,6 +422,7 @@ abstract class _DataGridState<T extends DataGridRow> extends DataGridState<T> {
     required final FilterState filter,
     required final GroupState group,
     final bool isLoading,
+    final String? loadingMessage,
   }) = _$DataGridStateImpl<T>;
   const _DataGridState._() : super._();
 
@@ -424,6 +444,8 @@ abstract class _DataGridState<T extends DataGridRow> extends DataGridState<T> {
   GroupState get group;
   @override
   bool get isLoading;
+  @override
+  String? get loadingMessage;
 
   /// Create a copy of DataGridState
   /// with the given fields replaced by the non-null parameter values.

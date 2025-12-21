@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:data_grid/data_grid/models/data/column.dart';
 import 'package:data_grid/data_grid/models/data/row.dart';
@@ -6,6 +7,7 @@ import 'package:data_grid/data_grid/models/state/grid_state.dart';
 import 'package:data_grid/data_grid/models/events/grid_events.dart';
 import 'package:data_grid/data_grid/utils/data_indexer.dart';
 import 'package:data_grid/data_grid/utils/viewport_calculator.dart';
+import 'package:data_grid/data_grid/utils/isolate_sort.dart';
 
 export 'package:data_grid/data_grid/utils/data_indexer.dart' show CellValueAccessor;
 
@@ -16,12 +18,18 @@ class DataGridController<T extends DataGridRow> {
 
   final DataIndexer<T> _dataIndexer;
   final ViewportCalculator _viewportCalculator;
+  
+  Timer? _sortDebounceTimer;
+  final Duration sortDebounce;
+  final bool useIsolateSorting;
 
   DataGridController({
     List<DataGridColumn>? initialColumns,
     List<T>? initialRows,
     double rowHeight = 48.0,
     CellValueAccessor<T>? cellValueAccessor,
+    this.sortDebounce = const Duration(milliseconds: 300),
+    this.useIsolateSorting = true,
   }) : _dataIndexer = DataIndexer<T>(cellValueAccessor: cellValueAccessor),
        _viewportCalculator = ViewportCalculator(rowHeight: rowHeight),
        _stateSubject = BehaviorSubject<DataGridState<T>>.seeded(DataGridState<T>.initial()) {
@@ -81,6 +89,8 @@ class DataGridController<T extends DataGridRow> {
         _handleLoadData(event);
       case RefreshDataEvent():
         _handleRefreshData();
+      case SetLoadingEvent():
+        _handleSetLoading(event);
     }
   }
 
@@ -160,6 +170,22 @@ class DataGridController<T extends DataGridRow> {
   }
 
   void _handleSort(SortEvent event) {
+    // Cancel any pending sort operation
+    _sortDebounceTimer?.cancel();
+
+    // Show loading for large datasets
+    final shouldShowLoading = state.rows.length > 1000;
+    if (shouldShowLoading) {
+      addEvent(SetLoadingEvent(isLoading: true, message: 'Sorting data...'));
+    }
+
+    // Debounce the actual sort operation
+    _sortDebounceTimer = Timer(sortDebounce, () {
+      _performSort(event, shouldShowLoading);
+    });
+  }
+
+  Future<void> _performSort(SortEvent event, bool shouldShowLoading) async {
     List<SortColumn> newSortColumns;
 
     if (event.multiSort) {
@@ -185,7 +211,33 @@ class DataGridController<T extends DataGridRow> {
       }
     }
 
-    final sortedIndices = _dataIndexer.sort(state.rows, newSortColumns, state.columns);
+    List<int> sortedIndices;
+
+    // Use isolate sorting for large datasets if enabled
+    if (useIsolateSorting && state.rows.length > 1000 && newSortColumns.isNotEmpty) {
+      // Extract cell values for sort columns
+      final columnValues = <List<dynamic>>[];
+      for (final sortCol in newSortColumns) {
+        final column = state.columns.firstWhere((c) => c.id == sortCol.columnId);
+        final values = <dynamic>[];
+        for (final row in state.rows) {
+          values.add(_dataIndexer.getCellValue(row, column));
+        }
+        columnValues.add(values);
+      }
+
+      // Perform sort in isolate
+      final params = SortParameters(
+        columnValues: columnValues,
+        sortColumns: newSortColumns,
+        rowCount: state.rows.length,
+      );
+
+      sortedIndices = await compute(performSortInIsolate, params);
+    } else {
+      // Use regular sorting for small datasets or when isolate is disabled
+      sortedIndices = _dataIndexer.sort(state.rows, newSortColumns, state.columns);
+    }
 
     _stateSubject.add(
       state.copyWith(
@@ -193,9 +245,20 @@ class DataGridController<T extends DataGridRow> {
         displayIndices: sortedIndices,
       ),
     );
+
+    if (shouldShowLoading) {
+      addEvent(SetLoadingEvent(isLoading: false));
+    }
   }
 
   void _handleFilter(FilterEvent event) {
+    // Show loading for large datasets
+    final shouldShowLoading = state.rows.length > 1000;
+    
+    if (shouldShowLoading) {
+      addEvent(SetLoadingEvent(isLoading: true, message: 'Filtering data...'));
+    }
+
     final newFilters = Map<int, ColumnFilter>.from(state.filter.columnFilters);
     newFilters[event.columnId] = ColumnFilter(columnId: event.columnId, operator: event.operator, value: event.value);
 
@@ -211,9 +274,20 @@ class DataGridController<T extends DataGridRow> {
         displayIndices: sortedIndices,
       ),
     );
+
+    if (shouldShowLoading) {
+      addEvent(SetLoadingEvent(isLoading: false));
+    }
   }
 
   void _handleClearFilter(ClearFilterEvent event) {
+    // Show loading for large datasets
+    final shouldShowLoading = state.rows.length > 1000;
+    
+    if (shouldShowLoading) {
+      addEvent(SetLoadingEvent(isLoading: true, message: 'Clearing filters...'));
+    }
+
     final newFilters = Map<int, ColumnFilter>.from(state.filter.columnFilters);
 
     if (event.columnId != null) {
@@ -236,6 +310,10 @@ class DataGridController<T extends DataGridRow> {
         displayIndices: sortedIndices,
       ),
     );
+
+    if (shouldShowLoading) {
+      addEvent(SetLoadingEvent(isLoading: false));
+    }
   }
 
   void _handleSelectRow(SelectRowEvent event) {
@@ -321,6 +399,13 @@ class DataGridController<T extends DataGridRow> {
     _stateSubject.add(state.copyWith(isLoading: true));
   }
 
+  void _handleSetLoading(SetLoadingEvent event) {
+    _stateSubject.add(state.copyWith(
+      isLoading: event.isLoading,
+      loadingMessage: event.message,
+    ));
+  }
+
   void setColumns(List<DataGridColumn> columns) {
     _stateSubject.add(state.copyWith(columns: columns));
   }
@@ -330,6 +415,7 @@ class DataGridController<T extends DataGridRow> {
   }
 
   void dispose() {
+    _sortDebounceTimer?.cancel();
     _disposeController.add(null);
     _disposeController.close();
     _eventSubject.close();

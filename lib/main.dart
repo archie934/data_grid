@@ -21,7 +21,7 @@ class _MainAppState extends State<MainApp> {
 
     final columns = List.generate(20, (index) => DataGridColumn(id: index, title: 'Column $index', width: 150));
 
-    final rows = List.generate(100000, (index) => SomeRow(id: index.toDouble()));
+    final rows = List.generate(1000000, (index) => SomeRow(id: index.toDouble()));
 
     controller = DataGridController<SomeRow>(
       initialColumns: columns,

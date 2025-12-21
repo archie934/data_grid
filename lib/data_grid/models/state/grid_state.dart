@@ -16,6 +16,7 @@ class DataGridState<T extends DataGridRow> with _$DataGridState<T> {
     required FilterState filter,
     required GroupState group,
     @Default(false) bool isLoading,
+    String? loadingMessage,
   }) = _DataGridState;
 
   const DataGridState._();

@@ -108,12 +108,17 @@ class DataIndexer<T extends DataGridRow> {
     return indices;
   }
 
-  dynamic _getCellValue(T row, DataGridColumn column) {
+  /// Get cell value for a specific row and column
+  /// Made public to support isolate sorting
+  dynamic getCellValue(T row, DataGridColumn column) {
     if (cellValueAccessor != null) {
       return cellValueAccessor!(row, column);
     }
     return null;
   }
+
+  // Keep for internal backward compatibility
+  dynamic _getCellValue(T row, DataGridColumn column) => getCellValue(row, column);
 
   int _compareValues(dynamic a, dynamic b) {
     if (a == null && b == null) return 0;

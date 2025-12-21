@@ -94,3 +94,10 @@ class LoadDataEvent<T> extends DataGridEvent {
 }
 
 class RefreshDataEvent extends DataGridEvent {}
+
+class SetLoadingEvent extends DataGridEvent {
+  final bool isLoading;
+  final String? message;
+
+  SetLoadingEvent({required this.isLoading, this.message});
+}
