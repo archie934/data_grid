@@ -7,8 +7,11 @@ import 'package:data_grid/data_grid/models/state/grid_state.dart';
 import 'package:data_grid/data_grid/models/events/grid_events.dart';
 import 'package:data_grid/data_grid/widgets/data_grid_header.dart';
 import 'package:data_grid/data_grid/widgets/data_grid_body.dart';
-import 'package:data_grid/data_grid/widgets/custom_scrollbar.dart';
-import 'package:data_grid/data_grid/delegates/body_layout_delegate.dart';
+import 'package:data_grid/data_grid/widgets/cells/data_grid_row_pinned.dart';
+import 'package:data_grid/data_grid/widgets/overlays/loading_overlay.dart';
+import 'package:data_grid/data_grid/widgets/scroll/scrollbar_vertical.dart';
+import 'package:data_grid/data_grid/widgets/scroll/scrollbar_horizontal.dart';
+import 'package:data_grid/data_grid/widgets/scroll/scrollbar_tracker.dart';
 
 class DataGrid<T extends DataGridRow> extends StatefulWidget {
   final DataGridController<T> controller;
@@ -44,171 +47,6 @@ class DataGrid<T extends DataGridRow> extends StatefulWidget {
 
   @override
   State<DataGrid<T>> createState() => _DataGridState<T>();
-}
-
-// Row widget with pinned and unpinned cells
-class _DataGridRowWithPinnedCells<T extends DataGridRow> extends StatelessWidget {
-  final T row;
-  final int index;
-  final List<DataGridColumn> pinnedColumns;
-  final List<DataGridColumn> unpinnedColumns;
-  final double pinnedWidth;
-  final double unpinnedWidth;
-  final double horizontalOffset;
-  final DataGridController<T> controller;
-  final double rowHeight;
-  final Widget Function(T row, int columnId)? cellBuilder;
-
-  const _DataGridRowWithPinnedCells({
-    super.key,
-    required this.row,
-    required this.index,
-    required this.pinnedColumns,
-    required this.unpinnedColumns,
-    required this.pinnedWidth,
-    required this.unpinnedWidth,
-    required this.horizontalOffset,
-    required this.controller,
-    required this.rowHeight,
-    this.cellBuilder,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return StreamBuilder<SelectionState>(
-      stream: controller.selection$,
-      initialData: controller.state.selection,
-      builder: (context, snapshot) {
-        final isSelected = snapshot.data?.isRowSelected(row.id) ?? false;
-
-        return GestureDetector(
-          onTap: () {
-            controller.addEvent(SelectRowEvent(rowId: row.id, multiSelect: false));
-          },
-          child: Container(
-            height: rowHeight,
-            decoration: BoxDecoration(
-              color: isSelected
-                  ? Colors.blue.withValues(alpha: 0.1)
-                  : (index % 2 == 0 ? Colors.white : Colors.grey[50]),
-              border: Border(bottom: BorderSide(color: Colors.grey[300]!)),
-            ),
-            child: Stack(
-              children: [
-                // Unpinned cells (responds to horizontal scroll)
-                Positioned(
-                  left: pinnedWidth,
-                  right: 0,
-                  top: 0,
-                  bottom: 0,
-                  child: ClipRect(
-                    child: Transform.translate(
-                      offset: Offset(-horizontalOffset, 0),
-                      child: SizedBox(
-                        width: unpinnedWidth,
-                        height: rowHeight,
-                        child: CustomMultiChildLayout(
-                          delegate: BodyLayoutDelegate(unpinnedColumns),
-                          children: [
-                            for (var column in unpinnedColumns) LayoutId(id: column.id, child: _buildCell(column)),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                // Pinned cells (fixed position)
-                Positioned(
-                  left: 0,
-                  top: 0,
-                  bottom: 0,
-                  width: pinnedWidth,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      border: Border(right: BorderSide(color: Colors.grey[400]!, width: 2)),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.1),
-                          blurRadius: 4,
-                          offset: const Offset(2, 0),
-                        ),
-                      ],
-                    ),
-                    child: CustomMultiChildLayout(
-                      delegate: BodyLayoutDelegate(pinnedColumns),
-                      children: [for (var column in pinnedColumns) LayoutId(id: column.id, child: _buildCell(column))],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildCell(DataGridColumn column) {
-    if (cellBuilder != null) {
-      return cellBuilder!(row, column.id);
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      alignment: Alignment.centerLeft,
-      child: Text('Row ${row.id}, Col ${column.id}', overflow: TextOverflow.ellipsis),
-    );
-  }
-}
-
-/// Widget that tracks scroll controller changes and rebuilds the scrollbar
-class _ScrollbarTracker extends StatefulWidget {
-  final Axis axis;
-  final ScrollController controller;
-  final Widget child;
-
-  const _ScrollbarTracker({
-    required this.axis,
-    required this.controller,
-    required this.child,
-  });
-
-  @override
-  State<_ScrollbarTracker> createState() => _ScrollbarTrackerState();
-}
-
-class _ScrollbarTrackerState extends State<_ScrollbarTracker> {
-  @override
-  void initState() {
-    super.initState();
-    widget.controller.addListener(_onScroll);
-  }
-
-  @override
-  void didUpdateWidget(_ScrollbarTracker oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.controller != widget.controller) {
-      oldWidget.controller.removeListener(_onScroll);
-      widget.controller.addListener(_onScroll);
-    }
-  }
-
-  @override
-  void dispose() {
-    widget.controller.removeListener(_onScroll);
-    super.dispose();
-  }
-
-  void _onScroll() {
-    if (mounted) {
-      setState(() {});
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return widget.child;
-  }
 }
 
 class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
@@ -308,7 +146,7 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
                   if (state.isLoading && widget.showLoadingOverlay)
                     widget.loadingOverlayBuilder != null
                         ? widget.loadingOverlayBuilder!(context, state.loadingMessage)
-                        : _LoadingOverlay(
+                        : DataGridLoadingOverlay(
                             message: state.loadingMessage,
                             backdropColor: widget.loadingBackdropColor,
                             indicatorColor: widget.loadingIndicatorColor,
@@ -397,7 +235,7 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
                                 final rowIndex = state.displayIndices[index];
                                 final row = state.rows[rowIndex];
 
-                                return _DataGridRowWithPinnedCells<T>(
+                                return DataGridRowWithPinnedCells<T>(
                                   key: ValueKey(row.id),
                                   row: row,
                                   index: index,
@@ -420,7 +258,7 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
                         right: 0,
                         top: 0,
                         bottom: 12,
-                        child: _ScrollbarTracker(
+                        child: ScrollbarTracker(
                           axis: Axis.vertical,
                           controller: _scrollController.verticalController,
                           child: CustomVerticalScrollbar(
@@ -434,7 +272,7 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
                         left: pinnedWidth,
                         right: 12,
                         bottom: 0,
-                        child: _ScrollbarTracker(
+                        child: ScrollbarTracker(
                           axis: Axis.horizontal,
                           controller: _scrollController.horizontalController,
                           child: CustomHorizontalScrollbar(
@@ -452,7 +290,7 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
             if (state.isLoading && widget.showLoadingOverlay)
               widget.loadingOverlayBuilder != null
                   ? widget.loadingOverlayBuilder!(context, state.loadingMessage)
-                  : _LoadingOverlay(
+                  : DataGridLoadingOverlay(
                       message: state.loadingMessage,
                       backdropColor: widget.loadingBackdropColor,
                       indicatorColor: widget.loadingIndicatorColor,
@@ -462,64 +300,6 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
           },
         );
       },
-    );
-  }
-}
-
-/// Default loading overlay widget displayed during heavy operations
-class _LoadingOverlay extends StatelessWidget {
-  final String? message;
-  final Color? backdropColor;
-  final Color? indicatorColor;
-
-  const _LoadingOverlay({
-    this.message,
-    this.backdropColor,
-    this.indicatorColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Positioned.fill(
-      child: Container(
-        color: backdropColor ?? Colors.black.withValues(alpha: 0.3),
-        child: Center(
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.2),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SizedBox(
-                  width: 40,
-                  height: 40,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 3,
-                    color: indicatorColor,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  message ?? 'Processing...',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

@@ -18,7 +18,7 @@ class DataGridController<T extends DataGridRow> {
 
   final DataIndexer<T> _dataIndexer;
   final ViewportCalculator _viewportCalculator;
-  
+
   Timer? _sortDebounceTimer;
   final Duration sortDebounce;
   final bool useIsolateSorting;
@@ -97,17 +97,9 @@ class DataGridController<T extends DataGridRow> {
   void addEvent(DataGridEvent event) => _eventSubject.add(event);
 
   void _handleScroll(ScrollEvent event) {
-    final visibleRange = _viewportCalculator.calculateVisibleRows(
-      event.offsetY,
-      state.viewport.viewportHeight,
-      state.displayIndices.length,
-    );
+    final visibleRange = _viewportCalculator.calculateVisibleRows(event.offsetY, state.viewport.viewportHeight, state.displayIndices.length);
 
-    final visibleColumnRange = _viewportCalculator.calculateVisibleColumns(
-      event.offsetX,
-      state.columns.map((c) => c.width).toList(),
-      state.viewport.viewportWidth,
-    );
+    final visibleColumnRange = _viewportCalculator.calculateVisibleColumns(event.offsetX, state.columns.map((c) => c.width).toList(), state.viewport.viewportWidth);
 
     _stateSubject.add(
       state.copyWith(
@@ -124,17 +116,9 @@ class DataGridController<T extends DataGridRow> {
   }
 
   void _handleViewportResize(ViewportResizeEvent event) {
-    final visibleRange = _viewportCalculator.calculateVisibleRows(
-      state.viewport.scrollOffsetY,
-      event.height,
-      state.displayIndices.length,
-    );
+    final visibleRange = _viewportCalculator.calculateVisibleRows(state.viewport.scrollOffsetY, event.height, state.displayIndices.length);
 
-    final visibleColumnRange = _viewportCalculator.calculateVisibleColumns(
-      state.viewport.scrollOffsetX,
-      state.columns.map((c) => c.width).toList(),
-      event.width,
-    );
+    final visibleColumnRange = _viewportCalculator.calculateVisibleColumns(state.viewport.scrollOffsetX, state.columns.map((c) => c.width).toList(), event.width);
 
     _stateSubject.add(
       state.copyWith(
@@ -199,9 +183,7 @@ class DataGridController<T extends DataGridRow> {
           newSortColumns[existingIndex] = newSortColumns[existingIndex].copyWith(direction: event.direction!);
         }
       } else if (event.direction != null) {
-        newSortColumns.add(
-          SortColumn(columnId: event.columnId, direction: event.direction!, priority: newSortColumns.length),
-        );
+        newSortColumns.add(SortColumn(columnId: event.columnId, direction: event.direction!, priority: newSortColumns.length));
       }
     } else {
       if (event.direction == null) {
@@ -227,11 +209,7 @@ class DataGridController<T extends DataGridRow> {
       }
 
       // Perform sort in isolate
-      final params = SortParameters(
-        columnValues: columnValues,
-        sortColumns: newSortColumns,
-        rowCount: state.rows.length,
-      );
+      final params = SortParameters(columnValues: columnValues, sortColumns: newSortColumns, rowCount: state.rows.length);
 
       sortedIndices = await compute(performSortInIsolate, params);
     } else {
@@ -254,7 +232,7 @@ class DataGridController<T extends DataGridRow> {
   void _handleFilter(FilterEvent event) {
     // Show loading for large datasets
     final shouldShowLoading = state.rows.length > 1000;
-    
+
     if (shouldShowLoading) {
       addEvent(SetLoadingEvent(isLoading: true, message: 'Filtering data...'));
     }
@@ -264,9 +242,7 @@ class DataGridController<T extends DataGridRow> {
 
     final filteredIndices = _dataIndexer.filter(state.rows, newFilters.values.toList(), state.columns);
 
-    final sortedIndices = state.sort.hasSort
-        ? _dataIndexer.sortIndices(state.rows, filteredIndices, state.sort.sortColumns, state.columns)
-        : filteredIndices;
+    final sortedIndices = state.sort.hasSort ? _dataIndexer.sortIndices(state.rows, filteredIndices, state.sort.sortColumns, state.columns) : filteredIndices;
 
     _stateSubject.add(
       state.copyWith(
@@ -283,7 +259,7 @@ class DataGridController<T extends DataGridRow> {
   void _handleClearFilter(ClearFilterEvent event) {
     // Show loading for large datasets
     final shouldShowLoading = state.rows.length > 1000;
-    
+
     if (shouldShowLoading) {
       addEvent(SetLoadingEvent(isLoading: true, message: 'Clearing filters...'));
     }
@@ -296,13 +272,9 @@ class DataGridController<T extends DataGridRow> {
       newFilters.clear();
     }
 
-    final filteredIndices = newFilters.isEmpty
-        ? List<int>.generate(state.rows.length, (i) => i)
-        : _dataIndexer.filter(state.rows, newFilters.values.toList(), state.columns);
+    final filteredIndices = newFilters.isEmpty ? List<int>.generate(state.rows.length, (i) => i) : _dataIndexer.filter(state.rows, newFilters.values.toList(), state.columns);
 
-    final sortedIndices = state.sort.hasSort
-        ? _dataIndexer.sortIndices(state.rows, filteredIndices, state.sort.sortColumns, state.columns)
-        : filteredIndices;
+    final sortedIndices = state.sort.hasSort ? _dataIndexer.sortIndices(state.rows, filteredIndices, state.sort.sortColumns, state.columns) : filteredIndices;
 
     _stateSubject.add(
       state.copyWith(
@@ -384,13 +356,9 @@ class DataGridController<T extends DataGridRow> {
 
     _dataIndexer.setData(newRows);
 
-    final filteredIndices = state.filter.hasFilters
-        ? _dataIndexer.filter(newRows, state.filter.columnFilters.values.toList(), state.columns)
-        : List<int>.generate(newRows.length, (i) => i);
+    final filteredIndices = state.filter.hasFilters ? _dataIndexer.filter(newRows, state.filter.columnFilters.values.toList(), state.columns) : List<int>.generate(newRows.length, (i) => i);
 
-    final sortedIndices = state.sort.hasSort
-        ? _dataIndexer.sortIndices(newRows, filteredIndices, state.sort.sortColumns, state.columns)
-        : filteredIndices;
+    final sortedIndices = state.sort.hasSort ? _dataIndexer.sortIndices(newRows, filteredIndices, state.sort.sortColumns, state.columns) : filteredIndices;
 
     _stateSubject.add(state.copyWith(rows: newRows, displayIndices: sortedIndices, isLoading: false));
   }
@@ -400,10 +368,7 @@ class DataGridController<T extends DataGridRow> {
   }
 
   void _handleSetLoading(SetLoadingEvent event) {
-    _stateSubject.add(state.copyWith(
-      isLoading: event.isLoading,
-      loadingMessage: event.message,
-    ));
+    _stateSubject.add(state.copyWith(isLoading: event.isLoading, loadingMessage: event.message));
   }
 
   void setColumns(List<DataGridColumn> columns) {

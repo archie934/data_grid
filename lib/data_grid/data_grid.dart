@@ -1,7 +1,33 @@
+// Controllers
 export 'controller/data_grid_controller.dart';
 export 'controller/grid_scroll_controller.dart';
+
+// Models
 export 'models/data/column.dart';
 export 'models/data/row.dart';
 export 'models/state/grid_state.dart';
 export 'models/events/grid_events.dart';
+
+// Main widgets
 export 'widgets/data_grid.dart';
+export 'widgets/data_grid_header.dart';
+export 'widgets/data_grid_body.dart';
+export 'widgets/data_grid_scroll_view.dart';
+
+// Cell widgets (for customization)
+export 'widgets/cells/data_grid_cell.dart';
+export 'widgets/cells/data_grid_header_cell.dart';
+export 'widgets/cells/data_grid_row_pinned.dart';
+
+// Overlays (for customization)
+export 'widgets/overlays/loading_overlay.dart';
+
+// Scrollbars (for customization)
+export 'widgets/scroll/scrollbar_horizontal.dart';
+export 'widgets/scroll/scrollbar_vertical.dart';
+export 'widgets/scroll/scrollbar_tracker.dart';
+
+// Viewport (advanced use cases)
+export 'widgets/viewport/data_grid_viewport.dart';
+export 'widgets/viewport/data_grid_viewport_delegate.dart';
+export 'widgets/viewport/data_grid_viewport_render.dart';
