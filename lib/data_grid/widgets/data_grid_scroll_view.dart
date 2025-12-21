@@ -16,15 +16,13 @@ class DataGridScrollView extends TwoDimensionalScrollView {
     required this.rowCount,
     required this.rowHeight,
     required this.cellBuilder,
-    super.primary,
-    super.mainAxis = Axis.vertical,
     super.verticalDetails = const ScrollableDetails.vertical(),
     super.horizontalDetails = const ScrollableDetails.horizontal(),
-    super.cacheExtent,
-    super.diagonalDragBehavior = DiagonalDragBehavior.none,
-    super.dragStartBehavior = DragStartBehavior.start,
-    super.clipBehavior = Clip.hardEdge,
   }) : super(
+         mainAxis: Axis.vertical,
+         diagonalDragBehavior: DiagonalDragBehavior.none,
+         dragStartBehavior: DragStartBehavior.start,
+         clipBehavior: Clip.hardEdge,
          delegate: DataGridChildDelegate(columns: columns, rowCount: rowCount, cellBuilder: cellBuilder),
        );
 

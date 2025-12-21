@@ -5,6 +5,7 @@ import 'package:data_grid/data_grid/models/data/row.dart';
 import 'package:data_grid/data_grid/models/state/grid_state.dart';
 import 'package:data_grid/data_grid/models/events/grid_events.dart';
 import 'package:data_grid/data_grid/widgets/data_grid_scroll_view.dart';
+import 'package:data_grid/data_grid/widgets/custom_scrollbar.dart';
 
 class DataGridBody<T extends DataGridRow> extends StatelessWidget {
   final DataGridState<T> state;
@@ -24,26 +25,85 @@ class DataGridBody<T extends DataGridRow> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DataGridScrollView(
-      columns: state.columns,
-      rowCount: state.displayIndices.length,
-      rowHeight: rowHeight,
-      verticalDetails: ScrollableDetails.vertical(controller: scrollController.verticalController),
-      horizontalDetails: ScrollableDetails.horizontal(controller: scrollController.horizontalController),
-      cellBuilder: (context, rowIndex, columnIndex) {
-        final actualRowIndex = state.displayIndices[rowIndex];
-        final row = state.rows[actualRowIndex];
-        final column = state.columns[columnIndex];
+    const scrollbarWidth = 12.0;
 
-        return _DataCell<T>(
-          row: row,
-          rowId: row.id,
-          columnId: column.id,
-          rowIndex: rowIndex,
-          controller: controller,
-          cellBuilder: cellBuilder,
-        );
+    return NotificationListener<ScrollNotification>(
+      onNotification: (notification) {
+        return false;
       },
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: DataGridScrollView(
+              columns: state.columns,
+              rowCount: state.displayIndices.length,
+              rowHeight: rowHeight,
+              verticalDetails: ScrollableDetails.vertical(controller: scrollController.verticalController),
+              horizontalDetails: ScrollableDetails.horizontal(controller: scrollController.horizontalController),
+              cellBuilder: (context, rowIndex, columnIndex) {
+                final actualRowIndex = state.displayIndices[rowIndex];
+                final row = state.rows[actualRowIndex];
+                final column = state.columns[columnIndex];
+
+                return _DataCell<T>(
+                  row: row,
+                  rowId: row.id,
+                  columnId: column.id,
+                  rowIndex: rowIndex,
+                  controller: controller,
+                  cellBuilder: cellBuilder,
+                );
+              },
+            ),
+          ),
+          Positioned(
+            right: 0,
+            top: 0,
+            bottom: scrollbarWidth,
+            child: _ScrollbarWrapper(
+              axis: Axis.vertical,
+              child: CustomVerticalScrollbar(controller: scrollController.verticalController, width: scrollbarWidth),
+            ),
+          ),
+          Positioned(
+            left: 0,
+            right: scrollbarWidth,
+            bottom: 0,
+            child: _ScrollbarWrapper(
+              axis: Axis.horizontal,
+              child: CustomHorizontalScrollbar(
+                controller: scrollController.horizontalController,
+                height: scrollbarWidth,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ScrollbarWrapper extends StatefulWidget {
+  final Axis axis;
+  final Widget child;
+
+  const _ScrollbarWrapper({required this.axis, required this.child});
+
+  @override
+  State<_ScrollbarWrapper> createState() => _ScrollbarWrapperState();
+}
+
+class _ScrollbarWrapperState extends State<_ScrollbarWrapper> {
+  @override
+  Widget build(BuildContext context) {
+    return NotificationListener<ScrollNotification>(
+      onNotification: (notification) {
+        if (notification.metrics.axis == widget.axis) {
+          setState(() {});
+        }
+        return false;
+      },
+      child: widget.child,
     );
   }
 }
