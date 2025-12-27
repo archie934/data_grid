@@ -7,7 +7,6 @@ import 'package:data_grid/data_grid/widgets/data_grid_scroll_view.dart';
 import 'package:data_grid/data_grid/widgets/cells/data_grid_cell.dart';
 import 'package:data_grid/data_grid/widgets/scroll/scrollbar_vertical.dart';
 import 'package:data_grid/data_grid/widgets/scroll/scrollbar_horizontal.dart';
-import 'package:data_grid/data_grid/widgets/scroll/scrollbar_tracker.dart';
 
 class DataGridBody<T extends DataGridRow> extends StatelessWidget {
   final DataGridState<T> state;
@@ -62,24 +61,13 @@ class DataGridBody<T extends DataGridRow> extends StatelessWidget {
             right: 0,
             top: 0,
             bottom: scrollbarWidth,
-            child: ScrollbarTracker(
-              axis: Axis.vertical,
-              controller: scrollController.verticalController,
-              child: CustomVerticalScrollbar(controller: scrollController.verticalController, width: scrollbarWidth),
-            ),
+            child: CustomVerticalScrollbar(controller: scrollController.verticalController, width: scrollbarWidth),
           ),
           Positioned(
             left: 0,
             right: scrollbarWidth,
             bottom: 0,
-            child: ScrollbarTracker(
-              axis: Axis.horizontal,
-              controller: scrollController.horizontalController,
-              child: CustomHorizontalScrollbar(
-                controller: scrollController.horizontalController,
-                height: scrollbarWidth,
-              ),
-            ),
+            child: CustomHorizontalScrollbar(controller: scrollController.horizontalController, height: scrollbarWidth),
           ),
         ],
       ),
