@@ -5,43 +5,29 @@ import 'package:data_grid/data_grid/models/state/grid_state.dart';
 typedef CellValueAccessor<T> = dynamic Function(T row, DataGridColumn column);
 
 class DataIndexer<T extends DataGridRow> {
-  final Map<double, int> _rowIndexMap = {};
-  List<T> _data = [];
+  Map<double, T> _data = {};
   final CellValueAccessor<T>? cellValueAccessor;
 
   DataIndexer({this.cellValueAccessor});
 
-  void setData(List<T> data) {
+  void setData(Map<double, T> data) {
     _data = data;
-    _rebuildIndexMap();
   }
 
-  void _rebuildIndexMap() {
-    _rowIndexMap.clear();
-    for (var i = 0; i < _data.length; i++) {
-      _rowIndexMap[_data[i].id] = i;
-    }
-  }
+  T? getRow(double rowId) => _data[rowId];
 
-  int? getRowIndex(double rowId) => _rowIndexMap[rowId];
-
-  T? getRow(double rowId) {
-    final index = _rowIndexMap[rowId];
-    return index != null ? _data[index] : null;
-  }
-
-  List<int> sort(List<T> rows, List<SortColumn> sortColumns, List<DataGridColumn> columns) {
+  List<double> sort(Map<double, T> rowsById, List<SortColumn> sortColumns, List<DataGridColumn> columns) {
     if (sortColumns.isEmpty) {
-      return List<int>.generate(rows.length, (i) => i);
+      return rowsById.keys.toList();
     }
 
-    final indices = List<int>.generate(rows.length, (i) => i);
+    final ids = rowsById.keys.toList();
 
-    indices.sort((aIdx, bIdx) {
+    ids.sort((aId, bId) {
       for (final sortCol in sortColumns) {
         final column = columns.firstWhere((c) => c.id == sortCol.columnId);
-        final aValue = _getCellValue(rows[aIdx], column);
-        final bValue = _getCellValue(rows[bIdx], column);
+        final aValue = _getCellValue(rowsById[aId]!, column);
+        final bValue = _getCellValue(rowsById[bId]!, column);
 
         final comparison = _compareValues(aValue, bValue);
 
@@ -52,21 +38,26 @@ class DataIndexer<T extends DataGridRow> {
       return 0;
     });
 
-    return indices;
+    return ids;
   }
 
-  List<int> sortIndices(List<T> rows, List<int> indices, List<SortColumn> sortColumns, List<DataGridColumn> columns) {
+  List<double> sortIds(
+    Map<double, T> rowsById,
+    List<double> idsToSort,
+    List<SortColumn> sortColumns,
+    List<DataGridColumn> columns,
+  ) {
     if (sortColumns.isEmpty) {
-      return indices;
+      return idsToSort;
     }
 
-    final sortedIndices = List<int>.from(indices);
+    final sortedIds = List<double>.from(idsToSort);
 
-    sortedIndices.sort((aIdx, bIdx) {
+    sortedIds.sort((aId, bId) {
       for (final sortCol in sortColumns) {
         final column = columns.firstWhere((c) => c.id == sortCol.columnId);
-        final aValue = _getCellValue(rows[aIdx], column);
-        final bValue = _getCellValue(rows[bIdx], column);
+        final aValue = _getCellValue(rowsById[aId]!, column);
+        final bValue = _getCellValue(rowsById[bId]!, column);
 
         final comparison = _compareValues(aValue, bValue);
 
@@ -77,22 +68,22 @@ class DataIndexer<T extends DataGridRow> {
       return 0;
     });
 
-    return sortedIndices;
+    return sortedIds;
   }
 
-  List<int> filter(List<T> rows, List<ColumnFilter> filters, List<DataGridColumn> columns) {
+  List<double> filter(Map<double, T> rowsById, List<ColumnFilter> filters, List<DataGridColumn> columns) {
     if (filters.isEmpty) {
-      return List<int>.generate(rows.length, (i) => i);
+      return rowsById.keys.toList();
     }
 
-    final indices = <int>[];
+    final matchingIds = <double>[];
 
-    for (var i = 0; i < rows.length; i++) {
+    for (final entry in rowsById.entries) {
       bool matchesAllFilters = true;
 
       for (final filter in filters) {
         final column = columns.firstWhere((c) => c.id == filter.columnId);
-        final cellValue = _getCellValue(rows[i], column);
+        final cellValue = _getCellValue(entry.value, column);
 
         if (!_matchesFilter(cellValue, filter)) {
           matchesAllFilters = false;
@@ -101,11 +92,11 @@ class DataIndexer<T extends DataGridRow> {
       }
 
       if (matchesAllFilters) {
-        indices.add(i);
+        matchingIds.add(entry.key);
       }
     }
 
-    return indices;
+    return matchingIds;
   }
 
   /// Get cell value for a specific row and column
@@ -171,7 +162,9 @@ class DataIndexer<T extends DataGridRow> {
     }
   }
 
-  List<int> getRangeIndices(int start, int end) {
-    return List<int>.generate((end - start).clamp(0, _data.length), (i) => start + i);
+  List<double> getRangeIds(List<double> displayOrder, int start, int end) {
+    final clampedStart = start.clamp(0, displayOrder.length);
+    final clampedEnd = end.clamp(0, displayOrder.length);
+    return displayOrder.sublist(clampedStart, clampedEnd);
   }
 }

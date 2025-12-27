@@ -40,8 +40,8 @@ class LoggingInterceptor<T extends DataGridRow> extends DataGridInterceptor<T> {
   String _describeStateChange(DataGridState<T> newState, DataGridState<T> oldState) {
     final changes = <String>[];
 
-    if (newState.rows.length != oldState.rows.length) {
-      changes.add('rows: ${oldState.rows.length} → ${newState.rows.length}');
+    if (newState.rowsById.length != oldState.rowsById.length) {
+      changes.add('rows: ${oldState.rowsById.length} → ${newState.rowsById.length}');
     }
 
     if (newState.columns.length != oldState.columns.length) {

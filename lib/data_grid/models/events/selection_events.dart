@@ -43,12 +43,19 @@ class SelectRowsRangeEvent extends DataGridEvent {
   @override
   DataGridState<T>? apply<T extends DataGridRow>(EventContext<T> context) {
     final selectedRows = Set<double>.from(context.state.selection.selectedRowIds);
-    final start = startRowId < endRowId ? startRowId : endRowId;
-    final end = startRowId < endRowId ? endRowId : startRowId;
 
-    for (double i = start; i <= end; i++) {
-      selectedRows.add(i);
+    final startIdx = context.state.displayOrder.indexOf(startRowId);
+    final endIdx = context.state.displayOrder.indexOf(endRowId);
+
+    if (startIdx == -1 || endIdx == -1) {
+      return null;
     }
+
+    final minIdx = startIdx < endIdx ? startIdx : endIdx;
+    final maxIdx = startIdx < endIdx ? endIdx : startIdx;
+
+    final rangeIds = context.state.displayOrder.sublist(minIdx, maxIdx + 1);
+    selectedRows.addAll(rangeIds);
 
     return context.state.copyWith(selection: context.state.selection.copyWith(selectedRowIds: selectedRows));
   }

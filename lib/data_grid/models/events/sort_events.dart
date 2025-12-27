@@ -11,7 +11,7 @@ class SortEvent extends DataGridEvent {
   SortEvent({required this.columnId, this.direction, this.multiSort = false});
 
   @override
-  bool shouldShowLoading(DataGridState state) => state.rows.length > 1000;
+  bool shouldShowLoading(DataGridState state) => state.rowsById.length > 1000;
 
   @override
   String? loadingMessage() => 'Sorting data...';
@@ -19,7 +19,7 @@ class SortEvent extends DataGridEvent {
   @override
   DataGridState<T>? apply<T extends DataGridRow>(EventContext<T> context) {
     context.sortDelegate.handleSort(this, context.state, (result) {
-      final newState = context.state.copyWith(sort: result.sortState, displayIndices: result.displayIndices);
+      final newState = context.state.copyWith(sort: result.sortState, displayOrder: result.displayOrder);
       context.dispatchEvent(SortCompleteEvent(newState: newState));
     });
     return null;

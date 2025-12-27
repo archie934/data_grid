@@ -22,13 +22,13 @@ abstract class SortDelegate<T extends DataGridRow> {
   Future<SortResult?> handleSort(SortEvent event, DataGridState<T> currentState, void Function(SortResult) onComplete);
 
   /// Dispose any resources (timers, subscriptions, etc.)
-  void dispose() {}
+  void dispose();
 }
 
 /// Result of a sort operation.
 class SortResult {
   final SortState sortState;
-  final List<int> displayIndices;
+  final List<double> displayOrder;
 
-  SortResult({required this.sortState, required this.displayIndices});
+  SortResult({required this.sortState, required this.displayOrder});
 }

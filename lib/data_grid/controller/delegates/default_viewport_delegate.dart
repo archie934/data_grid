@@ -15,7 +15,7 @@ class DefaultViewportDelegate<T extends DataGridRow> extends ViewportDelegate<T>
     final visibleRange = _calculator.calculateVisibleRows(
       event.offsetY,
       currentState.viewport.viewportHeight,
-      currentState.displayIndices.length,
+      currentState.displayOrder.length,
     );
 
     final visibleColumnRange = _calculator.calculateVisibleColumns(
@@ -39,7 +39,7 @@ class DefaultViewportDelegate<T extends DataGridRow> extends ViewportDelegate<T>
     final visibleRange = _calculator.calculateVisibleRows(
       currentState.viewport.scrollOffsetY,
       event.height,
-      currentState.displayIndices.length,
+      currentState.displayOrder.length,
     );
 
     final visibleColumnRange = _calculator.calculateVisibleColumns(

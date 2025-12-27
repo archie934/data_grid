@@ -52,13 +52,13 @@ class DataGridBody<T extends DataGridRow> extends StatelessWidget {
             Positioned.fill(
               child: DataGridScrollView(
                 columns: state.columns,
-                rowCount: state.displayIndices.length,
+                rowCount: state.displayOrder.length,
                 rowHeight: rowHeight,
                 verticalDetails: ScrollableDetails.vertical(controller: scrollController.verticalController),
                 horizontalDetails: ScrollableDetails.horizontal(controller: scrollController.horizontalController),
                 cellBuilder: (context, rowIndex, columnIndex) {
-                  final actualRowIndex = state.displayIndices[rowIndex];
-                  final row = state.rows[actualRowIndex];
+                  final rowId = state.displayOrder[rowIndex];
+                  final row = state.rowsById[rowId]!;
                   final column = state.columns[columnIndex];
 
                   return DataGridCell<T>(
@@ -142,13 +142,13 @@ class DataGridBody<T extends DataGridRow> extends StatelessWidget {
 
                 return ListView.builder(
                   controller: scrollController.verticalController,
-                  itemCount: state.displayIndices.length,
+                  itemCount: state.displayOrder.length,
                   itemExtent: rowHeight,
                   addAutomaticKeepAlives: false,
                   addRepaintBoundaries: true,
                   itemBuilder: (context, index) {
-                    final actualRowIndex = state.displayIndices[index];
-                    final row = state.rows[actualRowIndex];
+                    final rowId = state.displayOrder[index];
+                    final row = state.rowsById[rowId]!;
 
                     // Build row render context
                     final renderContext = RowRenderContext<T>(
@@ -161,11 +161,10 @@ class DataGridBody<T extends DataGridRow> extends StatelessWidget {
                       horizontalOffset: horizontalOffset,
                       rowHeight: rowHeight,
                       isSelected: controller.state.selection.isRowSelected(row.id),
-                      isHovered: false, // TODO: Add hover tracking
+                      isHovered: false,
                       cellBuilder: cellBuilder,
                     );
 
-                    // Use renderer to build row
                     return effectiveRowRenderer.buildRow(context, row, index, renderContext);
                   },
                 );

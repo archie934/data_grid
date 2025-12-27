@@ -11,7 +11,7 @@ class FilterEvent extends DataGridEvent {
   FilterEvent({required this.columnId, required this.operator, required this.value});
 
   @override
-  bool shouldShowLoading(DataGridState state) => state.rows.length > 1000;
+  bool shouldShowLoading(DataGridState state) => state.rowsById.length > 1000;
 
   @override
   String? loadingMessage() => 'Filtering data...';
@@ -23,22 +23,22 @@ class FilterEvent extends DataGridEvent {
 
     final updatedFilter = context.state.filter.copyWith(columnFilters: updatedFilters);
 
-    final filteredIndices = context.dataIndexer.filter(
-      context.state.rows,
+    final filteredIds = context.dataIndexer.filter(
+      context.state.rowsById,
       updatedFilters.values.toList(),
       context.state.columns,
     );
 
-    final sortedIndices = context.state.sort.hasSort
-        ? context.dataIndexer.sortIndices(
-            context.state.rows,
-            filteredIndices,
+    final sortedIds = context.state.sort.hasSort
+        ? context.dataIndexer.sortIds(
+            context.state.rowsById,
+            filteredIds,
             context.state.sort.sortColumns,
             context.state.columns,
           )
-        : filteredIndices;
+        : filteredIds;
 
-    return context.state.copyWith(filter: updatedFilter, displayIndices: sortedIndices);
+    return context.state.copyWith(filter: updatedFilter, displayOrder: sortedIds);
   }
 }
 
@@ -48,7 +48,7 @@ class ClearFilterEvent extends DataGridEvent {
   ClearFilterEvent({this.columnId});
 
   @override
-  bool shouldShowLoading(DataGridState state) => state.rows.length > 1000;
+  bool shouldShowLoading(DataGridState state) => state.rowsById.length > 1000;
 
   @override
   String? loadingMessage() => 'Clearing filters...';
@@ -65,19 +65,19 @@ class ClearFilterEvent extends DataGridEvent {
 
     final updatedFilter = context.state.filter.copyWith(columnFilters: updatedFilters);
 
-    final filteredIndices = updatedFilters.isEmpty
-        ? List<int>.generate(context.state.rows.length, (i) => i)
-        : context.dataIndexer.filter(context.state.rows, updatedFilters.values.toList(), context.state.columns);
+    final filteredIds = updatedFilters.isEmpty
+        ? context.state.rowsById.keys.toList()
+        : context.dataIndexer.filter(context.state.rowsById, updatedFilters.values.toList(), context.state.columns);
 
-    final sortedIndices = context.state.sort.hasSort
-        ? context.dataIndexer.sortIndices(
-            context.state.rows,
-            filteredIndices,
+    final sortedIds = context.state.sort.hasSort
+        ? context.dataIndexer.sortIds(
+            context.state.rowsById,
+            filteredIds,
             context.state.sort.sortColumns,
             context.state.columns,
           )
-        : filteredIndices;
+        : filteredIds;
 
-    return context.state.copyWith(filter: updatedFilter, displayIndices: sortedIndices);
+    return context.state.copyWith(filter: updatedFilter, displayOrder: sortedIds);
   }
 }

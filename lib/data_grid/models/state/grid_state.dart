@@ -8,8 +8,8 @@ part 'grid_state.freezed.dart';
 class DataGridState<T extends DataGridRow> with _$DataGridState<T> {
   const factory DataGridState({
     required List<DataGridColumn> columns,
-    required List<T> rows,
-    required List<int> displayIndices,
+    required Map<double, T> rowsById,
+    required List<double> displayOrder,
     required ViewportState viewport,
     required SelectionState selection,
     required SortState sort,
@@ -23,8 +23,8 @@ class DataGridState<T extends DataGridRow> with _$DataGridState<T> {
 
   factory DataGridState.initial() => DataGridState<T>(
     columns: [],
-    rows: [],
-    displayIndices: [],
+    rowsById: {},
+    displayOrder: [],
     viewport: ViewportState.initial(),
     selection: SelectionState.initial(),
     sort: SortState.initial(),
@@ -32,8 +32,8 @@ class DataGridState<T extends DataGridRow> with _$DataGridState<T> {
     group: GroupState.initial(),
   );
 
-  int get visibleRowCount => displayIndices.length;
-  List<T> get visibleRows => displayIndices.map((i) => rows[i]).toList();
+  int get visibleRowCount => displayOrder.length;
+  List<T> get visibleRows => displayOrder.map((id) => rowsById[id]!).toList();
 }
 
 @freezed

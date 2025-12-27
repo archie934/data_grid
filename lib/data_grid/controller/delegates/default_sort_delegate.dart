@@ -40,13 +40,13 @@ class DefaultSortDelegate<T extends DataGridRow> extends SortDelegate<T> {
       if (updatedSortColumns.isEmpty) {
         final result = SortResult(
           sortState: updatedSort.copyWith(sortColumns: []),
-          displayIndices: currentState.filter.hasFilters
+          displayOrder: currentState.filter.hasFilters
               ? _dataIndexer.filter(
-                  currentState.rows,
+                  currentState.rowsById,
                   currentState.filter.columnFilters.values.toList(),
                   currentState.columns,
                 )
-              : List<int>.generate(currentState.rows.length, (i) => i),
+              : currentState.rowsById.keys.toList(),
         );
         onComplete(result);
         completer.complete(result);
@@ -54,42 +54,39 @@ class DefaultSortDelegate<T extends DataGridRow> extends SortDelegate<T> {
       }
 
       try {
-        final indicesToSort = currentState.filter.hasFilters
+        final idsToSort = currentState.filter.hasFilters
             ? _dataIndexer.filter(
-                currentState.rows,
+                currentState.rowsById,
                 currentState.filter.columnFilters.values.toList(),
                 currentState.columns,
               )
-            : List<int>.generate(currentState.rows.length, (i) => i);
+            : currentState.rowsById.keys.toList();
 
-        final List<int> sortedIndices;
+        final List<double> sortedIds;
 
-        if (currentState.rows.length > _isolateThreshold) {
+        if (currentState.rowsById.length > _isolateThreshold) {
           final columnValues = <List<dynamic>>[];
           for (final sortCol in updatedSortColumns) {
             final column = currentState.columns.firstWhere((c) => c.id == sortCol.columnId);
-            final values = currentState.rows.map((row) => _dataIndexer.getCellValue(row, column)).toList();
+            final values = idsToSort
+                .map((id) => _dataIndexer.getCellValue(currentState.rowsById[id]!, column))
+                .toList();
             columnValues.add(values);
           }
 
           final params = SortParameters(
             columnValues: columnValues,
             sortColumns: updatedSortColumns,
-            rowCount: indicesToSort.length,
+            rowCount: idsToSort.length,
           );
 
           final isolateResult = await compute(performSortInIsolate, params);
-          sortedIndices = isolateResult.map((idx) => indicesToSort[idx]).toList();
+          sortedIds = isolateResult.map((idx) => idsToSort[idx]).toList();
         } else {
-          sortedIndices = _dataIndexer.sortIndices(
-            currentState.rows,
-            indicesToSort,
-            updatedSortColumns,
-            currentState.columns,
-          );
+          sortedIds = _dataIndexer.sortIds(currentState.rowsById, idsToSort, updatedSortColumns, currentState.columns);
         }
 
-        final result = SortResult(sortState: updatedSort, displayIndices: sortedIndices);
+        final result = SortResult(sortState: updatedSort, displayOrder: sortedIds);
         onComplete(result);
         completer.complete(result);
       } catch (e) {

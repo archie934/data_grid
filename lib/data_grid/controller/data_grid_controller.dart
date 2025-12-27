@@ -68,10 +68,11 @@ class DataGridController<T extends DataGridRow> {
   Stream<GroupState> get group$ => _stateSubject.stream.map((s) => s.group).distinct();
 
   void _initialize(List<DataGridColumn> columns, List<T> rows) {
-    _dataIndexer.setData(rows);
-    final displayIndices = List<int>.generate(rows.length, (i) => i);
+    final rowsById = {for (var row in rows) row.id: row};
+    final displayOrder = rows.map((r) => r.id).toList();
+    _dataIndexer.setData(rowsById);
 
-    _stateSubject.add(state.copyWith(columns: columns, rows: rows, displayIndices: displayIndices));
+    _stateSubject.add(state.copyWith(columns: columns, rowsById: rowsById, displayOrder: displayOrder));
   }
 
   void _setupEventHandlers() {
@@ -166,6 +167,30 @@ class DataGridController<T extends DataGridRow> {
 
   void setRows(List<T> rows) {
     addEvent(LoadDataEvent(rows: rows));
+  }
+
+  void insertRow(T row, {int? position}) {
+    addEvent(InsertRowEvent(row: row, position: position));
+  }
+
+  void insertRows(List<T> rows) {
+    addEvent(InsertRowsEvent(rows: rows));
+  }
+
+  void deleteRow(double rowId) {
+    addEvent(DeleteRowEvent(rowId: rowId));
+  }
+
+  void deleteRows(Set<double> rowIds) {
+    addEvent(DeleteRowsEvent(rowIds: rowIds));
+  }
+
+  void updateRow(double rowId, T newRow) {
+    addEvent(UpdateRowEvent(rowId: rowId, newRow: newRow));
+  }
+
+  void updateCell(double rowId, int columnId, dynamic value) {
+    addEvent(UpdateCellEvent(rowId: rowId, columnId: columnId, value: value));
   }
 
   void dispose() {

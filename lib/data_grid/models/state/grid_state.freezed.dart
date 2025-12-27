@@ -18,8 +18,8 @@ final _privateConstructorUsedError = UnsupportedError(
 /// @nodoc
 mixin _$DataGridState<T extends DataGridRow> {
   List<DataGridColumn> get columns => throw _privateConstructorUsedError;
-  List<T> get rows => throw _privateConstructorUsedError;
-  List<int> get displayIndices => throw _privateConstructorUsedError;
+  Map<double, T> get rowsById => throw _privateConstructorUsedError;
+  List<double> get displayOrder => throw _privateConstructorUsedError;
   ViewportState get viewport => throw _privateConstructorUsedError;
   SelectionState get selection => throw _privateConstructorUsedError;
   SortState get sort => throw _privateConstructorUsedError;
@@ -44,8 +44,8 @@ abstract class $DataGridStateCopyWith<T extends DataGridRow, $Res> {
   @useResult
   $Res call({
     List<DataGridColumn> columns,
-    List<T> rows,
-    List<int> displayIndices,
+    Map<double, T> rowsById,
+    List<double> displayOrder,
     ViewportState viewport,
     SelectionState selection,
     SortState sort,
@@ -82,8 +82,8 @@ class _$DataGridStateCopyWithImpl<
   @override
   $Res call({
     Object? columns = null,
-    Object? rows = null,
-    Object? displayIndices = null,
+    Object? rowsById = null,
+    Object? displayOrder = null,
     Object? viewport = null,
     Object? selection = null,
     Object? sort = null,
@@ -98,14 +98,14 @@ class _$DataGridStateCopyWithImpl<
                 ? _value.columns
                 : columns // ignore: cast_nullable_to_non_nullable
                       as List<DataGridColumn>,
-            rows: null == rows
-                ? _value.rows
-                : rows // ignore: cast_nullable_to_non_nullable
-                      as List<T>,
-            displayIndices: null == displayIndices
-                ? _value.displayIndices
-                : displayIndices // ignore: cast_nullable_to_non_nullable
-                      as List<int>,
+            rowsById: null == rowsById
+                ? _value.rowsById
+                : rowsById // ignore: cast_nullable_to_non_nullable
+                      as Map<double, T>,
+            displayOrder: null == displayOrder
+                ? _value.displayOrder
+                : displayOrder // ignore: cast_nullable_to_non_nullable
+                      as List<double>,
             viewport: null == viewport
                 ? _value.viewport
                 : viewport // ignore: cast_nullable_to_non_nullable
@@ -201,8 +201,8 @@ abstract class _$$DataGridStateImplCopyWith<T extends DataGridRow, $Res>
   @useResult
   $Res call({
     List<DataGridColumn> columns,
-    List<T> rows,
-    List<int> displayIndices,
+    Map<double, T> rowsById,
+    List<double> displayOrder,
     ViewportState viewport,
     SelectionState selection,
     SortState sort,
@@ -239,8 +239,8 @@ class __$$DataGridStateImplCopyWithImpl<T extends DataGridRow, $Res>
   @override
   $Res call({
     Object? columns = null,
-    Object? rows = null,
-    Object? displayIndices = null,
+    Object? rowsById = null,
+    Object? displayOrder = null,
     Object? viewport = null,
     Object? selection = null,
     Object? sort = null,
@@ -255,14 +255,14 @@ class __$$DataGridStateImplCopyWithImpl<T extends DataGridRow, $Res>
             ? _value._columns
             : columns // ignore: cast_nullable_to_non_nullable
                   as List<DataGridColumn>,
-        rows: null == rows
-            ? _value._rows
-            : rows // ignore: cast_nullable_to_non_nullable
-                  as List<T>,
-        displayIndices: null == displayIndices
-            ? _value._displayIndices
-            : displayIndices // ignore: cast_nullable_to_non_nullable
-                  as List<int>,
+        rowsById: null == rowsById
+            ? _value._rowsById
+            : rowsById // ignore: cast_nullable_to_non_nullable
+                  as Map<double, T>,
+        displayOrder: null == displayOrder
+            ? _value._displayOrder
+            : displayOrder // ignore: cast_nullable_to_non_nullable
+                  as List<double>,
         viewport: null == viewport
             ? _value.viewport
             : viewport // ignore: cast_nullable_to_non_nullable
@@ -301,8 +301,8 @@ class __$$DataGridStateImplCopyWithImpl<T extends DataGridRow, $Res>
 class _$DataGridStateImpl<T extends DataGridRow> extends _DataGridState<T> {
   const _$DataGridStateImpl({
     required final List<DataGridColumn> columns,
-    required final List<T> rows,
-    required final List<int> displayIndices,
+    required final Map<double, T> rowsById,
+    required final List<double> displayOrder,
     required this.viewport,
     required this.selection,
     required this.sort,
@@ -311,8 +311,8 @@ class _$DataGridStateImpl<T extends DataGridRow> extends _DataGridState<T> {
     this.isLoading = false,
     this.loadingMessage,
   }) : _columns = columns,
-       _rows = rows,
-       _displayIndices = displayIndices,
+       _rowsById = rowsById,
+       _displayOrder = displayOrder,
        super._();
 
   final List<DataGridColumn> _columns;
@@ -323,20 +323,20 @@ class _$DataGridStateImpl<T extends DataGridRow> extends _DataGridState<T> {
     return EqualUnmodifiableListView(_columns);
   }
 
-  final List<T> _rows;
+  final Map<double, T> _rowsById;
   @override
-  List<T> get rows {
-    if (_rows is EqualUnmodifiableListView) return _rows;
+  Map<double, T> get rowsById {
+    if (_rowsById is EqualUnmodifiableMapView) return _rowsById;
     // ignore: implicit_dynamic_type
-    return EqualUnmodifiableListView(_rows);
+    return EqualUnmodifiableMapView(_rowsById);
   }
 
-  final List<int> _displayIndices;
+  final List<double> _displayOrder;
   @override
-  List<int> get displayIndices {
-    if (_displayIndices is EqualUnmodifiableListView) return _displayIndices;
+  List<double> get displayOrder {
+    if (_displayOrder is EqualUnmodifiableListView) return _displayOrder;
     // ignore: implicit_dynamic_type
-    return EqualUnmodifiableListView(_displayIndices);
+    return EqualUnmodifiableListView(_displayOrder);
   }
 
   @override
@@ -357,7 +357,7 @@ class _$DataGridStateImpl<T extends DataGridRow> extends _DataGridState<T> {
 
   @override
   String toString() {
-    return 'DataGridState<$T>(columns: $columns, rows: $rows, displayIndices: $displayIndices, viewport: $viewport, selection: $selection, sort: $sort, filter: $filter, group: $group, isLoading: $isLoading, loadingMessage: $loadingMessage)';
+    return 'DataGridState<$T>(columns: $columns, rowsById: $rowsById, displayOrder: $displayOrder, viewport: $viewport, selection: $selection, sort: $sort, filter: $filter, group: $group, isLoading: $isLoading, loadingMessage: $loadingMessage)';
   }
 
   @override
@@ -366,10 +366,10 @@ class _$DataGridStateImpl<T extends DataGridRow> extends _DataGridState<T> {
         (other.runtimeType == runtimeType &&
             other is _$DataGridStateImpl<T> &&
             const DeepCollectionEquality().equals(other._columns, _columns) &&
-            const DeepCollectionEquality().equals(other._rows, _rows) &&
+            const DeepCollectionEquality().equals(other._rowsById, _rowsById) &&
             const DeepCollectionEquality().equals(
-              other._displayIndices,
-              _displayIndices,
+              other._displayOrder,
+              _displayOrder,
             ) &&
             (identical(other.viewport, viewport) ||
                 other.viewport == viewport) &&
@@ -388,8 +388,8 @@ class _$DataGridStateImpl<T extends DataGridRow> extends _DataGridState<T> {
   int get hashCode => Object.hash(
     runtimeType,
     const DeepCollectionEquality().hash(_columns),
-    const DeepCollectionEquality().hash(_rows),
-    const DeepCollectionEquality().hash(_displayIndices),
+    const DeepCollectionEquality().hash(_rowsById),
+    const DeepCollectionEquality().hash(_displayOrder),
     viewport,
     selection,
     sort,
@@ -414,8 +414,8 @@ class _$DataGridStateImpl<T extends DataGridRow> extends _DataGridState<T> {
 abstract class _DataGridState<T extends DataGridRow> extends DataGridState<T> {
   const factory _DataGridState({
     required final List<DataGridColumn> columns,
-    required final List<T> rows,
-    required final List<int> displayIndices,
+    required final Map<double, T> rowsById,
+    required final List<double> displayOrder,
     required final ViewportState viewport,
     required final SelectionState selection,
     required final SortState sort,
@@ -429,9 +429,9 @@ abstract class _DataGridState<T extends DataGridRow> extends DataGridState<T> {
   @override
   List<DataGridColumn> get columns;
   @override
-  List<T> get rows;
+  Map<double, T> get rowsById;
   @override
-  List<int> get displayIndices;
+  List<double> get displayOrder;
   @override
   ViewportState get viewport;
   @override
