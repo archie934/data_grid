@@ -1,15 +1,21 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:data_grid/data_grid/models/data/column.dart';
 import 'package:data_grid/data_grid/models/data/row.dart';
 import 'package:data_grid/data_grid/models/state/grid_state.dart';
 import 'package:data_grid/data_grid/models/events/grid_events.dart';
+import 'package:data_grid/data_grid/models/events/event_context.dart';
 import 'package:data_grid/data_grid/utils/data_indexer.dart';
-import 'package:data_grid/data_grid/utils/viewport_calculator.dart';
-import 'package:data_grid/data_grid/utils/isolate_sort.dart';
+import 'package:data_grid/data_grid/controller/delegates/viewport_delegate.dart';
+import 'package:data_grid/data_grid/controller/delegates/default_viewport_delegate.dart';
+import 'package:data_grid/data_grid/controller/delegates/sort_delegate.dart';
+import 'package:data_grid/data_grid/controller/delegates/default_sort_delegate.dart';
+import 'package:data_grid/data_grid/controller/interceptors/data_grid_interceptor.dart';
 
 export 'package:data_grid/data_grid/utils/data_indexer.dart' show CellValueAccessor;
+export 'package:data_grid/data_grid/controller/interceptors/data_grid_interceptor.dart';
+export 'package:data_grid/data_grid/controller/delegates/viewport_delegate.dart';
+export 'package:data_grid/data_grid/controller/delegates/sort_delegate.dart';
 
 class DataGridController<T extends DataGridRow> {
   final BehaviorSubject<DataGridState<T>> _stateSubject;
@@ -17,22 +23,30 @@ class DataGridController<T extends DataGridRow> {
   final StreamController<void> _disposeController = StreamController.broadcast();
 
   final DataIndexer<T> _dataIndexer;
-  final ViewportCalculator _viewportCalculator;
 
-  Timer? _sortDebounceTimer;
-  final Duration sortDebounce;
-  final bool useIsolateSorting;
+  late final ViewportDelegate<T> _viewportDelegate;
+  late final SortDelegate<T> _sortDelegate;
+
+  final List<DataGridInterceptor<T>> _interceptors = [];
 
   DataGridController({
     List<DataGridColumn>? initialColumns,
     List<T>? initialRows,
     double rowHeight = 48.0,
     CellValueAccessor<T>? cellValueAccessor,
-    this.sortDebounce = const Duration(milliseconds: 300),
-    this.useIsolateSorting = true,
+    Duration sortDebounce = const Duration(milliseconds: 300),
+    ViewportDelegate<T>? viewportDelegate,
+    SortDelegate<T>? sortDelegate,
+    List<DataGridInterceptor<T>>? interceptors,
   }) : _dataIndexer = DataIndexer<T>(cellValueAccessor: cellValueAccessor),
-       _viewportCalculator = ViewportCalculator(rowHeight: rowHeight),
        _stateSubject = BehaviorSubject<DataGridState<T>>.seeded(DataGridState<T>.initial()) {
+    _viewportDelegate = viewportDelegate ?? DefaultViewportDelegate<T>(rowHeight: rowHeight);
+    _sortDelegate = sortDelegate ?? DefaultSortDelegate<T>(dataIndexer: _dataIndexer, sortDebounce: sortDebounce);
+
+    if (interceptors != null) {
+      _interceptors.addAll(interceptors);
+    }
+
     _initialize(initialColumns ?? [], initialRows ?? []);
     _setupEventHandlers();
   }
@@ -58,321 +72,89 @@ class DataGridController<T extends DataGridRow> {
   }
 
   void _handleEvent(DataGridEvent event) {
-    switch (event) {
-      case ScrollEvent():
-        _handleScroll(event);
-      case ViewportResizeEvent():
-        _handleViewportResize(event);
-      case ColumnResizeEvent():
-        _handleColumnResize(event);
-      case ColumnReorderEvent():
-        _handleColumnReorder(event);
-      case SortEvent():
-        _handleSort(event);
-      case FilterEvent():
-        _handleFilter(event);
-      case ClearFilterEvent():
-        _handleClearFilter(event);
-      case SelectRowEvent():
-        _handleSelectRow(event);
-      case SelectRowsRangeEvent():
-        _handleSelectRowsRange(event);
-      case ClearSelectionEvent():
-        _handleClearSelection();
-      case GroupByColumnEvent():
-        _handleGroupByColumn(event);
-      case UngroupColumnEvent():
-        _handleUngroupColumn(event);
-      case ToggleGroupExpansionEvent():
-        _handleToggleGroupExpansion(event);
-      case LoadDataEvent<T>():
-        _handleLoadData(event);
-      case RefreshDataEvent():
-        _handleRefreshData();
-      case SetLoadingEvent():
-        _handleSetLoading(event);
+    try {
+      final interceptedEvent = _runBeforeEventInterceptors(event);
+      if (interceptedEvent == null) return;
+
+      final shouldShowLoading = interceptedEvent.shouldShowLoading(state);
+      if (shouldShowLoading) {
+        _updateStateWithInterceptors(
+          state.copyWith(isLoading: true, loadingMessage: interceptedEvent.loadingMessage()),
+          null,
+        );
+      }
+
+      final newState = interceptedEvent.apply(_createContext());
+      if (newState != null) {
+        _updateStateWithInterceptors(newState, interceptedEvent);
+      }
+
+      if (shouldShowLoading) {
+        _updateStateWithInterceptors(state.copyWith(isLoading: false), null);
+      }
+    } catch (error, stackTrace) {
+      _runErrorInterceptors(error, stackTrace, event);
     }
+  }
+
+  EventContext<T> _createContext() {
+    return EventContext<T>(
+      state: state,
+      viewportDelegate: _viewportDelegate,
+      sortDelegate: _sortDelegate,
+      dataIndexer: _dataIndexer,
+      dispatchEvent: addEvent,
+    );
   }
 
   void addEvent(DataGridEvent event) => _eventSubject.add(event);
 
-  void _handleScroll(ScrollEvent event) {
-    final visibleRange = _viewportCalculator.calculateVisibleRows(event.offsetY, state.viewport.viewportHeight, state.displayIndices.length);
-
-    final visibleColumnRange = _viewportCalculator.calculateVisibleColumns(event.offsetX, state.columns.map((c) => c.width).toList(), state.viewport.viewportWidth);
-
-    _stateSubject.add(
-      state.copyWith(
-        viewport: state.viewport.copyWith(
-          scrollOffsetX: event.offsetX,
-          scrollOffsetY: event.offsetY,
-          firstVisibleRow: visibleRange.start,
-          lastVisibleRow: visibleRange.end,
-          firstVisibleColumn: visibleColumnRange.start,
-          lastVisibleColumn: visibleColumnRange.end,
-        ),
-      ),
-    );
+  void addInterceptor(DataGridInterceptor<T> interceptor) {
+    _interceptors.add(interceptor);
   }
 
-  void _handleViewportResize(ViewportResizeEvent event) {
-    final visibleRange = _viewportCalculator.calculateVisibleRows(state.viewport.scrollOffsetY, event.height, state.displayIndices.length);
-
-    final visibleColumnRange = _viewportCalculator.calculateVisibleColumns(state.viewport.scrollOffsetX, state.columns.map((c) => c.width).toList(), event.width);
-
-    _stateSubject.add(
-      state.copyWith(
-        viewport: state.viewport.copyWith(
-          viewportWidth: event.width,
-          viewportHeight: event.height,
-          firstVisibleRow: visibleRange.start,
-          lastVisibleRow: visibleRange.end,
-          firstVisibleColumn: visibleColumnRange.start,
-          lastVisibleColumn: visibleColumnRange.end,
-        ),
-      ),
-    );
+  void removeInterceptor(DataGridInterceptor<T> interceptor) {
+    _interceptors.remove(interceptor);
   }
 
-  void _handleColumnResize(ColumnResizeEvent event) {
-    final updatedColumns = state.columns.map((col) {
-      if (col.id == event.columnId) {
-        return col.copyWith(width: event.newWidth);
-      }
-      return col;
-    }).toList();
-
-    _stateSubject.add(state.copyWith(columns: updatedColumns));
+  void clearInterceptors() {
+    _interceptors.clear();
   }
 
-  void _handleColumnReorder(ColumnReorderEvent event) {
-    final reorderedColumns = List<DataGridColumn>.from(state.columns);
-    final column = reorderedColumns.removeAt(event.oldIndex);
-    reorderedColumns.insert(event.newIndex, column);
-
-    _stateSubject.add(state.copyWith(columns: reorderedColumns));
+  DataGridEvent? _runBeforeEventInterceptors(DataGridEvent event) {
+    DataGridEvent? currentEvent = event;
+    for (final interceptor in _interceptors) {
+      currentEvent = interceptor.onBeforeEvent(currentEvent!, state);
+      if (currentEvent == null) break;
+    }
+    return currentEvent;
   }
 
-  void _handleSort(SortEvent event) {
-    // Cancel any pending sort operation
-    _sortDebounceTimer?.cancel();
+  void _updateStateWithInterceptors(DataGridState<T> newState, DataGridEvent? event) {
+    final oldState = state;
+    DataGridState<T>? interceptedState = newState;
 
-    // Show loading for large datasets
-    final shouldShowLoading = state.rows.length > 1000;
-    if (shouldShowLoading) {
-      addEvent(SetLoadingEvent(isLoading: true, message: 'Sorting data...'));
+    for (final interceptor in _interceptors) {
+      interceptedState = interceptor.onBeforeStateUpdate(interceptedState!, oldState, event);
+      if (interceptedState == null) return;
     }
 
-    // Debounce the actual sort operation
-    _sortDebounceTimer = Timer(sortDebounce, () {
-      _performSort(event, shouldShowLoading);
-    });
-  }
+    final finalState = interceptedState!;
+    _stateSubject.add(finalState);
 
-  Future<void> _performSort(SortEvent event, bool shouldShowLoading) async {
-    List<SortColumn> newSortColumns;
-
-    if (event.multiSort) {
-      newSortColumns = List.from(state.sort.sortColumns);
-      final existingIndex = newSortColumns.indexWhere((s) => s.columnId == event.columnId);
-
-      if (existingIndex >= 0) {
-        if (event.direction == null) {
-          newSortColumns.removeAt(existingIndex);
-        } else {
-          newSortColumns[existingIndex] = newSortColumns[existingIndex].copyWith(direction: event.direction!);
-        }
-      } else if (event.direction != null) {
-        newSortColumns.add(SortColumn(columnId: event.columnId, direction: event.direction!, priority: newSortColumns.length));
-      }
-    } else {
-      if (event.direction == null) {
-        newSortColumns = [];
-      } else {
-        newSortColumns = [SortColumn(columnId: event.columnId, direction: event.direction!, priority: 0)];
-      }
-    }
-
-    List<int> sortedIndices;
-
-    // Use isolate sorting for large datasets if enabled
-    if (useIsolateSorting && state.rows.length > 1000 && newSortColumns.isNotEmpty) {
-      // Extract cell values for sort columns
-      final columnValues = <List<dynamic>>[];
-      for (final sortCol in newSortColumns) {
-        final column = state.columns.firstWhere((c) => c.id == sortCol.columnId);
-        final values = <dynamic>[];
-        for (final row in state.rows) {
-          values.add(_dataIndexer.getCellValue(row, column));
-        }
-        columnValues.add(values);
-      }
-
-      // Perform sort in isolate
-      final params = SortParameters(columnValues: columnValues, sortColumns: newSortColumns, rowCount: state.rows.length);
-
-      sortedIndices = await compute(performSortInIsolate, params);
-    } else {
-      // Use regular sorting for small datasets or when isolate is disabled
-      sortedIndices = _dataIndexer.sort(state.rows, newSortColumns, state.columns);
-    }
-
-    _stateSubject.add(
-      state.copyWith(
-        sort: state.sort.copyWith(sortColumns: newSortColumns),
-        displayIndices: sortedIndices,
-      ),
-    );
-
-    if (shouldShowLoading) {
-      addEvent(SetLoadingEvent(isLoading: false));
+    for (final interceptor in _interceptors) {
+      interceptor.onAfterStateUpdate(finalState, oldState, event);
     }
   }
 
-  void _handleFilter(FilterEvent event) {
-    // Show loading for large datasets
-    final shouldShowLoading = state.rows.length > 1000;
-
-    if (shouldShowLoading) {
-      addEvent(SetLoadingEvent(isLoading: true, message: 'Filtering data...'));
+  void _runErrorInterceptors(Object error, StackTrace stackTrace, DataGridEvent? event) {
+    for (final interceptor in _interceptors) {
+      interceptor.onError(error, stackTrace, event);
     }
-
-    final newFilters = Map<int, ColumnFilter>.from(state.filter.columnFilters);
-    newFilters[event.columnId] = ColumnFilter(columnId: event.columnId, operator: event.operator, value: event.value);
-
-    final filteredIndices = _dataIndexer.filter(state.rows, newFilters.values.toList(), state.columns);
-
-    final sortedIndices = state.sort.hasSort ? _dataIndexer.sortIndices(state.rows, filteredIndices, state.sort.sortColumns, state.columns) : filteredIndices;
-
-    _stateSubject.add(
-      state.copyWith(
-        filter: state.filter.copyWith(columnFilters: newFilters),
-        displayIndices: sortedIndices,
-      ),
-    );
-
-    if (shouldShowLoading) {
-      addEvent(SetLoadingEvent(isLoading: false));
-    }
-  }
-
-  void _handleClearFilter(ClearFilterEvent event) {
-    // Show loading for large datasets
-    final shouldShowLoading = state.rows.length > 1000;
-
-    if (shouldShowLoading) {
-      addEvent(SetLoadingEvent(isLoading: true, message: 'Clearing filters...'));
-    }
-
-    final newFilters = Map<int, ColumnFilter>.from(state.filter.columnFilters);
-
-    if (event.columnId != null) {
-      newFilters.remove(event.columnId);
-    } else {
-      newFilters.clear();
-    }
-
-    final filteredIndices = newFilters.isEmpty ? List<int>.generate(state.rows.length, (i) => i) : _dataIndexer.filter(state.rows, newFilters.values.toList(), state.columns);
-
-    final sortedIndices = state.sort.hasSort ? _dataIndexer.sortIndices(state.rows, filteredIndices, state.sort.sortColumns, state.columns) : filteredIndices;
-
-    _stateSubject.add(
-      state.copyWith(
-        filter: state.filter.copyWith(columnFilters: newFilters),
-        displayIndices: sortedIndices,
-      ),
-    );
-
-    if (shouldShowLoading) {
-      addEvent(SetLoadingEvent(isLoading: false));
-    }
-  }
-
-  void _handleSelectRow(SelectRowEvent event) {
-    final Set<double> newSelection;
-    if (event.multiSelect) {
-      newSelection = Set<double>.from(state.selection.selectedRowIds);
-      if (newSelection.contains(event.rowId)) {
-        newSelection.remove(event.rowId);
-      } else {
-        newSelection.add(event.rowId);
-      }
-    } else {
-      newSelection = {event.rowId};
-    }
-
-    _stateSubject.add(
-      state.copyWith(
-        selection: state.selection.copyWith(selectedRowIds: newSelection, focusedRowId: event.rowId),
-      ),
-    );
-  }
-
-  void _handleSelectRowsRange(SelectRowsRangeEvent event) {
-    final startIndex = state.rows.indexWhere((r) => r.id == event.startRowId);
-    final endIndex = state.rows.indexWhere((r) => r.id == event.endRowId);
-
-    if (startIndex < 0 || endIndex < 0) return;
-
-    final minIndex = startIndex < endIndex ? startIndex : endIndex;
-    final maxIndex = startIndex > endIndex ? startIndex : endIndex;
-
-    final selectedIds = <double>{};
-    for (var i = minIndex; i <= maxIndex; i++) {
-      selectedIds.add(state.rows[i].id);
-    }
-
-    _stateSubject.add(state.copyWith(selection: state.selection.copyWith(selectedRowIds: selectedIds)));
-  }
-
-  void _handleClearSelection() {
-    _stateSubject.add(state.copyWith(selection: SelectionState.initial()));
-  }
-
-  void _handleGroupByColumn(GroupByColumnEvent event) {
-    final newGroupedColumns = List<int>.from(state.group.groupedColumnIds);
-    if (!newGroupedColumns.contains(event.columnId)) {
-      newGroupedColumns.add(event.columnId);
-    }
-
-    _stateSubject.add(state.copyWith(group: state.group.copyWith(groupedColumnIds: newGroupedColumns)));
-  }
-
-  void _handleUngroupColumn(UngroupColumnEvent event) {
-    final newGroupedColumns = List<int>.from(state.group.groupedColumnIds)..remove(event.columnId);
-
-    _stateSubject.add(state.copyWith(group: state.group.copyWith(groupedColumnIds: newGroupedColumns)));
-  }
-
-  void _handleToggleGroupExpansion(ToggleGroupExpansionEvent event) {
-    final newExpandedGroups = Map<String, bool>.from(state.group.expandedGroups);
-    newExpandedGroups[event.groupKey] = !(newExpandedGroups[event.groupKey] ?? true);
-
-    _stateSubject.add(state.copyWith(group: state.group.copyWith(expandedGroups: newExpandedGroups)));
-  }
-
-  void _handleLoadData(LoadDataEvent<T> event) {
-    final newRows = event.append ? [...state.rows, ...event.rows] : event.rows;
-
-    _dataIndexer.setData(newRows);
-
-    final filteredIndices = state.filter.hasFilters ? _dataIndexer.filter(newRows, state.filter.columnFilters.values.toList(), state.columns) : List<int>.generate(newRows.length, (i) => i);
-
-    final sortedIndices = state.sort.hasSort ? _dataIndexer.sortIndices(newRows, filteredIndices, state.sort.sortColumns, state.columns) : filteredIndices;
-
-    _stateSubject.add(state.copyWith(rows: newRows, displayIndices: sortedIndices, isLoading: false));
-  }
-
-  void _handleRefreshData() {
-    _stateSubject.add(state.copyWith(isLoading: true));
-  }
-
-  void _handleSetLoading(SetLoadingEvent event) {
-    _stateSubject.add(state.copyWith(isLoading: event.isLoading, loadingMessage: event.message));
   }
 
   void setColumns(List<DataGridColumn> columns) {
-    _stateSubject.add(state.copyWith(columns: columns));
+    _updateStateWithInterceptors(state.copyWith(columns: columns), null);
   }
 
   void setRows(List<T> rows) {
@@ -380,7 +162,8 @@ class DataGridController<T extends DataGridRow> {
   }
 
   void dispose() {
-    _sortDebounceTimer?.cancel();
+    _viewportDelegate.dispose();
+    _sortDelegate.dispose();
     _disposeController.add(null);
     _disposeController.close();
     _eventSubject.close();

@@ -4,7 +4,7 @@ import 'package:data_grid/data_grid/models/data/column.dart';
 class HeaderLayoutDelegate extends MultiChildLayoutDelegate {
   final List<DataGridColumn> columns;
 
-  HeaderLayoutDelegate(this.columns);
+  HeaderLayoutDelegate({required this.columns});
 
   @override
   void performLayout(Size size) {
@@ -16,6 +16,7 @@ class HeaderLayoutDelegate extends MultiChildLayoutDelegate {
       if (hasChild(column.id)) {
         layoutChild(column.id, BoxConstraints.tightFor(width: column.width, height: size.height));
 
+        // Position columns sequentially - parent handles scrolling
         positionChild(column.id, Offset(offsetX, 0));
         offsetX += column.width;
       }

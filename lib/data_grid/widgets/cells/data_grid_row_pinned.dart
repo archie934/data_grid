@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:data_grid/data_grid/controller/data_grid_controller.dart';
+import 'package:data_grid/data_grid/controller/grid_scroll_controller.dart';
 import 'package:data_grid/data_grid/models/data/row.dart';
 import 'package:data_grid/data_grid/models/data/column.dart';
 import 'package:data_grid/data_grid/models/events/grid_events.dart';
@@ -7,7 +8,7 @@ import 'package:data_grid/data_grid/models/state/grid_state.dart';
 import 'package:data_grid/data_grid/delegates/body_layout_delegate.dart';
 
 /// A data grid row widget that supports pinned (frozen) columns.
-/// 
+///
 /// This widget renders a row with both pinned and unpinned columns:
 /// - Pinned columns remain fixed on the left side
 /// - Unpinned columns scroll horizontally
@@ -21,6 +22,7 @@ class DataGridRowWithPinnedCells<T extends DataGridRow> extends StatelessWidget 
   final double unpinnedWidth;
   final double horizontalOffset;
   final DataGridController<T> controller;
+  final GridScrollController scrollController;
   final double rowHeight;
   final Widget Function(T row, int columnId)? cellBuilder;
 
@@ -34,6 +36,7 @@ class DataGridRowWithPinnedCells<T extends DataGridRow> extends StatelessWidget 
     required this.unpinnedWidth,
     required this.horizontalOffset,
     required this.controller,
+    required this.scrollController,
     required this.rowHeight,
     this.cellBuilder,
   });
@@ -73,7 +76,7 @@ class DataGridRowWithPinnedCells<T extends DataGridRow> extends StatelessWidget 
                         width: unpinnedWidth,
                         height: rowHeight,
                         child: CustomMultiChildLayout(
-                          delegate: BodyLayoutDelegate(unpinnedColumns),
+                          delegate: BodyLayoutDelegate(columns: unpinnedColumns),
                           children: [
                             for (var column in unpinnedColumns) LayoutId(id: column.id, child: _buildCell(column)),
                           ],
@@ -100,7 +103,7 @@ class DataGridRowWithPinnedCells<T extends DataGridRow> extends StatelessWidget 
                       ],
                     ),
                     child: CustomMultiChildLayout(
-                      delegate: BodyLayoutDelegate(pinnedColumns),
+                      delegate: BodyLayoutDelegate(columns: pinnedColumns),
                       children: [for (var column in pinnedColumns) LayoutId(id: column.id, child: _buildCell(column))],
                     ),
                   ),
@@ -125,4 +128,3 @@ class DataGridRowWithPinnedCells<T extends DataGridRow> extends StatelessWidget 
     );
   }
 }
-
