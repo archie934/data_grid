@@ -85,14 +85,17 @@ class _FilterTextFieldState extends State<_FilterTextField> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
     final hasFilter = widget.currentFilter != null;
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colorScheme.surface,
         border: Border(
-          right: BorderSide(color: Colors.grey[400]!),
-          bottom: BorderSide(color: Colors.grey[400]!),
+          right: BorderSide(color: colorScheme.outlineVariant),
+          bottom: BorderSide(color: colorScheme.outlineVariant),
         ),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -101,36 +104,36 @@ class _FilterTextFieldState extends State<_FilterTextField> {
         onChanged: _onTextChanged,
         decoration: InputDecoration(
           hintText: 'Filter ${widget.column.title}...',
-          hintStyle: TextStyle(color: Colors.grey[400], fontSize: 12),
+          hintStyle: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
           isDense: true,
           contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(4),
-            borderSide: BorderSide(color: Colors.grey[300]!),
+            borderSide: BorderSide(color: colorScheme.outline),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(4),
-            borderSide: BorderSide(color: Colors.grey[300]!),
+            borderSide: BorderSide(color: colorScheme.outline),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(4),
-            borderSide: const BorderSide(color: Colors.blue, width: 2),
+            borderSide: BorderSide(color: colorScheme.primary, width: 2),
           ),
-          suffixIcon: hasFilter
-              ? IconButton(
-                  icon: const Icon(Icons.clear, size: 16),
-                  onPressed: () {
+          suffixIcon: IconButton(
+            icon: Icon(Icons.clear, size: 16, color: hasFilter ? colorScheme.onSurfaceVariant : Colors.transparent),
+            onPressed: hasFilter
+                ? () {
                     _controller.clear();
                     widget.onClear();
-                  },
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                  iconSize: 16,
-                )
-              : null,
+                  }
+                : null,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+            iconSize: 16,
+          ),
           suffixIconConstraints: const BoxConstraints(minWidth: 32, minHeight: 32),
         ),
-        style: const TextStyle(fontSize: 12),
+        style: textTheme.bodySmall,
       ),
     );
   }
