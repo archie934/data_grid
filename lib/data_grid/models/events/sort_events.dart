@@ -33,6 +33,6 @@ class SortCompleteEvent<T extends DataGridRow> extends DataGridEvent {
 
   @override
   DataGridState<T>? apply<T extends DataGridRow>(EventContext<T> context) {
-    return newState as DataGridState<T>;
+    return (newState as DataGridState<T>).copyWith(isLoading: false);
   }
 }

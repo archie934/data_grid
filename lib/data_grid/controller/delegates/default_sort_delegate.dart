@@ -1,20 +1,27 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:data_grid/data_grid/models/data/row.dart';
 import 'package:data_grid/data_grid/models/state/grid_state.dart';
 import 'package:data_grid/data_grid/models/events/grid_events.dart';
 import 'package:data_grid/data_grid/utils/data_indexer.dart';
+import 'package:data_grid/data_grid/utils/isolate_sort.dart';
 import 'package:data_grid/data_grid/controller/delegates/sort_delegate.dart';
 
-/// Default sort delegate with debouncing support.
+/// Default sort delegate with debouncing and isolate-based sorting for large datasets.
 class DefaultSortDelegate<T extends DataGridRow> extends SortDelegate<T> {
   final DataIndexer<T> _dataIndexer;
   final Duration _debounce;
+  final int _isolateThreshold;
 
   Timer? _debounceTimer;
 
-  DefaultSortDelegate({required DataIndexer<T> dataIndexer, required Duration sortDebounce})
-    : _dataIndexer = dataIndexer,
-      _debounce = sortDebounce;
+  DefaultSortDelegate({
+    required DataIndexer<T> dataIndexer,
+    required Duration sortDebounce,
+    int isolateThreshold = 10000,
+  }) : _dataIndexer = dataIndexer,
+       _debounce = sortDebounce,
+       _isolateThreshold = isolateThreshold;
 
   @override
   Future<SortResult?> handleSort(
@@ -47,18 +54,40 @@ class DefaultSortDelegate<T extends DataGridRow> extends SortDelegate<T> {
       }
 
       try {
-        final sortedIndices = _dataIndexer.sortIndices(
-          currentState.rows,
-          currentState.filter.hasFilters
-              ? _dataIndexer.filter(
-                  currentState.rows,
-                  currentState.filter.columnFilters.values.toList(),
-                  currentState.columns,
-                )
-              : List<int>.generate(currentState.rows.length, (i) => i),
-          updatedSortColumns,
-          currentState.columns,
-        );
+        final indicesToSort = currentState.filter.hasFilters
+            ? _dataIndexer.filter(
+                currentState.rows,
+                currentState.filter.columnFilters.values.toList(),
+                currentState.columns,
+              )
+            : List<int>.generate(currentState.rows.length, (i) => i);
+
+        final List<int> sortedIndices;
+
+        if (currentState.rows.length > _isolateThreshold) {
+          final columnValues = <List<dynamic>>[];
+          for (final sortCol in updatedSortColumns) {
+            final column = currentState.columns.firstWhere((c) => c.id == sortCol.columnId);
+            final values = currentState.rows.map((row) => _dataIndexer.getCellValue(row, column)).toList();
+            columnValues.add(values);
+          }
+
+          final params = SortParameters(
+            columnValues: columnValues,
+            sortColumns: updatedSortColumns,
+            rowCount: indicesToSort.length,
+          );
+
+          final isolateResult = await compute(performSortInIsolate, params);
+          sortedIndices = isolateResult.map((idx) => indicesToSort[idx]).toList();
+        } else {
+          sortedIndices = _dataIndexer.sortIndices(
+            currentState.rows,
+            indicesToSort,
+            updatedSortColumns,
+            currentState.columns,
+          );
+        }
 
         final result = SortResult(sortState: updatedSort, displayIndices: sortedIndices);
         onComplete(result);

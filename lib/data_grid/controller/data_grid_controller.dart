@@ -35,13 +35,20 @@ class DataGridController<T extends DataGridRow> {
     double rowHeight = 48.0,
     CellValueAccessor<T>? cellValueAccessor,
     Duration sortDebounce = const Duration(milliseconds: 300),
+    int sortIsolateThreshold = 10000,
     ViewportDelegate<T>? viewportDelegate,
     SortDelegate<T>? sortDelegate,
     List<DataGridInterceptor<T>>? interceptors,
   }) : _dataIndexer = DataIndexer<T>(cellValueAccessor: cellValueAccessor),
        _stateSubject = BehaviorSubject<DataGridState<T>>.seeded(DataGridState<T>.initial()) {
     _viewportDelegate = viewportDelegate ?? DefaultViewportDelegate<T>(rowHeight: rowHeight);
-    _sortDelegate = sortDelegate ?? DefaultSortDelegate<T>(dataIndexer: _dataIndexer, sortDebounce: sortDebounce);
+    _sortDelegate =
+        sortDelegate ??
+        DefaultSortDelegate<T>(
+          dataIndexer: _dataIndexer,
+          sortDebounce: sortDebounce,
+          isolateThreshold: sortIsolateThreshold,
+        );
 
     if (interceptors != null) {
       _interceptors.addAll(interceptors);
@@ -87,10 +94,10 @@ class DataGridController<T extends DataGridRow> {
       final newState = interceptedEvent.apply(_createContext());
       if (newState != null) {
         _updateStateWithInterceptors(newState, interceptedEvent);
-      }
 
-      if (shouldShowLoading) {
-        _updateStateWithInterceptors(state.copyWith(isLoading: false), null);
+        if (shouldShowLoading) {
+          _updateStateWithInterceptors(state.copyWith(isLoading: false), null);
+        }
       }
     } catch (error, stackTrace) {
       _runErrorInterceptors(error, stackTrace, event);
