@@ -9,6 +9,10 @@ import 'package:data_grid/data_grid/widgets/data_grid_body.dart';
 import 'package:data_grid/data_grid/widgets/overlays/loading_overlay.dart';
 import 'package:data_grid/data_grid/renderers/row_renderer.dart';
 import 'package:data_grid/data_grid/renderers/cell_renderer.dart';
+import 'package:data_grid/data_grid/renderers/default_row_renderer.dart';
+import 'package:data_grid/data_grid/renderers/default_cell_renderer.dart';
+import 'package:data_grid/data_grid/renderers/filter_renderer.dart';
+import 'package:data_grid/data_grid/renderers/default_filter_renderer.dart';
 
 class DataGrid<T extends DataGridRow> extends StatefulWidget {
   final DataGridController<T> controller;
@@ -21,6 +25,9 @@ class DataGrid<T extends DataGridRow> extends StatefulWidget {
 
   /// Custom cell renderer for advanced cell customization.
   final CellRenderer<T>? cellRenderer;
+
+  /// Custom filter renderer for advanced filter widget customization.
+  final FilterRenderer? filterRenderer;
 
   /// Legacy cell builder function (deprecated, use cellRenderer instead).
   final Widget Function(T row, int columnId)? cellBuilder;
@@ -45,6 +52,7 @@ class DataGrid<T extends DataGridRow> extends StatefulWidget {
     this.rowHeight = 48.0,
     this.rowRenderer,
     this.cellRenderer,
+    this.filterRenderer,
     this.cellBuilder,
     this.showLoadingOverlay = true,
     this.loadingOverlayBuilder,
@@ -58,11 +66,17 @@ class DataGrid<T extends DataGridRow> extends StatefulWidget {
 
 class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
   late GridScrollController _scrollController;
+  late RowRenderer<T> _rowRenderer;
+  late CellRenderer<T> _cellRenderer;
+  late FilterRenderer _filterRenderer;
 
   @override
   void initState() {
     super.initState();
     _scrollController = widget.scrollController ?? GridScrollController();
+    _rowRenderer = widget.rowRenderer ?? DefaultRowRenderer<T>();
+    _cellRenderer = widget.cellRenderer ?? DefaultCellRenderer<T>();
+    _filterRenderer = widget.filterRenderer ?? const DefaultFilterRenderer();
 
     _scrollController.scrollEvent$.listen((event) {
       widget.controller.addEvent(event);
@@ -98,13 +112,12 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
               children: [
                 Column(
                   children: [
-                    SizedBox(
-                      height: widget.headerHeight,
-                      child: DataGridHeader<T>(
-                        state: state,
-                        controller: widget.controller,
-                        scrollController: _scrollController,
-                      ),
+                    DataGridHeader<T>(
+                      state: state,
+                      controller: widget.controller,
+                      scrollController: _scrollController,
+                      defaultFilterRenderer: _filterRenderer,
+                      headerHeight: widget.headerHeight,
                     ),
                     Expanded(
                       child: DataGridBody<T>(
@@ -112,8 +125,8 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
                         controller: widget.controller,
                         scrollController: _scrollController,
                         rowHeight: widget.rowHeight,
-                        rowRenderer: widget.rowRenderer,
-                        cellRenderer: widget.cellRenderer,
+                        rowRenderer: _rowRenderer,
+                        cellRenderer: _cellRenderer,
                         cellBuilder: widget.cellBuilder,
                       ),
                     ),

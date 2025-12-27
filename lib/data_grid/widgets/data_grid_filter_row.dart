@@ -1,0 +1,129 @@
+import 'package:flutter/material.dart';
+import 'package:data_grid/data_grid/controller/data_grid_controller.dart';
+import 'package:data_grid/data_grid/controller/grid_scroll_controller.dart';
+import 'package:data_grid/data_grid/models/data/row.dart';
+import 'package:data_grid/data_grid/models/data/column.dart';
+import 'package:data_grid/data_grid/models/state/grid_state.dart';
+import 'package:data_grid/data_grid/models/events/grid_events.dart';
+import 'package:data_grid/data_grid/delegates/header_layout_delegate.dart';
+import 'package:data_grid/data_grid/renderers/filter_renderer.dart';
+
+class DataGridFilterRow<T extends DataGridRow> extends StatelessWidget {
+  final DataGridState<T> state;
+  final DataGridController<T> controller;
+  final GridScrollController scrollController;
+  final FilterRenderer defaultFilterRenderer;
+
+  const DataGridFilterRow({
+    super.key,
+    required this.state,
+    required this.controller,
+    required this.scrollController,
+    required this.defaultFilterRenderer,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final hasFilterableColumns = state.columns.any((col) => col.filterable && col.visible);
+    if (!hasFilterableColumns) {
+      return const SizedBox.shrink();
+    }
+
+    final pinnedColumns = state.columns.where((col) => col.pinned && col.visible).toList();
+    final unpinnedColumns = state.columns.where((col) => !col.pinned && col.visible).toList();
+
+    if (pinnedColumns.isEmpty) {
+      return CustomMultiChildLayout(
+        delegate: HeaderLayoutDelegate(columns: state.columns),
+        children: [for (var column in state.columns) LayoutId(id: column.id, child: _buildFilterCell(column, context))],
+      );
+    }
+
+    final pinnedWidth = pinnedColumns.fold<double>(0.0, (sum, col) => sum + col.width);
+    final unpinnedWidth = unpinnedColumns.fold<double>(0.0, (sum, col) => sum + col.width);
+
+    return Stack(
+      children: [
+        Positioned(
+          left: pinnedWidth,
+          right: 0,
+          top: 0,
+          bottom: 0,
+          child: ClipRect(
+            child: AnimatedBuilder(
+              animation: scrollController.horizontalController,
+              builder: (context, child) {
+                final offset = scrollController.horizontalController.hasClients
+                    ? scrollController.horizontalController.offset
+                    : 0.0;
+                return Transform.translate(
+                  offset: Offset(-offset, 0),
+                  child: SizedBox(
+                    width: unpinnedWidth,
+                    child: CustomMultiChildLayout(
+                      delegate: HeaderLayoutDelegate(columns: unpinnedColumns),
+                      children: [
+                        for (var column in unpinnedColumns)
+                          LayoutId(id: column.id, child: _buildFilterCell(column, context)),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+        Positioned(
+          left: 0,
+          top: 0,
+          bottom: 0,
+          width: pinnedWidth,
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border(right: BorderSide(color: Colors.grey[400]!, width: 2)),
+              boxShadow: [
+                BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 4, offset: const Offset(2, 0)),
+              ],
+            ),
+            child: CustomMultiChildLayout(
+              delegate: HeaderLayoutDelegate(columns: pinnedColumns),
+              children: [
+                for (var column in pinnedColumns) LayoutId(id: column.id, child: _buildFilterCell(column, context)),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFilterCell(DataGridColumn column, BuildContext context) {
+    if (!column.filterable) {
+      return Container(
+        decoration: BoxDecoration(
+          color: Colors.grey[100],
+          border: Border(
+            right: BorderSide(color: Colors.grey[400]!),
+            bottom: BorderSide(color: Colors.grey[400]!),
+          ),
+        ),
+      );
+    }
+
+    final currentFilter = state.filter.columnFilters[column.id];
+    final renderer = column.filterRenderer ?? defaultFilterRenderer;
+
+    return renderer.buildFilter(
+      context,
+      column,
+      currentFilter,
+      (operator, value) {
+        controller.addEvent(FilterEvent(columnId: column.id, operator: operator, value: value));
+      },
+      () {
+        controller.addEvent(ClearFilterEvent(columnId: column.id));
+      },
+    );
+  }
+}

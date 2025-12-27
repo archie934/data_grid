@@ -7,13 +7,58 @@ import 'package:data_grid/data_grid/models/state/grid_state.dart';
 import 'package:data_grid/data_grid/models/events/grid_events.dart';
 import 'package:data_grid/data_grid/delegates/header_layout_delegate.dart';
 import 'package:data_grid/data_grid/widgets/cells/data_grid_header_cell.dart';
+import 'package:data_grid/data_grid/widgets/data_grid_filter_row.dart';
+import 'package:data_grid/data_grid/renderers/filter_renderer.dart';
 
 class DataGridHeader<T extends DataGridRow> extends StatelessWidget {
   final DataGridState<T> state;
   final DataGridController<T> controller;
   final GridScrollController scrollController;
+  final FilterRenderer defaultFilterRenderer;
+  final double headerHeight;
 
-  const DataGridHeader({super.key, required this.state, required this.controller, required this.scrollController});
+  const DataGridHeader({
+    super.key,
+    required this.state,
+    required this.controller,
+    required this.scrollController,
+    required this.defaultFilterRenderer,
+    required this.headerHeight,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final hasFilterableColumns = state.columns.any((col) => col.filterable && col.visible);
+    const filterRowHeight = 40.0;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          height: headerHeight,
+          child: _HeaderRow<T>(state: state, controller: controller, scrollController: scrollController),
+        ),
+        if (hasFilterableColumns)
+          SizedBox(
+            height: filterRowHeight,
+            child: DataGridFilterRow<T>(
+              state: state,
+              controller: controller,
+              scrollController: scrollController,
+              defaultFilterRenderer: defaultFilterRenderer,
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _HeaderRow<T extends DataGridRow> extends StatelessWidget {
+  final DataGridState<T> state;
+  final DataGridController<T> controller;
+  final GridScrollController scrollController;
+
+  const _HeaderRow({required this.state, required this.controller, required this.scrollController});
 
   @override
   Widget build(BuildContext context) {
@@ -21,20 +66,23 @@ class DataGridHeader<T extends DataGridRow> extends StatelessWidget {
     final unpinnedColumns = state.columns.where((col) => !col.pinned && col.visible).toList();
 
     if (pinnedColumns.isEmpty) {
-      // Simple layout - no pinned columns
       return CustomMultiChildLayout(
         delegate: HeaderLayoutDelegate(columns: state.columns),
-        children: [for (var column in state.columns) LayoutId(id: column.id, child: _buildHeaderCell(column))],
+        children: [
+          for (var column in state.columns)
+            LayoutId(
+              id: column.id,
+              child: _HeaderCellWrapper<T>(column: column, controller: controller, sortState: state.sort),
+            ),
+        ],
       );
     }
 
-    // Split layout with pinned + scrollable unpinned
     final pinnedWidth = pinnedColumns.fold<double>(0.0, (sum, col) => sum + col.width);
     final unpinnedWidth = unpinnedColumns.fold<double>(0.0, (sum, col) => sum + col.width);
 
     return Stack(
       children: [
-        // Unpinned header (scrollable)
         Positioned(
           left: pinnedWidth,
           right: 0,
@@ -48,13 +96,16 @@ class DataGridHeader<T extends DataGridRow> extends StatelessWidget {
               child: CustomMultiChildLayout(
                 delegate: HeaderLayoutDelegate(columns: unpinnedColumns),
                 children: [
-                  for (var column in unpinnedColumns) LayoutId(id: column.id, child: _buildHeaderCell(column)),
+                  for (var column in unpinnedColumns)
+                    LayoutId(
+                      id: column.id,
+                      child: _HeaderCellWrapper<T>(column: column, controller: controller, sortState: state.sort),
+                    ),
                 ],
               ),
             ),
           ),
         ),
-        // Pinned header (fixed)
         Positioned(
           left: 0,
           top: 0,
@@ -70,18 +121,33 @@ class DataGridHeader<T extends DataGridRow> extends StatelessWidget {
             ),
             child: CustomMultiChildLayout(
               delegate: HeaderLayoutDelegate(columns: pinnedColumns),
-              children: [for (var column in pinnedColumns) LayoutId(id: column.id, child: _buildHeaderCell(column))],
+              children: [
+                for (var column in pinnedColumns)
+                  LayoutId(
+                    id: column.id,
+                    child: _HeaderCellWrapper<T>(column: column, controller: controller, sortState: state.sort),
+                  ),
+              ],
             ),
           ),
         ),
       ],
     );
   }
+}
 
-  Widget _buildHeaderCell(DataGridColumn column) {
+class _HeaderCellWrapper<T extends DataGridRow> extends StatelessWidget {
+  final DataGridColumn column;
+  final DataGridController<T> controller;
+  final SortState sortState;
+
+  const _HeaderCellWrapper({required this.column, required this.controller, required this.sortState});
+
+  @override
+  Widget build(BuildContext context) {
     return DataGridHeaderCell(
       column: column,
-      sortState: state.sort,
+      sortState: sortState,
       onSort: (direction) {
         controller.addEvent(SortEvent(columnId: column.id, direction: direction, multiSort: false));
       },

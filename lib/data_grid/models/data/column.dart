@@ -1,3 +1,5 @@
+import 'package:data_grid/data_grid/renderers/filter_renderer.dart';
+
 class DataGridColumn {
   final int id;
   final String title;
@@ -7,6 +9,7 @@ class DataGridColumn {
   final bool resizable;
   final bool sortable;
   final bool filterable;
+  final FilterRenderer? filterRenderer;
 
   DataGridColumn({
     required this.id,
@@ -17,6 +20,7 @@ class DataGridColumn {
     this.resizable = true,
     this.sortable = true,
     this.filterable = true,
+    this.filterRenderer,
   });
 
   @override
@@ -31,10 +35,11 @@ class DataGridColumn {
           visible == other.visible &&
           resizable == other.resizable &&
           sortable == other.sortable &&
-          filterable == other.filterable;
+          filterable == other.filterable &&
+          filterRenderer == other.filterRenderer;
 
   @override
-  int get hashCode => Object.hash(id, title, width, pinned, visible, resizable, sortable, filterable);
+  int get hashCode => Object.hash(id, title, width, pinned, visible, resizable, sortable, filterable, filterRenderer);
 
   DataGridColumn copyWith({
     int? id,
@@ -45,6 +50,7 @@ class DataGridColumn {
     bool? resizable,
     bool? sortable,
     bool? filterable,
+    FilterRenderer? filterRenderer,
   }) {
     return DataGridColumn(
       id: id ?? this.id,
@@ -55,6 +61,7 @@ class DataGridColumn {
       resizable: resizable ?? this.resizable,
       sortable: sortable ?? this.sortable,
       filterable: filterable ?? this.filterable,
+      filterRenderer: filterRenderer ?? this.filterRenderer,
     );
   }
 }
