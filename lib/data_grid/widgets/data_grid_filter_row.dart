@@ -7,6 +7,7 @@ import 'package:data_grid/data_grid/models/state/grid_state.dart';
 import 'package:data_grid/data_grid/models/events/grid_events.dart';
 import 'package:data_grid/data_grid/delegates/header_layout_delegate.dart';
 import 'package:data_grid/data_grid/renderers/filter_renderer.dart';
+import 'package:data_grid/data_grid/theme/data_grid_theme.dart';
 
 class DataGridFilterRow<T extends DataGridRow> extends StatefulWidget {
   final DataGridState<T> state;
@@ -40,9 +41,19 @@ class _DataGridFilterRowState<T extends DataGridRow> extends State<DataGridFilte
   @override
   void didUpdateWidget(DataGridFilterRow<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.state.effectiveColumns != widget.state.effectiveColumns) {
+    if (!_columnsEqual(oldWidget.state.effectiveColumns, widget.state.effectiveColumns)) {
       _updateColumns();
     }
+  }
+
+  bool _columnsEqual(List<DataGridColumn> a, List<DataGridColumn> b) {
+    if (a.length != b.length) return false;
+    for (int i = 0; i < a.length; i++) {
+      if (a[i].id != b[i].id || a[i].pinned != b[i].pinned || a[i].visible != b[i].visible) {
+        return false;
+      }
+    }
+    return true;
   }
 
   void _updateColumns() {
@@ -122,29 +133,32 @@ class _DataGridFilterRowState<T extends DataGridRow> extends State<DataGridFilte
           top: 0,
           bottom: 0,
           width: pinnedWidth,
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border(right: BorderSide(color: Colors.grey[400]!, width: 2)),
-              boxShadow: [
-                BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 4, offset: const Offset(2, 0)),
-              ],
-            ),
-            child: CustomMultiChildLayout(
-              delegate: HeaderLayoutDelegate(columns: pinnedColumns),
-              children: [
-                for (var column in pinnedColumns)
-                  LayoutId(
-                    id: column.id,
-                    child: _FilterCell<T>(
-                      column: column,
-                      state: widget.state,
-                      controller: widget.controller,
-                      defaultFilterRenderer: widget.defaultFilterRenderer,
-                    ),
-                  ),
-              ],
-            ),
+          child: Builder(
+            builder: (context) {
+              final theme = DataGridTheme.of(context);
+              return Container(
+                decoration: BoxDecoration(
+                  color: theme.colors.evenRowColor,
+                  border: theme.borders.pinnedBorder,
+                  boxShadow: theme.borders.pinnedShadow,
+                ),
+                child: CustomMultiChildLayout(
+                  delegate: HeaderLayoutDelegate(columns: pinnedColumns),
+                  children: [
+                    for (var column in pinnedColumns)
+                      LayoutId(
+                        id: column.id,
+                        child: _FilterCell<T>(
+                          column: column,
+                          state: widget.state,
+                          controller: widget.controller,
+                          defaultFilterRenderer: widget.defaultFilterRenderer,
+                        ),
+                      ),
+                  ],
+                ),
+              );
+            },
           ),
         ),
       ],
@@ -167,15 +181,11 @@ class _FilterCell<T extends DataGridRow> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = DataGridTheme.of(context);
+
     if (!column.filterable) {
       return Container(
-        decoration: BoxDecoration(
-          color: Colors.grey[100],
-          border: Border(
-            right: BorderSide(color: Colors.grey[400]!),
-            bottom: BorderSide(color: Colors.grey[400]!),
-          ),
-        ),
+        decoration: BoxDecoration(color: theme.colors.filterBackgroundColor, border: theme.borders.filterBorder),
       );
     }
 

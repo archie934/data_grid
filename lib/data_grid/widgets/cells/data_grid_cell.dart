@@ -4,6 +4,7 @@ import 'package:data_grid/data_grid/controller/data_grid_controller.dart';
 import 'package:data_grid/data_grid/models/data/row.dart';
 import 'package:data_grid/data_grid/models/data/column.dart';
 import 'package:data_grid/data_grid/models/events/selection_events.dart';
+import 'package:data_grid/data_grid/theme/data_grid_theme.dart';
 
 class _CellState {
   final bool isSelected;
@@ -70,12 +71,6 @@ class _DataGridCellState<T extends DataGridRow> extends State<DataGridCell<T>> {
     }
   }
 
-  void _handleDoubleTap() {
-    if (widget.column.editable) {
-      widget.controller.startEditCell(widget.rowId, widget.column.id);
-    }
-  }
-
   void _handleKeyPress(KeyEvent event) {
     if (event is KeyDownEvent) {
       if (event.logicalKey == LogicalKeyboardKey.enter) {
@@ -88,6 +83,8 @@ class _DataGridCellState<T extends DataGridRow> extends State<DataGridCell<T>> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = DataGridTheme.of(context);
+
     return StreamBuilder<_CellState>(
       stream: widget.controller.state$
           .map(
@@ -124,24 +121,55 @@ class _DataGridCellState<T extends DataGridRow> extends State<DataGridCell<T>> {
               : Text('Row ${widget.row.id}, Col ${widget.column.id}', overflow: TextOverflow.ellipsis);
         }
 
-        return GestureDetector(
-          onTap: () {
-            widget.controller.addEvent(SelectRowEvent(rowId: widget.rowId, multiSelect: false));
-          },
-          onDoubleTap: _handleDoubleTap,
-          child: Container(
-            decoration: BoxDecoration(
-              color: isSelected
-                  ? Colors.blue.withValues(alpha: 0.1)
-                  : (widget.rowIndex % 2 == 0 ? Colors.white : Colors.grey[50]),
-              border: Border(
-                bottom: BorderSide(color: Colors.grey[300]!),
-                right: BorderSide(color: Colors.grey[300]!),
+        return Semantics(
+          label: 'Cell row ${widget.rowIndex + 1} column ${widget.column.title}',
+          value: isEditing ? 'Editing' : null,
+          selected: isSelected,
+          button: true,
+          onTap: isEditing
+              ? null
+              : () {
+                  if (isSelected && widget.controller.state.selection.focusedRowId == widget.rowId) {
+                    if (widget.column.editable) {
+                      widget.controller.startEditCell(widget.rowId, widget.column.id);
+                    }
+                  } else {
+                    widget.controller.addEvent(SelectRowEvent(rowId: widget.rowId, multiSelect: false));
+                  }
+                },
+          child: GestureDetector(
+            onTap: () {
+              if (!isEditing) {
+                if (isSelected && widget.controller.state.selection.focusedRowId == widget.rowId) {
+                  if (widget.column.editable) {
+                    widget.controller.startEditCell(widget.rowId, widget.column.id);
+                  }
+                } else {
+                  widget.controller.addEvent(SelectRowEvent(rowId: widget.rowId, multiSelect: false));
+                }
+              }
+            },
+            child: Container(
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? theme.colors.selectionColor
+                    : (widget.rowIndex % 2 == 0 ? theme.colors.evenRowColor : theme.colors.oddRowColor),
+                border: isEditing ? theme.borders.editingBorder : theme.borders.cellBorder,
+              ),
+              padding: isEditing ? EdgeInsets.zero : theme.padding.cellPadding,
+              alignment: isEditing ? Alignment.center : Alignment.centerLeft,
+              child: Stack(
+                children: [
+                  cellContent,
+                  if (isEditing)
+                    Positioned(
+                      top: 2,
+                      right: 2,
+                      child: Icon(Icons.edit, size: 12, color: theme.colors.editIndicatorColor),
+                    ),
+                ],
               ),
             ),
-            padding: isEditing ? EdgeInsets.zero : const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            alignment: isEditing ? Alignment.center : Alignment.centerLeft,
-            child: cellContent,
           ),
         );
       },
@@ -149,7 +177,7 @@ class _DataGridCellState<T extends DataGridRow> extends State<DataGridCell<T>> {
   }
 }
 
-class _CellEditor<T extends DataGridRow> extends StatelessWidget {
+class _CellEditor<T extends DataGridRow> extends StatefulWidget {
   final DataGridColumn column;
   final DataGridController<T> controller;
   final dynamic value;
@@ -167,27 +195,68 @@ class _CellEditor<T extends DataGridRow> extends StatelessWidget {
   });
 
   @override
+  State<_CellEditor<T>> createState() => _CellEditorState<T>();
+}
+
+class _CellEditorState<T extends DataGridRow> extends State<_CellEditor<T>> {
+  late final FocusNode _keyboardListenerFocusNode;
+  bool _initialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _keyboardListenerFocusNode = FocusNode();
+    _initializeController();
+  }
+
+  @override
+  void didUpdateWidget(_CellEditor<T> oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.value != widget.value) {
+      _initialized = false;
+      _initializeController();
+    }
+  }
+
+  void _initializeController() {
+    if (_initialized) return;
+    widget.editController.text = widget.value?.toString() ?? '';
+    widget.editController.selection = TextSelection(baseOffset: 0, extentOffset: widget.editController.text.length);
+    _initialized = true;
+  }
+
+  @override
+  void dispose() {
+    _keyboardListenerFocusNode.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    if (column.cellEditorBuilder != null) {
-      return column.cellEditorBuilder!(context, value, (newValue) => controller.updateCellEditValue(newValue));
+    final theme = DataGridTheme.of(context);
+
+    if (widget.column.cellEditorBuilder != null) {
+      return widget.column.cellEditorBuilder!(
+        context,
+        widget.value,
+        (newValue) => widget.controller.updateCellEditValue(newValue),
+      );
     }
 
-    editController.text = value?.toString() ?? '';
-    editController.selection = TextSelection(baseOffset: 0, extentOffset: editController.text.length);
-
     return KeyboardListener(
-      focusNode: FocusNode(),
-      onKeyEvent: onKeyPress,
+      focusNode: _keyboardListenerFocusNode,
+      onKeyEvent: widget.onKeyPress,
       child: TextField(
-        controller: editController,
-        focusNode: focusNode,
+        key: const ValueKey('cell_editor_textfield'),
+        controller: widget.editController,
+        focusNode: widget.focusNode,
         autofocus: true,
-        decoration: const InputDecoration(
-          border: OutlineInputBorder(),
-          contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        decoration: InputDecoration(
+          border: InputBorder.none,
+          contentPadding: theme.padding.editorPadding,
           isDense: true,
         ),
-        onChanged: (newValue) => controller.updateCellEditValue(newValue),
+        onChanged: (newValue) => widget.controller.updateCellEditValue(newValue),
       ),
     );
   }

@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:data_grid/data_grid/controller/data_grid_controller.dart';
 import 'package:data_grid/data_grid/controller/grid_scroll_controller.dart';
 import 'package:data_grid/data_grid/models/data/row.dart';
@@ -13,12 +15,14 @@ import 'package:data_grid/data_grid/renderers/default_row_renderer.dart';
 import 'package:data_grid/data_grid/renderers/default_cell_renderer.dart';
 import 'package:data_grid/data_grid/renderers/filter_renderer.dart';
 import 'package:data_grid/data_grid/renderers/default_filter_renderer.dart';
+import 'package:data_grid/data_grid/theme/data_grid_theme.dart';
+import 'package:data_grid/data_grid/theme/data_grid_theme_data.dart';
 
 class DataGrid<T extends DataGridRow> extends StatefulWidget {
   final DataGridController<T> controller;
   final GridScrollController? scrollController;
-  final double headerHeight;
-  final double rowHeight;
+  final double? headerHeight;
+  final double? rowHeight;
 
   /// Custom row renderer for advanced row customization.
   final RowRenderer<T>? rowRenderer;
@@ -44,12 +48,16 @@ class DataGrid<T extends DataGridRow> extends StatefulWidget {
   /// Color of the loading indicator (default: theme primary color)
   final Color? loadingIndicatorColor;
 
+  /// Optional theme data to customize the appearance of the data grid.
+  /// If not provided, uses the default theme.
+  final DataGridThemeData? theme;
+
   const DataGrid({
     super.key,
     required this.controller,
     this.scrollController,
-    this.headerHeight = 48.0,
-    this.rowHeight = 48.0,
+    this.headerHeight,
+    this.rowHeight,
     this.rowRenderer,
     this.cellRenderer,
     this.filterRenderer,
@@ -58,6 +66,7 @@ class DataGrid<T extends DataGridRow> extends StatefulWidget {
     this.loadingOverlayBuilder,
     this.loadingBackdropColor,
     this.loadingIndicatorColor,
+    this.theme,
   });
 
   @override
@@ -69,6 +78,7 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
   late RowRenderer<T> _rowRenderer;
   late CellRenderer<T> _cellRenderer;
   late FilterRenderer _filterRenderer;
+  StreamSubscription? _scrollSubscription;
 
   @override
   void initState() {
@@ -78,13 +88,14 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
     _cellRenderer = widget.cellRenderer ?? DefaultCellRenderer<T>();
     _filterRenderer = widget.filterRenderer ?? const DefaultFilterRenderer();
 
-    _scrollController.scrollEvent$.listen((event) {
+    _scrollSubscription = _scrollController.scrollEvent$.listen((event) {
       widget.controller.addEvent(event);
     });
   }
 
   @override
   void dispose() {
+    _scrollSubscription?.cancel();
     if (widget.scrollController == null) {
       _scrollController.dispose();
     }
@@ -93,58 +104,105 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        widget.controller.addEvent(
-          ViewportResizeEvent(width: constraints.maxWidth, height: constraints.maxHeight - widget.headerHeight),
-        );
+    final themeData = widget.theme ?? DataGridThemeData.defaultTheme();
+    final effectiveHeaderHeight = widget.headerHeight ?? themeData.dimensions.headerHeight;
+    final effectiveRowHeight = widget.rowHeight ?? themeData.dimensions.rowHeight;
 
-        return StreamBuilder<DataGridState<T>>(
-          stream: widget.controller.state$,
-          builder: (context, snapshot) {
-            if (!snapshot.hasData) {
-              return const Center(child: CircularProgressIndicator());
-            }
+    return DataGridTheme(
+      data: themeData,
+      child: Focus(
+        autofocus: true,
+        onKeyEvent: (node, event) => _handleKeyEvent(event),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            widget.controller.addEvent(
+              ViewportResizeEvent(width: constraints.maxWidth, height: constraints.maxHeight - effectiveHeaderHeight),
+            );
 
-            final state = snapshot.data!;
+            return StreamBuilder<DataGridState<T>>(
+              stream: widget.controller.state$,
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-            return Stack(
-              children: [
-                Column(
-                  children: [
-                    DataGridHeader<T>(
-                      state: state,
-                      controller: widget.controller,
-                      scrollController: _scrollController,
-                      defaultFilterRenderer: _filterRenderer,
-                      headerHeight: widget.headerHeight,
-                    ),
-                    Expanded(
-                      child: DataGridBody<T>(
-                        state: state,
-                        controller: widget.controller,
-                        scrollController: _scrollController,
-                        rowHeight: widget.rowHeight,
-                        rowRenderer: _rowRenderer,
-                        cellRenderer: _cellRenderer,
-                        cellBuilder: widget.cellBuilder,
+                final state = snapshot.data!;
+                final rowCount = state.displayOrder.length;
+                final columnCount = state.effectiveColumns.length;
+
+                return Semantics(
+                  label: 'Data grid with $rowCount rows and $columnCount columns',
+                  child: Stack(
+                    children: [
+                      Column(
+                        children: [
+                          DataGridHeader<T>(
+                            state: state,
+                            controller: widget.controller,
+                            scrollController: _scrollController,
+                            defaultFilterRenderer: _filterRenderer,
+                            headerHeight: effectiveHeaderHeight,
+                          ),
+                          Expanded(
+                            child: DataGridBody<T>(
+                              state: state,
+                              controller: widget.controller,
+                              scrollController: _scrollController,
+                              rowHeight: effectiveRowHeight,
+                              rowRenderer: _rowRenderer,
+                              cellRenderer: _cellRenderer,
+                              cellBuilder: widget.cellBuilder,
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
-                ),
-                if (state.isLoading && widget.showLoadingOverlay)
-                  widget.loadingOverlayBuilder != null
-                      ? widget.loadingOverlayBuilder!(context, state.loadingMessage)
-                      : DataGridLoadingOverlay(
-                          message: state.loadingMessage,
-                          backdropColor: widget.loadingBackdropColor,
-                          indicatorColor: widget.loadingIndicatorColor,
-                        ),
-              ],
+                      if (state.isLoading && widget.showLoadingOverlay)
+                        widget.loadingOverlayBuilder != null
+                            ? widget.loadingOverlayBuilder!(context, state.loadingMessage)
+                            : DataGridLoadingOverlay(
+                                message: state.loadingMessage,
+                                backdropColor: widget.loadingBackdropColor,
+                                indicatorColor: widget.loadingIndicatorColor,
+                              ),
+                    ],
+                  ),
+                );
+              },
             );
           },
-        );
-      },
+        ),
+      ),
     );
+  }
+
+  KeyEventResult _handleKeyEvent(KeyEvent event) {
+    if (event is! KeyDownEvent) return KeyEventResult.ignored;
+
+    if (widget.controller.state.edit.isEditing) {
+      return KeyEventResult.ignored;
+    }
+
+    if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+      widget.controller.addEvent(NavigateUpEvent());
+      return KeyEventResult.handled;
+    } else if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+      widget.controller.addEvent(NavigateDownEvent());
+      return KeyEventResult.handled;
+    } else if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+      widget.controller.addEvent(NavigateLeftEvent());
+      return KeyEventResult.handled;
+    } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
+      widget.controller.addEvent(NavigateRightEvent());
+      return KeyEventResult.handled;
+    } else if (event.logicalKey == LogicalKeyboardKey.escape) {
+      widget.controller.addEvent(ClearSelectionEvent());
+      return KeyEventResult.handled;
+    } else if (event.logicalKey == LogicalKeyboardKey.keyA &&
+        (HardwareKeyboard.instance.isControlPressed || HardwareKeyboard.instance.isMetaPressed)) {
+      widget.controller.addEvent(SelectAllVisibleEvent());
+      return KeyEventResult.handled;
+    }
+
+    return KeyEventResult.ignored;
   }
 }

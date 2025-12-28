@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:data_grid/data_grid/models/data/column.dart';
 import 'package:data_grid/data_grid/models/state/grid_state.dart';
 import 'package:data_grid/data_grid/renderers/filter_renderer.dart';
+import 'package:data_grid/data_grid/theme/data_grid_theme.dart';
 
 /// Default filter renderer using a simple text input with "contains" operator.
 class DefaultFilterRenderer extends FilterRenderer {
@@ -86,19 +87,14 @@ class _FilterTextFieldState extends State<_FilterTextField> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final gridTheme = DataGridTheme.of(context);
     final colorScheme = theme.colorScheme;
     final textTheme = theme.textTheme;
     final hasFilter = widget.currentFilter != null;
 
     return Container(
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        border: Border(
-          right: BorderSide(color: colorScheme.outlineVariant),
-          bottom: BorderSide(color: colorScheme.outlineVariant),
-        ),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(color: colorScheme.surface, border: gridTheme.borders.filterBorder),
+      padding: gridTheme.padding.filterPadding,
       child: TextField(
         controller: _controller,
         onChanged: _onTextChanged,
@@ -106,7 +102,7 @@ class _FilterTextFieldState extends State<_FilterTextField> {
           hintText: 'Filter ${widget.column.title}...',
           hintStyle: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
           isDense: true,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          contentPadding: gridTheme.padding.filterInputPadding,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(4),
             borderSide: BorderSide(color: colorScheme.outline),

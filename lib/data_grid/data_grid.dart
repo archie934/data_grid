@@ -8,6 +8,10 @@ export 'models/data/row.dart';
 export 'models/state/grid_state.dart';
 export 'models/events/grid_events.dart';
 
+// Theme
+export 'theme/data_grid_theme.dart';
+export 'theme/data_grid_theme_data.dart';
+
 // Main widgets
 export 'widgets/data_grid.dart';
 export 'widgets/data_grid_header.dart';

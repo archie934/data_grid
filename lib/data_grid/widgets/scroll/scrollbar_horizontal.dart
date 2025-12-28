@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:data_grid/data_grid/theme/data_grid_theme.dart';
 
 /// A custom horizontal scrollbar widget with drag support.
 ///
@@ -6,9 +7,8 @@ import 'package:flutter/material.dart';
 /// Automatically calculates thumb size based on viewport/content ratio.
 class CustomHorizontalScrollbar extends StatefulWidget {
   final ScrollController controller;
-  final double height;
 
-  const CustomHorizontalScrollbar({super.key, required this.controller, this.height = 12});
+  const CustomHorizontalScrollbar({super.key, required this.controller});
 
   @override
   State<CustomHorizontalScrollbar> createState() => _CustomHorizontalScrollbarState();
@@ -21,6 +21,13 @@ class _CustomHorizontalScrollbarState extends State<CustomHorizontalScrollbar> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = DataGridTheme.of(context);
+    final height = theme.dimensions.scrollbarHeight;
+    final thumbMinSize = theme.dimensions.scrollbarThumbMinSize;
+    final thumbInset = theme.padding.scrollbarThumbInset;
+    final trackColor = theme.colors.scrollbarTrackColor;
+    final thumbColor = theme.colors.scrollbarThumbColor;
+
     return ListenableBuilder(
       listenable: widget.controller,
       builder: (context, child) {
@@ -29,7 +36,7 @@ class _CustomHorizontalScrollbarState extends State<CustomHorizontalScrollbar> {
             final trackWidth = constraints.maxWidth;
 
             if (!widget.controller.hasClients || trackWidth == 0) {
-              return Container(height: widget.height, color: Colors.grey.withValues(alpha: 0.1));
+              return Container(height: height, color: trackColor);
             }
 
             final position = widget.controller.position;
@@ -38,15 +45,15 @@ class _CustomHorizontalScrollbarState extends State<CustomHorizontalScrollbar> {
             final maxScrollExtent = position.maxScrollExtent;
 
             if (viewportSize == 0 || maxScrollExtent <= 0) {
-              return Container(height: widget.height, color: Colors.grey.withValues(alpha: 0.1));
+              return Container(height: height, color: trackColor);
             }
 
             final contentSize = maxScrollExtent + viewportSize;
             if (contentSize <= viewportSize) {
-              return Container(height: widget.height, color: Colors.grey.withValues(alpha: 0.1));
+              return Container(height: height, color: trackColor);
             }
 
-            final thumbWidth = ((viewportSize / contentSize) * trackWidth).clamp(30.0, trackWidth);
+            final thumbWidth = ((viewportSize / contentSize) * trackWidth).clamp(thumbMinSize, trackWidth);
             final thumbOffset = (scrollOffset / contentSize) * trackWidth;
 
             return GestureDetector(
@@ -100,10 +107,10 @@ class _CustomHorizontalScrollbarState extends State<CustomHorizontalScrollbar> {
                 });
               },
               child: Container(
-                height: widget.height,
+                height: height,
                 decoration: BoxDecoration(
-                  color: Colors.grey.withValues(alpha: 0.1),
-                  border: const Border(top: BorderSide(color: Color(0xFFE0E0E0), width: 1)),
+                  color: trackColor,
+                  border: Border(top: theme.borders.scrollbarBorder.top),
                 ),
                 child: Stack(
                   children: [
@@ -111,13 +118,13 @@ class _CustomHorizontalScrollbarState extends State<CustomHorizontalScrollbar> {
                       duration: _isDragging ? Duration.zero : const Duration(milliseconds: 100),
                       curve: Curves.easeOutCubic,
                       left: thumbOffset,
-                      top: 2,
-                      bottom: 2,
+                      top: thumbInset,
+                      bottom: thumbInset,
                       child: Container(
                         width: thumbWidth,
                         decoration: BoxDecoration(
-                          color: const Color(0xFF757575).withValues(alpha: 0.7),
-                          borderRadius: BorderRadius.circular((widget.height - 4) / 2),
+                          color: thumbColor,
+                          borderRadius: BorderRadius.circular((height - thumbInset * 2) / 2),
                         ),
                       ),
                     ),

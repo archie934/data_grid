@@ -10,6 +10,7 @@ import 'package:data_grid/data_grid/widgets/cells/data_grid_header_cell.dart';
 import 'package:data_grid/data_grid/widgets/cells/data_grid_checkbox_cell.dart';
 import 'package:data_grid/data_grid/widgets/data_grid_filter_row.dart';
 import 'package:data_grid/data_grid/renderers/filter_renderer.dart';
+import 'package:data_grid/data_grid/theme/data_grid_theme.dart';
 
 class DataGridHeader<T extends DataGridRow> extends StatelessWidget {
   final DataGridState<T> state;
@@ -17,8 +18,6 @@ class DataGridHeader<T extends DataGridRow> extends StatelessWidget {
   final GridScrollController scrollController;
   final FilterRenderer defaultFilterRenderer;
   final double headerHeight;
-
-  static const filterRowHeight = 40.0;
 
   const DataGridHeader({
     super.key,
@@ -33,6 +32,8 @@ class DataGridHeader<T extends DataGridRow> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = DataGridTheme.of(context);
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -42,7 +43,7 @@ class DataGridHeader<T extends DataGridRow> extends StatelessWidget {
         ),
         if (hasFilterableColumns)
           SizedBox(
-            height: filterRowHeight,
+            height: theme.dimensions.filterRowHeight,
             child: DataGridFilterRow<T>(
               state: state,
               controller: controller,
@@ -79,9 +80,19 @@ class _HeaderRowState<T extends DataGridRow> extends State<_HeaderRow<T>> {
   @override
   void didUpdateWidget(_HeaderRow<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.state.effectiveColumns != widget.state.effectiveColumns) {
+    if (!_columnsEqual(oldWidget.state.effectiveColumns, widget.state.effectiveColumns)) {
       _updateColumns();
     }
+  }
+
+  bool _columnsEqual(List<DataGridColumn> a, List<DataGridColumn> b) {
+    if (a.length != b.length) return false;
+    for (int i = 0; i < a.length; i++) {
+      if (a[i].id != b[i].id || a[i].pinned != b[i].pinned || a[i].visible != b[i].visible) {
+        return false;
+      }
+    }
+    return true;
   }
 
   void _updateColumns() {
@@ -141,28 +152,31 @@ class _HeaderRowState<T extends DataGridRow> extends State<_HeaderRow<T>> {
           top: 0,
           bottom: 0,
           width: pinnedWidth,
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.grey[200],
-              border: Border(right: BorderSide(color: Colors.grey[400]!, width: 2)),
-              boxShadow: [
-                BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 4, offset: const Offset(2, 0)),
-              ],
-            ),
-            child: CustomMultiChildLayout(
-              delegate: HeaderLayoutDelegate(columns: pinnedColumns),
-              children: [
-                for (var column in pinnedColumns)
-                  LayoutId(
-                    id: column.id,
-                    child: _HeaderCellWrapper<T>(
-                      column: column,
-                      controller: widget.controller,
-                      sortState: widget.state.sort,
-                    ),
-                  ),
-              ],
-            ),
+          child: Builder(
+            builder: (context) {
+              final theme = DataGridTheme.of(context);
+              return Container(
+                decoration: BoxDecoration(
+                  color: theme.colors.headerColor,
+                  border: theme.borders.pinnedBorder,
+                  boxShadow: theme.borders.pinnedShadow,
+                ),
+                child: CustomMultiChildLayout(
+                  delegate: HeaderLayoutDelegate(columns: pinnedColumns),
+                  children: [
+                    for (var column in pinnedColumns)
+                      LayoutId(
+                        id: column.id,
+                        child: _HeaderCellWrapper<T>(
+                          column: column,
+                          controller: widget.controller,
+                          sortState: widget.state.sort,
+                        ),
+                      ),
+                  ],
+                ),
+              );
+            },
           ),
         ),
       ],
@@ -190,7 +204,8 @@ class _HeaderCellWrapper<T extends DataGridRow> extends StatelessWidget {
         controller.addEvent(SortEvent(columnId: column.id, direction: direction, multiSort: false));
       },
       onResize: (delta) {
-        final newWidth = (column.width + delta).clamp(50.0, 1000.0);
+        final theme = DataGridTheme.of(context);
+        final newWidth = (column.width + delta).clamp(theme.dimensions.columnMinWidth, theme.dimensions.columnMaxWidth);
         controller.addEvent(ColumnResizeEvent(columnId: column.id, newWidth: newWidth));
       },
     );

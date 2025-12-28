@@ -8,6 +8,7 @@ import 'package:data_grid/data_grid/renderers/cell_renderer.dart';
 import 'package:data_grid/data_grid/renderers/default_cell_renderer.dart';
 import 'package:data_grid/data_grid/renderers/render_context.dart';
 import 'package:data_grid/data_grid/widgets/cells/data_grid_checkbox_cell.dart';
+import 'package:data_grid/data_grid/theme/data_grid_theme.dart';
 
 /// Default row renderer implementation.
 ///
@@ -19,6 +20,7 @@ class DefaultRowRenderer<T extends DataGridRow> extends RowRenderer<T> {
 
   @override
   Widget buildRow(BuildContext context, T row, int index, RowRenderContext<T> renderContext) {
+    final theme = DataGridTheme.of(context);
     final effectiveCellRenderer = cellRenderer ?? DefaultCellRenderer<T>();
 
     return GestureDetector(
@@ -29,9 +31,9 @@ class DefaultRowRenderer<T extends DataGridRow> extends RowRenderer<T> {
         height: renderContext.rowHeight,
         decoration: BoxDecoration(
           color: renderContext.isSelected
-              ? Colors.blue.withValues(alpha: 0.1)
-              : (index % 2 == 0 ? Colors.white : Colors.grey[50]),
-          border: Border(bottom: BorderSide(color: Colors.grey[300]!)),
+              ? theme.colors.selectionColor
+              : (index % 2 == 0 ? theme.colors.evenRowColor : theme.colors.oddRowColor),
+          border: theme.borders.rowBorder,
         ),
         child: Stack(
           children: [
@@ -115,16 +117,15 @@ class _PinnedCells<T extends DataGridRow> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = DataGridTheme.of(context);
+
     return Positioned(
       left: 0,
       top: 0,
       bottom: 0,
       width: renderContext.pinnedWidth,
       child: Container(
-        decoration: BoxDecoration(
-          border: Border(right: BorderSide(color: Colors.grey[400]!, width: 2)),
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 4, offset: const Offset(2, 0))],
-        ),
+        decoration: BoxDecoration(border: theme.borders.pinnedBorder, boxShadow: theme.borders.pinnedShadow),
         child: CustomMultiChildLayout(
           delegate: BodyLayoutDelegate(columns: renderContext.pinnedColumns),
           children: [

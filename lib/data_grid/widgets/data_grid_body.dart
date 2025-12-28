@@ -14,8 +14,7 @@ import 'package:data_grid/data_grid/renderers/row_renderer.dart';
 import 'package:data_grid/data_grid/renderers/cell_renderer.dart';
 import 'package:data_grid/data_grid/renderers/default_row_renderer.dart';
 import 'package:data_grid/data_grid/renderers/render_context.dart';
-
-const scrollbarWidth = 12.0;
+import 'package:data_grid/data_grid/theme/data_grid_theme.dart';
 
 class DataGridBody<T extends DataGridRow> extends StatefulWidget {
   final DataGridState<T> state;
@@ -44,28 +43,54 @@ class DataGridBody<T extends DataGridRow> extends StatefulWidget {
 class _DataGridBodyState<T extends DataGridRow> extends State<DataGridBody<T>> {
   late List<DataGridColumn> pinnedColumns;
   late List<DataGridColumn> unpinnedColumns;
+  late double pinnedWidth;
+  late double unpinnedWidth;
+  late RowRenderer<T> effectiveRowRenderer;
 
   @override
   void initState() {
     super.initState();
     _updateColumns();
+    _updateRowRenderer();
   }
 
   @override
   void didUpdateWidget(DataGridBody<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.state.effectiveColumns != widget.state.effectiveColumns) {
+    if (!_columnsEqual(oldWidget.state.effectiveColumns, widget.state.effectiveColumns)) {
       _updateColumns();
     }
+    if (oldWidget.rowRenderer != widget.rowRenderer || oldWidget.cellRenderer != widget.cellRenderer) {
+      _updateRowRenderer();
+    }
+  }
+
+  bool _columnsEqual(List<DataGridColumn> a, List<DataGridColumn> b) {
+    if (a.length != b.length) return false;
+    for (int i = 0; i < a.length; i++) {
+      if (a[i].id != b[i].id || a[i].pinned != b[i].pinned || a[i].visible != b[i].visible) {
+        return false;
+      }
+    }
+    return true;
   }
 
   void _updateColumns() {
     pinnedColumns = widget.state.effectiveColumns.where((col) => col.pinned && col.visible).toList();
     unpinnedColumns = widget.state.effectiveColumns.where((col) => !col.pinned && col.visible).toList();
+    pinnedWidth = pinnedColumns.fold<double>(0.0, (sum, col) => sum + col.width);
+    unpinnedWidth = unpinnedColumns.fold<double>(0.0, (sum, col) => sum + col.width);
+  }
+
+  void _updateRowRenderer() {
+    effectiveRowRenderer = widget.rowRenderer ?? DefaultRowRenderer<T>(cellRenderer: widget.cellRenderer);
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = DataGridTheme.of(context);
+    final scrollbarWidth = theme.dimensions.scrollbarWidth;
+
     if (pinnedColumns.isEmpty) {
       return NotificationListener<ScrollNotification>(
         onNotification: (notification) {
@@ -111,19 +136,13 @@ class _DataGridBodyState<T extends DataGridRow> extends State<DataGridBody<T>> {
               right: 0,
               top: 0,
               bottom: scrollbarWidth,
-              child: CustomVerticalScrollbar(
-                controller: widget.scrollController.verticalController,
-                width: scrollbarWidth,
-              ),
+              child: CustomVerticalScrollbar(controller: widget.scrollController.verticalController),
             ),
             Positioned(
               left: 0,
               right: scrollbarWidth,
               bottom: 0,
-              child: CustomHorizontalScrollbar(
-                controller: widget.scrollController.horizontalController,
-                height: scrollbarWidth,
-              ),
+              child: CustomHorizontalScrollbar(controller: widget.scrollController.horizontalController),
             ),
           ],
         ),
@@ -136,9 +155,10 @@ class _DataGridBodyState<T extends DataGridRow> extends State<DataGridBody<T>> {
       scrollController: widget.scrollController,
       pinnedColumns: pinnedColumns,
       unpinnedColumns: unpinnedColumns,
+      pinnedWidth: pinnedWidth,
+      unpinnedWidth: unpinnedWidth,
       rowHeight: widget.rowHeight,
-      rowRenderer: widget.rowRenderer,
-      cellRenderer: widget.cellRenderer,
+      rowRenderer: effectiveRowRenderer,
       cellBuilder: widget.cellBuilder,
     );
   }
@@ -150,9 +170,10 @@ class _PinnedLayout<T extends DataGridRow> extends StatelessWidget {
   final GridScrollController scrollController;
   final List<DataGridColumn> pinnedColumns;
   final List<DataGridColumn> unpinnedColumns;
+  final double pinnedWidth;
+  final double unpinnedWidth;
   final double rowHeight;
-  final RowRenderer<T>? rowRenderer;
-  final CellRenderer<T>? cellRenderer;
+  final RowRenderer<T> rowRenderer;
   final Widget Function(T row, int columnId)? cellBuilder;
 
   const _PinnedLayout({
@@ -161,17 +182,17 @@ class _PinnedLayout<T extends DataGridRow> extends StatelessWidget {
     required this.scrollController,
     required this.pinnedColumns,
     required this.unpinnedColumns,
+    required this.pinnedWidth,
+    required this.unpinnedWidth,
     required this.rowHeight,
-    this.rowRenderer,
-    this.cellRenderer,
+    required this.rowRenderer,
     this.cellBuilder,
   });
 
   @override
   Widget build(BuildContext context) {
-    final pinnedWidth = pinnedColumns.fold<double>(0.0, (sum, col) => sum + col.width);
-    final unpinnedWidth = unpinnedColumns.fold<double>(0.0, (sum, col) => sum + col.width);
-    final effectiveRowRenderer = rowRenderer ?? DefaultRowRenderer<T>(cellRenderer: cellRenderer);
+    final theme = DataGridTheme.of(context);
+    final scrollbarWidth = theme.dimensions.scrollbarWidth;
 
     return Stack(
       children: [
@@ -230,7 +251,7 @@ class _PinnedLayout<T extends DataGridRow> extends StatelessWidget {
                       cellBuilder: cellBuilder,
                     );
 
-                    return effectiveRowRenderer.buildRow(context, row, index, renderContext);
+                    return rowRenderer.buildRow(context, row, index, renderContext);
                   },
                 );
               },
@@ -241,13 +262,13 @@ class _PinnedLayout<T extends DataGridRow> extends StatelessWidget {
           right: 0,
           top: 0,
           bottom: scrollbarWidth,
-          child: CustomVerticalScrollbar(controller: scrollController.verticalController, width: scrollbarWidth),
+          child: CustomVerticalScrollbar(controller: scrollController.verticalController),
         ),
         Positioned(
           left: pinnedWidth,
           right: scrollbarWidth,
           bottom: 0,
-          child: CustomHorizontalScrollbar(controller: scrollController.horizontalController, height: scrollbarWidth),
+          child: CustomHorizontalScrollbar(controller: scrollController.horizontalController),
         ),
       ],
     );

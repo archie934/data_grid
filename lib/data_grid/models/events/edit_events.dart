@@ -33,8 +33,23 @@ class StartCellEditEvent extends DataGridEvent {
     final cellId = context.state.edit.createCellId(rowId, columnId);
     final currentValue = context.dataIndexer.getCellValue(row, column);
 
-    return context.state.copyWith(
-      edit: context.state.edit.copyWith(editingCellId: cellId, editingValue: currentValue),
+    var newState = context.state;
+
+    if (context.state.edit.isEditing) {
+      final currentCellId = context.state.edit.editingCellId!;
+
+      if (currentCellId != cellId) {
+        final parts = currentCellId.split('_');
+        final currentRowId = double.parse(parts[0]);
+        final currentColumnId = int.parse(parts[1]);
+        final editValue = context.state.edit.editingValue;
+
+        context.dispatchEvent(UpdateCellEvent(rowId: currentRowId, columnId: currentColumnId, value: editValue));
+      }
+    }
+
+    return newState.copyWith(
+      edit: newState.edit.copyWith(editingCellId: cellId, editingValue: currentValue),
     );
   }
 }

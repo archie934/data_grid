@@ -5,6 +5,7 @@ import 'package:data_grid/data_grid/models/data/row.dart';
 import 'package:data_grid/data_grid/models/data/column.dart';
 import 'package:data_grid/data_grid/models/events/grid_events.dart';
 import 'package:data_grid/data_grid/delegates/body_layout_delegate.dart';
+import 'package:data_grid/data_grid/theme/data_grid_theme.dart';
 
 /// A data grid row widget that supports pinned (frozen) columns.
 ///
@@ -42,6 +43,8 @@ class DataGridRowWithPinnedCells<T extends DataGridRow> extends StatelessWidget 
 
   @override
   Widget build(BuildContext context) {
+    final theme = DataGridTheme.of(context);
+
     return StreamBuilder<bool>(
       stream: controller.selection$.map((s) => s.isRowSelected(row.id)).distinct(),
       initialData: controller.state.selection.isRowSelected(row.id),
@@ -56,9 +59,9 @@ class DataGridRowWithPinnedCells<T extends DataGridRow> extends StatelessWidget 
             height: rowHeight,
             decoration: BoxDecoration(
               color: isSelected
-                  ? Colors.blue.withValues(alpha: 0.1)
-                  : (index % 2 == 0 ? Colors.white : Colors.grey[50]),
-              border: Border(bottom: BorderSide(color: Colors.grey[300]!)),
+                  ? theme.colors.selectionColor
+                  : (index % 2 == 0 ? theme.colors.evenRowColor : theme.colors.oddRowColor),
+              border: theme.borders.rowBorder,
             ),
             child: Stack(
               children: [
@@ -96,14 +99,8 @@ class DataGridRowWithPinnedCells<T extends DataGridRow> extends StatelessWidget 
                   width: pinnedWidth,
                   child: Container(
                     decoration: BoxDecoration(
-                      border: Border(right: BorderSide(color: Colors.grey[400]!, width: 2)),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.1),
-                          blurRadius: 4,
-                          offset: const Offset(2, 0),
-                        ),
-                      ],
+                      border: theme.borders.pinnedBorder,
+                      boxShadow: theme.borders.pinnedShadow,
                     ),
                     child: CustomMultiChildLayout(
                       delegate: BodyLayoutDelegate(columns: pinnedColumns),
@@ -135,12 +132,14 @@ class _RowCell<T extends DataGridRow> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = DataGridTheme.of(context);
+
     if (cellBuilder != null) {
       return cellBuilder!(row, column.id);
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: theme.padding.cellPadding,
       alignment: Alignment.centerLeft,
       child: Text('Row ${row.id}, Col ${column.id}', overflow: TextOverflow.ellipsis),
     );
