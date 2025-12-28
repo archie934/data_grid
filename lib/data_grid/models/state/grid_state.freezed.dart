@@ -25,6 +25,7 @@ mixin _$DataGridState<T extends DataGridRow> {
   SortState get sort => throw _privateConstructorUsedError;
   FilterState get filter => throw _privateConstructorUsedError;
   GroupState get group => throw _privateConstructorUsedError;
+  EditState get edit => throw _privateConstructorUsedError;
   bool get isLoading => throw _privateConstructorUsedError;
   String? get loadingMessage => throw _privateConstructorUsedError;
 
@@ -51,6 +52,7 @@ abstract class $DataGridStateCopyWith<T extends DataGridRow, $Res> {
     SortState sort,
     FilterState filter,
     GroupState group,
+    EditState edit,
     bool isLoading,
     String? loadingMessage,
   });
@@ -60,6 +62,7 @@ abstract class $DataGridStateCopyWith<T extends DataGridRow, $Res> {
   $SortStateCopyWith<$Res> get sort;
   $FilterStateCopyWith<$Res> get filter;
   $GroupStateCopyWith<$Res> get group;
+  $EditStateCopyWith<$Res> get edit;
 }
 
 /// @nodoc
@@ -89,6 +92,7 @@ class _$DataGridStateCopyWithImpl<
     Object? sort = null,
     Object? filter = null,
     Object? group = null,
+    Object? edit = null,
     Object? isLoading = null,
     Object? loadingMessage = freezed,
   }) {
@@ -126,6 +130,10 @@ class _$DataGridStateCopyWithImpl<
                 ? _value.group
                 : group // ignore: cast_nullable_to_non_nullable
                       as GroupState,
+            edit: null == edit
+                ? _value.edit
+                : edit // ignore: cast_nullable_to_non_nullable
+                      as EditState,
             isLoading: null == isLoading
                 ? _value.isLoading
                 : isLoading // ignore: cast_nullable_to_non_nullable
@@ -188,6 +196,16 @@ class _$DataGridStateCopyWithImpl<
       return _then(_value.copyWith(group: value) as $Val);
     });
   }
+
+  /// Create a copy of DataGridState
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @pragma('vm:prefer-inline')
+  $EditStateCopyWith<$Res> get edit {
+    return $EditStateCopyWith<$Res>(_value.edit, (value) {
+      return _then(_value.copyWith(edit: value) as $Val);
+    });
+  }
 }
 
 /// @nodoc
@@ -208,6 +226,7 @@ abstract class _$$DataGridStateImplCopyWith<T extends DataGridRow, $Res>
     SortState sort,
     FilterState filter,
     GroupState group,
+    EditState edit,
     bool isLoading,
     String? loadingMessage,
   });
@@ -222,6 +241,8 @@ abstract class _$$DataGridStateImplCopyWith<T extends DataGridRow, $Res>
   $FilterStateCopyWith<$Res> get filter;
   @override
   $GroupStateCopyWith<$Res> get group;
+  @override
+  $EditStateCopyWith<$Res> get edit;
 }
 
 /// @nodoc
@@ -246,6 +267,7 @@ class __$$DataGridStateImplCopyWithImpl<T extends DataGridRow, $Res>
     Object? sort = null,
     Object? filter = null,
     Object? group = null,
+    Object? edit = null,
     Object? isLoading = null,
     Object? loadingMessage = freezed,
   }) {
@@ -283,6 +305,10 @@ class __$$DataGridStateImplCopyWithImpl<T extends DataGridRow, $Res>
             ? _value.group
             : group // ignore: cast_nullable_to_non_nullable
                   as GroupState,
+        edit: null == edit
+            ? _value.edit
+            : edit // ignore: cast_nullable_to_non_nullable
+                  as EditState,
         isLoading: null == isLoading
             ? _value.isLoading
             : isLoading // ignore: cast_nullable_to_non_nullable
@@ -308,6 +334,7 @@ class _$DataGridStateImpl<T extends DataGridRow> extends _DataGridState<T> {
     required this.sort,
     required this.filter,
     required this.group,
+    required this.edit,
     this.isLoading = false,
     this.loadingMessage,
   }) : _columns = columns,
@@ -350,6 +377,8 @@ class _$DataGridStateImpl<T extends DataGridRow> extends _DataGridState<T> {
   @override
   final GroupState group;
   @override
+  final EditState edit;
+  @override
   @JsonKey()
   final bool isLoading;
   @override
@@ -357,7 +386,7 @@ class _$DataGridStateImpl<T extends DataGridRow> extends _DataGridState<T> {
 
   @override
   String toString() {
-    return 'DataGridState<$T>(columns: $columns, rowsById: $rowsById, displayOrder: $displayOrder, viewport: $viewport, selection: $selection, sort: $sort, filter: $filter, group: $group, isLoading: $isLoading, loadingMessage: $loadingMessage)';
+    return 'DataGridState<$T>(columns: $columns, rowsById: $rowsById, displayOrder: $displayOrder, viewport: $viewport, selection: $selection, sort: $sort, filter: $filter, group: $group, edit: $edit, isLoading: $isLoading, loadingMessage: $loadingMessage)';
   }
 
   @override
@@ -378,6 +407,7 @@ class _$DataGridStateImpl<T extends DataGridRow> extends _DataGridState<T> {
             (identical(other.sort, sort) || other.sort == sort) &&
             (identical(other.filter, filter) || other.filter == filter) &&
             (identical(other.group, group) || other.group == group) &&
+            (identical(other.edit, edit) || other.edit == edit) &&
             (identical(other.isLoading, isLoading) ||
                 other.isLoading == isLoading) &&
             (identical(other.loadingMessage, loadingMessage) ||
@@ -395,6 +425,7 @@ class _$DataGridStateImpl<T extends DataGridRow> extends _DataGridState<T> {
     sort,
     filter,
     group,
+    edit,
     isLoading,
     loadingMessage,
   );
@@ -421,6 +452,7 @@ abstract class _DataGridState<T extends DataGridRow> extends DataGridState<T> {
     required final SortState sort,
     required final FilterState filter,
     required final GroupState group,
+    required final EditState edit,
     final bool isLoading,
     final String? loadingMessage,
   }) = _$DataGridStateImpl<T>;
@@ -442,6 +474,8 @@ abstract class _DataGridState<T extends DataGridRow> extends DataGridState<T> {
   FilterState get filter;
   @override
   GroupState get group;
+  @override
+  EditState get edit;
   @override
   bool get isLoading;
   @override
@@ -762,6 +796,7 @@ mixin _$SelectionState {
   Set<double> get selectedRowIds => throw _privateConstructorUsedError;
   double? get focusedRowId => throw _privateConstructorUsedError;
   Set<String> get selectedCellIds => throw _privateConstructorUsedError;
+  SelectionMode get mode => throw _privateConstructorUsedError;
 
   /// Create a copy of SelectionState
   /// with the given fields replaced by the non-null parameter values.
@@ -781,6 +816,7 @@ abstract class $SelectionStateCopyWith<$Res> {
     Set<double> selectedRowIds,
     double? focusedRowId,
     Set<String> selectedCellIds,
+    SelectionMode mode,
   });
 }
 
@@ -802,6 +838,7 @@ class _$SelectionStateCopyWithImpl<$Res, $Val extends SelectionState>
     Object? selectedRowIds = null,
     Object? focusedRowId = freezed,
     Object? selectedCellIds = null,
+    Object? mode = null,
   }) {
     return _then(
       _value.copyWith(
@@ -817,6 +854,10 @@ class _$SelectionStateCopyWithImpl<$Res, $Val extends SelectionState>
                 ? _value.selectedCellIds
                 : selectedCellIds // ignore: cast_nullable_to_non_nullable
                       as Set<String>,
+            mode: null == mode
+                ? _value.mode
+                : mode // ignore: cast_nullable_to_non_nullable
+                      as SelectionMode,
           )
           as $Val,
     );
@@ -836,6 +877,7 @@ abstract class _$$SelectionStateImplCopyWith<$Res>
     Set<double> selectedRowIds,
     double? focusedRowId,
     Set<String> selectedCellIds,
+    SelectionMode mode,
   });
 }
 
@@ -856,6 +898,7 @@ class __$$SelectionStateImplCopyWithImpl<$Res>
     Object? selectedRowIds = null,
     Object? focusedRowId = freezed,
     Object? selectedCellIds = null,
+    Object? mode = null,
   }) {
     return _then(
       _$SelectionStateImpl(
@@ -871,6 +914,10 @@ class __$$SelectionStateImplCopyWithImpl<$Res>
             ? _value._selectedCellIds
             : selectedCellIds // ignore: cast_nullable_to_non_nullable
                   as Set<String>,
+        mode: null == mode
+            ? _value.mode
+            : mode // ignore: cast_nullable_to_non_nullable
+                  as SelectionMode,
       ),
     );
   }
@@ -883,6 +930,7 @@ class _$SelectionStateImpl extends _SelectionState {
     required final Set<double> selectedRowIds,
     this.focusedRowId,
     required final Set<String> selectedCellIds,
+    required this.mode,
   }) : _selectedRowIds = selectedRowIds,
        _selectedCellIds = selectedCellIds,
        super._();
@@ -906,8 +954,11 @@ class _$SelectionStateImpl extends _SelectionState {
   }
 
   @override
+  final SelectionMode mode;
+
+  @override
   String toString() {
-    return 'SelectionState(selectedRowIds: $selectedRowIds, focusedRowId: $focusedRowId, selectedCellIds: $selectedCellIds)';
+    return 'SelectionState(selectedRowIds: $selectedRowIds, focusedRowId: $focusedRowId, selectedCellIds: $selectedCellIds, mode: $mode)';
   }
 
   @override
@@ -924,7 +975,8 @@ class _$SelectionStateImpl extends _SelectionState {
             const DeepCollectionEquality().equals(
               other._selectedCellIds,
               _selectedCellIds,
-            ));
+            ) &&
+            (identical(other.mode, mode) || other.mode == mode));
   }
 
   @override
@@ -933,6 +985,7 @@ class _$SelectionStateImpl extends _SelectionState {
     const DeepCollectionEquality().hash(_selectedRowIds),
     focusedRowId,
     const DeepCollectionEquality().hash(_selectedCellIds),
+    mode,
   );
 
   /// Create a copy of SelectionState
@@ -952,6 +1005,7 @@ abstract class _SelectionState extends SelectionState {
     required final Set<double> selectedRowIds,
     final double? focusedRowId,
     required final Set<String> selectedCellIds,
+    required final SelectionMode mode,
   }) = _$SelectionStateImpl;
   const _SelectionState._() : super._();
 
@@ -961,6 +1015,8 @@ abstract class _SelectionState extends SelectionState {
   double? get focusedRowId;
   @override
   Set<String> get selectedCellIds;
+  @override
+  SelectionMode get mode;
 
   /// Create a copy of SelectionState
   /// with the given fields replaced by the non-null parameter values.
@@ -1800,5 +1856,161 @@ abstract class _GroupState extends GroupState {
   @override
   @JsonKey(includeFromJson: false, includeToJson: false)
   _$$GroupStateImplCopyWith<_$GroupStateImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+mixin _$EditState {
+  String? get editingCellId => throw _privateConstructorUsedError;
+  dynamic get editingValue => throw _privateConstructorUsedError;
+
+  /// Create a copy of EditState
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  $EditStateCopyWith<EditState> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $EditStateCopyWith<$Res> {
+  factory $EditStateCopyWith(EditState value, $Res Function(EditState) then) =
+      _$EditStateCopyWithImpl<$Res, EditState>;
+  @useResult
+  $Res call({String? editingCellId, dynamic editingValue});
+}
+
+/// @nodoc
+class _$EditStateCopyWithImpl<$Res, $Val extends EditState>
+    implements $EditStateCopyWith<$Res> {
+  _$EditStateCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  /// Create a copy of EditState
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({Object? editingCellId = freezed, Object? editingValue = freezed}) {
+    return _then(
+      _value.copyWith(
+            editingCellId: freezed == editingCellId
+                ? _value.editingCellId
+                : editingCellId // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            editingValue: freezed == editingValue
+                ? _value.editingValue
+                : editingValue // ignore: cast_nullable_to_non_nullable
+                      as dynamic,
+          )
+          as $Val,
+    );
+  }
+}
+
+/// @nodoc
+abstract class _$$EditStateImplCopyWith<$Res>
+    implements $EditStateCopyWith<$Res> {
+  factory _$$EditStateImplCopyWith(
+    _$EditStateImpl value,
+    $Res Function(_$EditStateImpl) then,
+  ) = __$$EditStateImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({String? editingCellId, dynamic editingValue});
+}
+
+/// @nodoc
+class __$$EditStateImplCopyWithImpl<$Res>
+    extends _$EditStateCopyWithImpl<$Res, _$EditStateImpl>
+    implements _$$EditStateImplCopyWith<$Res> {
+  __$$EditStateImplCopyWithImpl(
+    _$EditStateImpl _value,
+    $Res Function(_$EditStateImpl) _then,
+  ) : super(_value, _then);
+
+  /// Create a copy of EditState
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({Object? editingCellId = freezed, Object? editingValue = freezed}) {
+    return _then(
+      _$EditStateImpl(
+        editingCellId: freezed == editingCellId
+            ? _value.editingCellId
+            : editingCellId // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        editingValue: freezed == editingValue
+            ? _value.editingValue
+            : editingValue // ignore: cast_nullable_to_non_nullable
+                  as dynamic,
+      ),
+    );
+  }
+}
+
+/// @nodoc
+
+class _$EditStateImpl extends _EditState {
+  const _$EditStateImpl({this.editingCellId, this.editingValue}) : super._();
+
+  @override
+  final String? editingCellId;
+  @override
+  final dynamic editingValue;
+
+  @override
+  String toString() {
+    return 'EditState(editingCellId: $editingCellId, editingValue: $editingValue)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$EditStateImpl &&
+            (identical(other.editingCellId, editingCellId) ||
+                other.editingCellId == editingCellId) &&
+            const DeepCollectionEquality().equals(
+              other.editingValue,
+              editingValue,
+            ));
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    runtimeType,
+    editingCellId,
+    const DeepCollectionEquality().hash(editingValue),
+  );
+
+  /// Create a copy of EditState
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$EditStateImplCopyWith<_$EditStateImpl> get copyWith =>
+      __$$EditStateImplCopyWithImpl<_$EditStateImpl>(this, _$identity);
+}
+
+abstract class _EditState extends EditState {
+  const factory _EditState({
+    final String? editingCellId,
+    final dynamic editingValue,
+  }) = _$EditStateImpl;
+  const _EditState._() : super._();
+
+  @override
+  String? get editingCellId;
+  @override
+  dynamic get editingValue;
+
+  /// Create a copy of EditState
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$EditStateImplCopyWith<_$EditStateImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

@@ -1,4 +1,7 @@
+import 'package:flutter/widgets.dart';
 import 'package:data_grid/data_grid/renderers/filter_renderer.dart';
+
+typedef CellEditorBuilder = Widget Function(BuildContext context, dynamic value, ValueChanged<dynamic> onChanged);
 
 class DataGridColumn {
   final int id;
@@ -9,7 +12,9 @@ class DataGridColumn {
   final bool resizable;
   final bool sortable;
   final bool filterable;
+  final bool editable;
   final FilterRenderer? filterRenderer;
+  final CellEditorBuilder? cellEditorBuilder;
 
   DataGridColumn({
     required this.id,
@@ -20,7 +25,9 @@ class DataGridColumn {
     this.resizable = true,
     this.sortable = true,
     this.filterable = true,
+    this.editable = true,
     this.filterRenderer,
+    this.cellEditorBuilder,
   });
 
   @override
@@ -36,10 +43,13 @@ class DataGridColumn {
           resizable == other.resizable &&
           sortable == other.sortable &&
           filterable == other.filterable &&
-          filterRenderer == other.filterRenderer;
+          editable == other.editable &&
+          filterRenderer == other.filterRenderer &&
+          cellEditorBuilder == other.cellEditorBuilder;
 
   @override
-  int get hashCode => Object.hash(id, title, width, pinned, visible, resizable, sortable, filterable, filterRenderer);
+  int get hashCode =>
+      Object.hash(id, title, width, pinned, visible, resizable, sortable, filterable, editable, filterRenderer);
 
   DataGridColumn copyWith({
     int? id,
@@ -50,7 +60,9 @@ class DataGridColumn {
     bool? resizable,
     bool? sortable,
     bool? filterable,
+    bool? editable,
     FilterRenderer? filterRenderer,
+    CellEditorBuilder? cellEditorBuilder,
   }) {
     return DataGridColumn(
       id: id ?? this.id,
@@ -61,7 +73,9 @@ class DataGridColumn {
       resizable: resizable ?? this.resizable,
       sortable: sortable ?? this.sortable,
       filterable: filterable ?? this.filterable,
+      editable: editable ?? this.editable,
       filterRenderer: filterRenderer ?? this.filterRenderer,
+      cellEditorBuilder: cellEditorBuilder ?? this.cellEditorBuilder,
     );
   }
 }

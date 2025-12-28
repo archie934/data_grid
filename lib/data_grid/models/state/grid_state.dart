@@ -15,6 +15,7 @@ class DataGridState<T extends DataGridRow> with _$DataGridState<T> {
     required SortState sort,
     required FilterState filter,
     required GroupState group,
+    required EditState edit,
     @Default(false) bool isLoading,
     String? loadingMessage,
   }) = _DataGridState;
@@ -30,6 +31,7 @@ class DataGridState<T extends DataGridRow> with _$DataGridState<T> {
     sort: SortState.initial(),
     filter: FilterState.initial(),
     group: GroupState.initial(),
+    edit: EditState.initial(),
   );
 
   int get visibleRowCount => displayOrder.length;
@@ -61,17 +63,21 @@ class ViewportState with _$ViewportState {
   );
 }
 
+enum SelectionMode { single, multiple }
+
 @freezed
 class SelectionState with _$SelectionState {
   const factory SelectionState({
     required Set<double> selectedRowIds,
     double? focusedRowId,
     required Set<String> selectedCellIds,
+    required SelectionMode mode,
   }) = _SelectionState;
 
   const SelectionState._();
 
-  factory SelectionState.initial() => const SelectionState(selectedRowIds: {}, selectedCellIds: {});
+  factory SelectionState.initial() =>
+      const SelectionState(selectedRowIds: {}, selectedCellIds: {}, mode: SelectionMode.single);
 
   bool isRowSelected(double rowId) => selectedRowIds.contains(rowId);
   bool isCellSelected(String cellId) => selectedCellIds.contains(cellId);
@@ -138,4 +144,21 @@ class GroupState with _$GroupState {
 
   bool get hasGroups => groupedColumnIds.isNotEmpty;
   bool isGroupExpanded(String groupKey) => expandedGroups[groupKey] ?? true;
+}
+
+@freezed
+class EditState with _$EditState {
+  const factory EditState({String? editingCellId, dynamic editingValue}) = _EditState;
+
+  const EditState._();
+
+  factory EditState.initial() => const EditState();
+
+  bool get isEditing => editingCellId != null;
+
+  bool isCellEditing(double rowId, int columnId) {
+    return editingCellId == '${rowId}_$columnId';
+  }
+
+  String createCellId(double rowId, int columnId) => '${rowId}_$columnId';
 }

@@ -17,6 +17,8 @@ class DataGridHeader<T extends DataGridRow> extends StatelessWidget {
   final FilterRenderer defaultFilterRenderer;
   final double headerHeight;
 
+  static const filterRowHeight = 40.0;
+
   const DataGridHeader({
     super.key,
     required this.state,
@@ -26,11 +28,10 @@ class DataGridHeader<T extends DataGridRow> extends StatelessWidget {
     required this.headerHeight,
   });
 
+  bool get hasFilterableColumns => state.columns.any((col) => col.filterable && col.visible);
+
   @override
   Widget build(BuildContext context) {
-    final hasFilterableColumns = state.columns.any((col) => col.filterable && col.visible);
-    const filterRowHeight = 40.0;
-
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [

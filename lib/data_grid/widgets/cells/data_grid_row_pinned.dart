@@ -78,7 +78,11 @@ class DataGridRowWithPinnedCells<T extends DataGridRow> extends StatelessWidget 
                         child: CustomMultiChildLayout(
                           delegate: BodyLayoutDelegate(columns: unpinnedColumns),
                           children: [
-                            for (var column in unpinnedColumns) LayoutId(id: column.id, child: _buildCell(column)),
+                            for (var column in unpinnedColumns)
+                              LayoutId(
+                                id: column.id,
+                                child: _RowCell<T>(row: row, column: column, cellBuilder: cellBuilder),
+                              ),
                           ],
                         ),
                       ),
@@ -104,7 +108,13 @@ class DataGridRowWithPinnedCells<T extends DataGridRow> extends StatelessWidget 
                     ),
                     child: CustomMultiChildLayout(
                       delegate: BodyLayoutDelegate(columns: pinnedColumns),
-                      children: [for (var column in pinnedColumns) LayoutId(id: column.id, child: _buildCell(column))],
+                      children: [
+                        for (var column in pinnedColumns)
+                          LayoutId(
+                            id: column.id,
+                            child: _RowCell<T>(row: row, column: column, cellBuilder: cellBuilder),
+                          ),
+                      ],
                     ),
                   ),
                 ),
@@ -115,8 +125,17 @@ class DataGridRowWithPinnedCells<T extends DataGridRow> extends StatelessWidget 
       },
     );
   }
+}
 
-  Widget _buildCell(DataGridColumn column) {
+class _RowCell<T extends DataGridRow> extends StatelessWidget {
+  final T row;
+  final DataGridColumn column;
+  final Widget Function(T row, int columnId)? cellBuilder;
+
+  const _RowCell({required this.row, required this.column, this.cellBuilder});
+
+  @override
+  Widget build(BuildContext context) {
     if (cellBuilder != null) {
       return cellBuilder!(row, column.id);
     }

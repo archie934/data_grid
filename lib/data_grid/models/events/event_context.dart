@@ -17,6 +17,9 @@ class EventContext<T extends DataGridRow> {
   final SortDelegate<T> sortDelegate;
   final DataIndexer<T> dataIndexer;
   final void Function(DataGridEvent) dispatchEvent;
+  final bool Function(double rowId, int columnId)? canEditCell;
+  final bool Function(double rowId)? canSelectRow;
+  final Future<bool> Function(double rowId, int columnId, dynamic oldValue, dynamic newValue)? onCellCommit;
 
   const EventContext({
     required this.state,
@@ -24,5 +27,8 @@ class EventContext<T extends DataGridRow> {
     required this.sortDelegate,
     required this.dataIndexer,
     required this.dispatchEvent,
+    this.canEditCell,
+    this.canSelectRow,
+    this.onCellCommit,
   });
 }

@@ -22,9 +22,10 @@ class DataGridFilterRow<T extends DataGridRow> extends StatelessWidget {
     required this.defaultFilterRenderer,
   });
 
+  bool get hasFilterableColumns => state.columns.any((col) => col.filterable && col.visible);
+
   @override
   Widget build(BuildContext context) {
-    final hasFilterableColumns = state.columns.any((col) => col.filterable && col.visible);
     if (!hasFilterableColumns) {
       return const SizedBox.shrink();
     }
@@ -35,7 +36,18 @@ class DataGridFilterRow<T extends DataGridRow> extends StatelessWidget {
     if (pinnedColumns.isEmpty) {
       return CustomMultiChildLayout(
         delegate: HeaderLayoutDelegate(columns: state.columns),
-        children: [for (var column in state.columns) LayoutId(id: column.id, child: _buildFilterCell(column, context))],
+        children: [
+          for (var column in state.columns)
+            LayoutId(
+              id: column.id,
+              child: _FilterCell<T>(
+                column: column,
+                state: state,
+                controller: controller,
+                defaultFilterRenderer: defaultFilterRenderer,
+              ),
+            ),
+        ],
       );
     }
 
@@ -64,7 +76,15 @@ class DataGridFilterRow<T extends DataGridRow> extends StatelessWidget {
                       delegate: HeaderLayoutDelegate(columns: unpinnedColumns),
                       children: [
                         for (var column in unpinnedColumns)
-                          LayoutId(id: column.id, child: _buildFilterCell(column, context)),
+                          LayoutId(
+                            id: column.id,
+                            child: _FilterCell<T>(
+                              column: column,
+                              state: state,
+                              controller: controller,
+                              defaultFilterRenderer: defaultFilterRenderer,
+                            ),
+                          ),
                       ],
                     ),
                   ),
@@ -89,7 +109,16 @@ class DataGridFilterRow<T extends DataGridRow> extends StatelessWidget {
             child: CustomMultiChildLayout(
               delegate: HeaderLayoutDelegate(columns: pinnedColumns),
               children: [
-                for (var column in pinnedColumns) LayoutId(id: column.id, child: _buildFilterCell(column, context)),
+                for (var column in pinnedColumns)
+                  LayoutId(
+                    id: column.id,
+                    child: _FilterCell<T>(
+                      column: column,
+                      state: state,
+                      controller: controller,
+                      defaultFilterRenderer: defaultFilterRenderer,
+                    ),
+                  ),
               ],
             ),
           ),
@@ -97,8 +126,23 @@ class DataGridFilterRow<T extends DataGridRow> extends StatelessWidget {
       ],
     );
   }
+}
 
-  Widget _buildFilterCell(DataGridColumn column, BuildContext context) {
+class _FilterCell<T extends DataGridRow> extends StatelessWidget {
+  final DataGridColumn column;
+  final DataGridState<T> state;
+  final DataGridController<T> controller;
+  final FilterRenderer defaultFilterRenderer;
+
+  const _FilterCell({
+    required this.column,
+    required this.state,
+    required this.controller,
+    required this.defaultFilterRenderer,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     if (!column.filterable) {
       return Container(
         decoration: BoxDecoration(

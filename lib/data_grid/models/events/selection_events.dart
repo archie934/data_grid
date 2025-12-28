@@ -11,6 +11,10 @@ class SelectRowEvent extends DataGridEvent {
 
   @override
   DataGridState<T>? apply<T extends DataGridRow>(EventContext<T> context) {
+    if (context.canSelectRow != null && !context.canSelectRow!(rowId)) {
+      return null;
+    }
+
     final selectedRows = Set<double>.from(context.state.selection.selectedRowIds);
 
     if (multiSelect) {
@@ -64,6 +68,30 @@ class SelectRowsRangeEvent extends DataGridEvent {
 class ClearSelectionEvent extends DataGridEvent {
   @override
   DataGridState<T>? apply<T extends DataGridRow>(EventContext<T> context) {
-    return context.state.copyWith(selection: SelectionState.initial());
+    return context.state.copyWith(
+      selection: context.state.selection.copyWith(selectedRowIds: {}, selectedCellIds: {}, focusedRowId: null),
+    );
+  }
+}
+
+class SetSelectionModeEvent extends DataGridEvent {
+  final SelectionMode mode;
+
+  SetSelectionModeEvent({required this.mode});
+
+  @override
+  DataGridState<T>? apply<T extends DataGridRow>(EventContext<T> context) {
+    if (context.state.selection.mode == mode) {
+      return null;
+    }
+
+    return context.state.copyWith(
+      selection: context.state.selection.copyWith(
+        mode: mode,
+        selectedRowIds: {},
+        selectedCellIds: {},
+        focusedRowId: null,
+      ),
+    );
   }
 }

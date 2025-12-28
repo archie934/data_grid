@@ -14,6 +14,8 @@ import 'package:data_grid/data_grid/renderers/cell_renderer.dart';
 import 'package:data_grid/data_grid/renderers/default_row_renderer.dart';
 import 'package:data_grid/data_grid/renderers/render_context.dart';
 
+const scrollbarWidth = 12.0;
+
 class DataGridBody<T extends DataGridRow> extends StatelessWidget {
   final DataGridState<T> state;
   final DataGridController<T> controller;
@@ -36,8 +38,6 @@ class DataGridBody<T extends DataGridRow> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const scrollbarWidth = 12.0;
-
     final pinnedColumns = state.columns.where((col) => col.pinned && col.visible).toList();
     final unpinnedColumns = state.columns.where((col) => !col.pinned && col.visible).toList();
 
@@ -64,7 +64,7 @@ class DataGridBody<T extends DataGridRow> extends StatelessWidget {
                   return DataGridCell<T>(
                     row: row,
                     rowId: row.id,
-                    columnId: column.id,
+                    column: column,
                     rowIndex: rowIndex,
                     controller: controller,
                     cellBuilder: cellBuilder,
@@ -92,19 +92,47 @@ class DataGridBody<T extends DataGridRow> extends StatelessWidget {
       );
     }
 
-    // ListView with pinned columns and Listener for gestures
-    return _buildPinnedLayout(pinnedColumns, unpinnedColumns, scrollbarWidth);
+    return _PinnedLayout<T>(
+      state: state,
+      controller: controller,
+      scrollController: scrollController,
+      pinnedColumns: pinnedColumns,
+      unpinnedColumns: unpinnedColumns,
+      rowHeight: rowHeight,
+      rowRenderer: rowRenderer,
+      cellRenderer: cellRenderer,
+      cellBuilder: cellBuilder,
+    );
   }
+}
 
-  Widget _buildPinnedLayout(
-    List<DataGridColumn> pinnedColumns,
-    List<DataGridColumn> unpinnedColumns,
-    double scrollbarWidth,
-  ) {
+class _PinnedLayout<T extends DataGridRow> extends StatelessWidget {
+  final DataGridState<T> state;
+  final DataGridController<T> controller;
+  final GridScrollController scrollController;
+  final List<DataGridColumn> pinnedColumns;
+  final List<DataGridColumn> unpinnedColumns;
+  final double rowHeight;
+  final RowRenderer<T>? rowRenderer;
+  final CellRenderer<T>? cellRenderer;
+  final Widget Function(T row, int columnId)? cellBuilder;
+
+  const _PinnedLayout({
+    required this.state,
+    required this.controller,
+    required this.scrollController,
+    required this.pinnedColumns,
+    required this.unpinnedColumns,
+    required this.rowHeight,
+    this.rowRenderer,
+    this.cellRenderer,
+    this.cellBuilder,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     final pinnedWidth = pinnedColumns.fold<double>(0.0, (sum, col) => sum + col.width);
     final unpinnedWidth = unpinnedColumns.fold<double>(0.0, (sum, col) => sum + col.width);
-
-    // Use provided renderer or default
     final effectiveRowRenderer = rowRenderer ?? DefaultRowRenderer<T>(cellRenderer: cellRenderer);
 
     return Stack(
@@ -150,7 +178,6 @@ class DataGridBody<T extends DataGridRow> extends StatelessWidget {
                     final rowId = state.displayOrder[index];
                     final row = state.rowsById[rowId]!;
 
-                    // Build row render context
                     final renderContext = RowRenderContext<T>(
                       controller: controller,
                       scrollController: scrollController,
@@ -172,14 +199,12 @@ class DataGridBody<T extends DataGridRow> extends StatelessWidget {
             ),
           ),
         ),
-        // Vertical scrollbar
         Positioned(
           right: 0,
           top: 0,
           bottom: scrollbarWidth,
           child: CustomVerticalScrollbar(controller: scrollController.verticalController, width: scrollbarWidth),
         ),
-        // Horizontal scrollbar
         Positioned(
           left: pinnedWidth,
           right: scrollbarWidth,

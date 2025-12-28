@@ -34,24 +34,41 @@ class DefaultRowRenderer<T extends DataGridRow> extends RowRenderer<T> {
         ),
         child: Stack(
           children: [
-            // Unpinned cells (responds to horizontal scroll)
-            _buildUnpinnedCells(context, row, index, renderContext, effectiveCellRenderer),
-            // Pinned cells (fixed position)
+            _UnpinnedCells<T>(
+              row: row,
+              index: index,
+              renderContext: renderContext,
+              cellRenderer: effectiveCellRenderer,
+            ),
             if (renderContext.pinnedColumns.isNotEmpty)
-              _buildPinnedCells(context, row, index, renderContext, effectiveCellRenderer),
+              _PinnedCells<T>(
+                row: row,
+                index: index,
+                renderContext: renderContext,
+                cellRenderer: effectiveCellRenderer,
+              ),
           ],
         ),
       ),
     );
   }
+}
 
-  Widget _buildUnpinnedCells(
-    BuildContext context,
-    T row,
-    int index,
-    RowRenderContext<T> renderContext,
-    CellRenderer<T> cellRenderer,
-  ) {
+class _UnpinnedCells<T extends DataGridRow> extends StatelessWidget {
+  final T row;
+  final int index;
+  final RowRenderContext<T> renderContext;
+  final CellRenderer<T> cellRenderer;
+
+  const _UnpinnedCells({
+    required this.row,
+    required this.index,
+    required this.renderContext,
+    required this.cellRenderer,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Positioned(
       left: renderContext.pinnedWidth,
       right: 0,
@@ -69,7 +86,14 @@ class DefaultRowRenderer<T extends DataGridRow> extends RowRenderer<T> {
                 for (var column in renderContext.unpinnedColumns)
                   LayoutId(
                     id: column.id,
-                    child: _buildCell(context, row, column, index, renderContext, cellRenderer, isPinned: false),
+                    child: _RendererCell<T>(
+                      row: row,
+                      column: column,
+                      index: index,
+                      renderContext: renderContext,
+                      cellRenderer: cellRenderer,
+                      isPinned: false,
+                    ),
                   ),
               ],
             ),
@@ -78,14 +102,18 @@ class DefaultRowRenderer<T extends DataGridRow> extends RowRenderer<T> {
       ),
     );
   }
+}
 
-  Widget _buildPinnedCells(
-    BuildContext context,
-    T row,
-    int index,
-    RowRenderContext<T> renderContext,
-    CellRenderer<T> cellRenderer,
-  ) {
+class _PinnedCells<T extends DataGridRow> extends StatelessWidget {
+  final T row;
+  final int index;
+  final RowRenderContext<T> renderContext;
+  final CellRenderer<T> cellRenderer;
+
+  const _PinnedCells({required this.row, required this.index, required this.renderContext, required this.cellRenderer});
+
+  @override
+  Widget build(BuildContext context) {
     return Positioned(
       left: 0,
       top: 0,
@@ -102,23 +130,41 @@ class DefaultRowRenderer<T extends DataGridRow> extends RowRenderer<T> {
             for (var column in renderContext.pinnedColumns)
               LayoutId(
                 id: column.id,
-                child: _buildCell(context, row, column, index, renderContext, cellRenderer, isPinned: true),
+                child: _RendererCell<T>(
+                  row: row,
+                  column: column,
+                  index: index,
+                  renderContext: renderContext,
+                  cellRenderer: cellRenderer,
+                  isPinned: true,
+                ),
               ),
           ],
         ),
       ),
     );
   }
+}
 
-  Widget _buildCell(
-    BuildContext context,
-    T row,
-    DataGridColumn column,
-    int index,
-    RowRenderContext<T> renderContext,
-    CellRenderer<T> cellRenderer, {
-    required bool isPinned,
-  }) {
+class _RendererCell<T extends DataGridRow> extends StatelessWidget {
+  final T row;
+  final DataGridColumn column;
+  final int index;
+  final RowRenderContext<T> renderContext;
+  final CellRenderer<T> cellRenderer;
+  final bool isPinned;
+
+  const _RendererCell({
+    required this.row,
+    required this.column,
+    required this.index,
+    required this.renderContext,
+    required this.cellRenderer,
+    required this.isPinned,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     final cellContext = CellRenderContext<T>(
       controller: renderContext.controller,
       isSelected: renderContext.isSelected,
