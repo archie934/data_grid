@@ -49,7 +49,10 @@ class _DataGridFilterRowState<T extends DataGridRow> extends State<DataGridFilte
   bool _columnsEqual(List<DataGridColumn> a, List<DataGridColumn> b) {
     if (a.length != b.length) return false;
     for (int i = 0; i < a.length; i++) {
-      if (a[i].id != b[i].id || a[i].pinned != b[i].pinned || a[i].visible != b[i].visible) {
+      if (a[i].id != b[i].id ||
+          a[i].pinned != b[i].pinned ||
+          a[i].visible != b[i].visible ||
+          a[i].width != b[i].width) {
         return false;
       }
     }

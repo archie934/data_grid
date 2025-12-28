@@ -22,6 +22,7 @@ class DataGridController<T extends DataGridRow> {
   final BehaviorSubject<DataGridState<T>> _stateSubject;
   final PublishSubject<DataGridEvent> _eventSubject = PublishSubject();
   final StreamController<void> _disposeController = StreamController.broadcast();
+  final BehaviorSubject<Set<double>> _renderedRowIds = BehaviorSubject.seeded({});
 
   final DataIndexer<T> _dataIndexer;
 
@@ -74,6 +75,9 @@ class DataGridController<T extends DataGridRow> {
   Stream<SortState> get sort$ => _stateSubject.stream.map((s) => s.sort).distinct();
   Stream<FilterState> get filter$ => _stateSubject.stream.map((s) => s.filter).distinct();
   Stream<GroupState> get group$ => _stateSubject.stream.map((s) => s.group).distinct();
+
+  Stream<Set<double>> get renderedRowIds$ => _renderedRowIds.stream;
+  Set<double> get renderedRowIds => _renderedRowIds.value;
 
   void _initialize(List<DataGridColumn> columns, List<T> rows) {
     final rowsById = {for (var row in rows) row.id: row};
@@ -244,6 +248,16 @@ class DataGridController<T extends DataGridRow> {
     addEvent(CancelCellEditEvent());
   }
 
+  void registerRenderedRow(double rowId) {
+    final updated = Set<double>.from(_renderedRowIds.value)..add(rowId);
+    _renderedRowIds.add(updated);
+  }
+
+  void unregisterRenderedRow(double rowId) {
+    final updated = Set<double>.from(_renderedRowIds.value)..remove(rowId);
+    _renderedRowIds.add(updated);
+  }
+
   void dispose() {
     _viewportDelegate.dispose();
     _sortDelegate.dispose();
@@ -251,5 +265,6 @@ class DataGridController<T extends DataGridRow> {
     _disposeController.close();
     _eventSubject.close();
     _stateSubject.close();
+    _renderedRowIds.close();
   }
 }

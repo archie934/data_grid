@@ -8,6 +8,7 @@ import 'package:data_grid/data_grid/renderers/cell_renderer.dart';
 import 'package:data_grid/data_grid/renderers/default_cell_renderer.dart';
 import 'package:data_grid/data_grid/renderers/render_context.dart';
 import 'package:data_grid/data_grid/widgets/cells/data_grid_checkbox_cell.dart';
+import 'package:data_grid/data_grid/widgets/visible_row_tracker.dart';
 import 'package:data_grid/data_grid/theme/data_grid_theme.dart';
 
 /// Default row renderer implementation.
@@ -23,34 +24,40 @@ class DefaultRowRenderer<T extends DataGridRow> extends RowRenderer<T> {
     final theme = DataGridTheme.of(context);
     final effectiveCellRenderer = cellRenderer ?? DefaultCellRenderer<T>();
 
-    return GestureDetector(
-      onTap: () {
-        renderContext.controller.addEvent(SelectRowEvent(rowId: row.id, multiSelect: false));
-      },
-      child: Container(
-        height: renderContext.rowHeight,
-        decoration: BoxDecoration(
-          color: renderContext.isSelected
-              ? theme.colors.selectionColor
-              : (index % 2 == 0 ? theme.colors.evenRowColor : theme.colors.oddRowColor),
-          border: theme.borders.rowBorder,
-        ),
-        child: Stack(
-          children: [
-            _UnpinnedCells<T>(
-              row: row,
-              index: index,
-              renderContext: renderContext,
-              cellRenderer: effectiveCellRenderer,
-            ),
-            if (renderContext.pinnedColumns.isNotEmpty)
-              _PinnedCells<T>(
+    return VisibleRowTracker<T>(
+      rowId: row.id,
+      rowIndex: index,
+      rowHeight: renderContext.rowHeight,
+      controller: renderContext.controller,
+      child: GestureDetector(
+        onTap: () {
+          renderContext.controller.addEvent(SelectRowEvent(rowId: row.id, multiSelect: false));
+        },
+        child: Container(
+          height: renderContext.rowHeight,
+          decoration: BoxDecoration(
+            color: renderContext.isSelected
+                ? theme.colors.selectionColor
+                : (index % 2 == 0 ? theme.colors.evenRowColor : theme.colors.oddRowColor),
+            border: theme.borders.rowBorder,
+          ),
+          child: Stack(
+            children: [
+              _UnpinnedCells<T>(
                 row: row,
                 index: index,
                 renderContext: renderContext,
                 cellRenderer: effectiveCellRenderer,
               ),
-          ],
+              if (renderContext.pinnedColumns.isNotEmpty)
+                _PinnedCells<T>(
+                  row: row,
+                  index: index,
+                  renderContext: renderContext,
+                  cellRenderer: effectiveCellRenderer,
+                ),
+            ],
+          ),
         ),
       ),
     );

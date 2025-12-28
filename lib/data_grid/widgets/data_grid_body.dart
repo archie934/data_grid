@@ -67,11 +67,19 @@ class _DataGridBodyState<T extends DataGridRow> extends State<DataGridBody<T>> {
 
   bool _columnsEqual(List<DataGridColumn> a, List<DataGridColumn> b) {
     if (a.length != b.length) return false;
+
     for (int i = 0; i < a.length; i++) {
-      if (a[i].id != b[i].id || a[i].pinned != b[i].pinned || a[i].visible != b[i].visible) {
+      final colA = a[i];
+      final colB = b[i];
+
+      if (colA.id != colB.id ||
+          colA.pinned != colB.pinned ||
+          colA.visible != colB.visible ||
+          colA.width != colB.width) {
         return false;
       }
     }
+
     return true;
   }
 

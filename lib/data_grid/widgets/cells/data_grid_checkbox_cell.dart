@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:rxdart/rxdart.dart';
 import 'package:data_grid/data_grid/controller/data_grid_controller.dart';
 import 'package:data_grid/data_grid/models/data/row.dart';
 import 'package:data_grid/data_grid/models/events/selection_events.dart';
@@ -74,35 +75,35 @@ class _DataGridCheckboxHeaderCellState<T extends DataGridRow> extends State<Data
     final theme = DataGridTheme.of(context);
 
     return StreamBuilder<_CheckboxHeaderState>(
-      stream: widget.controller.state$.map((state) {
-        final viewport = state.viewport;
-        final visibleRowIds = <double>[];
+      stream: Rx.combineLatest2(widget.controller.renderedRowIds$, widget.controller.selection$, (
+        Set<double> renderedRowIds,
+        selection,
+      ) {
+        final allVisibleSelected =
+            renderedRowIds.isNotEmpty && renderedRowIds.every((id) => selection.isRowSelected(id));
+        final anySelected = selection.selectedRowIds.isNotEmpty;
+        final someSelected = anySelected && !allVisibleSelected;
 
-        for (int i = viewport.firstVisibleRow; i <= viewport.lastVisibleRow && i < state.displayOrder.length; i++) {
-          visibleRowIds.add(state.displayOrder[i]);
-        }
-
-        final allSelected = visibleRowIds.isNotEmpty && visibleRowIds.every((id) => state.selection.isRowSelected(id));
-        final someSelected = visibleRowIds.any((id) => state.selection.isRowSelected(id)) && !allSelected;
-
-        return _CheckboxHeaderState(allSelected, someSelected);
+        return _CheckboxHeaderState(allVisibleSelected, someSelected, renderedRowIds);
       }).distinct(),
       initialData: _computeInitialState(),
       builder: (context, snapshot) {
         final headerState = snapshot.data!;
 
         return Semantics(
-          label: headerState.allSelected
+          label: headerState.allVisibleSelected
               ? 'Deselect all rows'
               : headerState.someSelected
               ? 'Some rows selected, click to deselect all'
               : 'Select all visible rows',
-          checked: headerState.allSelected,
+          checked: headerState.allVisibleSelected,
           onTap: () {
-            if (headerState.allSelected || headerState.someSelected) {
+            if (headerState.allVisibleSelected || headerState.someSelected) {
               widget.controller.addEvent(ClearSelectionEvent());
             } else {
-              widget.controller.addEvent(SelectAllRowsEvent());
+              widget.controller.addEvent(
+                SelectAllRowsEvent(rowIds: headerState.visibleRowIds.isEmpty ? null : headerState.visibleRowIds),
+              );
             }
           },
           child: Container(
@@ -110,13 +111,15 @@ class _DataGridCheckboxHeaderCellState<T extends DataGridRow> extends State<Data
             padding: theme.padding.checkboxPadding,
             alignment: Alignment.center,
             child: Checkbox(
-              value: headerState.allSelected,
+              value: headerState.someSelected ? null : headerState.allVisibleSelected,
               tristate: true,
               onChanged: (value) {
-                if (headerState.allSelected || headerState.someSelected) {
+                if (headerState.allVisibleSelected || headerState.someSelected) {
                   widget.controller.addEvent(ClearSelectionEvent());
                 } else {
-                  widget.controller.addEvent(SelectAllRowsEvent());
+                  widget.controller.addEvent(
+                    SelectAllRowsEvent(rowIds: headerState.visibleRowIds.isEmpty ? null : headerState.visibleRowIds),
+                  );
                 }
               },
             ),
@@ -128,31 +131,33 @@ class _DataGridCheckboxHeaderCellState<T extends DataGridRow> extends State<Data
 
   _CheckboxHeaderState _computeInitialState() {
     final state = widget.controller.state;
-    final viewport = state.viewport;
-    final visibleRowIds = <double>[];
+    final renderedRowIds = widget.controller.renderedRowIds;
 
-    for (int i = viewport.firstVisibleRow; i <= viewport.lastVisibleRow && i < state.displayOrder.length; i++) {
-      visibleRowIds.add(state.displayOrder[i]);
-    }
+    final allVisibleSelected =
+        renderedRowIds.isNotEmpty && renderedRowIds.every((id) => state.selection.isRowSelected(id));
+    final anySelected = state.selection.selectedRowIds.isNotEmpty;
+    final someSelected = anySelected && !allVisibleSelected;
 
-    final allSelected = visibleRowIds.isNotEmpty && visibleRowIds.every((id) => state.selection.isRowSelected(id));
-    final someSelected = visibleRowIds.any((id) => state.selection.isRowSelected(id)) && !allSelected;
-
-    return _CheckboxHeaderState(allSelected, someSelected);
+    return _CheckboxHeaderState(allVisibleSelected, someSelected, renderedRowIds);
   }
 }
 
 class _CheckboxHeaderState {
-  final bool allSelected;
+  final bool allVisibleSelected;
   final bool someSelected;
+  final Set<double> visibleRowIds;
 
-  _CheckboxHeaderState(this.allSelected, this.someSelected);
+  _CheckboxHeaderState(this.allVisibleSelected, this.someSelected, this.visibleRowIds);
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is _CheckboxHeaderState && allSelected == other.allSelected && someSelected == other.someSelected;
+      other is _CheckboxHeaderState &&
+          allVisibleSelected == other.allVisibleSelected &&
+          someSelected == other.someSelected &&
+          visibleRowIds.length == other.visibleRowIds.length &&
+          visibleRowIds.every((id) => other.visibleRowIds.contains(id));
 
   @override
-  int get hashCode => Object.hash(allSelected, someSelected);
+  int get hashCode => Object.hash(allVisibleSelected, someSelected, Object.hashAll(visibleRowIds));
 }
