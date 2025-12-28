@@ -7,6 +7,7 @@ import 'package:data_grid/data_grid/renderers/row_renderer.dart';
 import 'package:data_grid/data_grid/renderers/cell_renderer.dart';
 import 'package:data_grid/data_grid/renderers/default_cell_renderer.dart';
 import 'package:data_grid/data_grid/renderers/render_context.dart';
+import 'package:data_grid/data_grid/widgets/cells/data_grid_checkbox_cell.dart';
 
 /// Default row renderer implementation.
 ///
@@ -165,6 +166,10 @@ class _RendererCell<T extends DataGridRow> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (column.id == kSelectionColumnId) {
+      return DataGridCheckboxCell<T>(row: row, rowId: row.id, rowIndex: index, controller: renderContext.controller);
+    }
+
     final cellContext = CellRenderContext<T>(
       controller: renderContext.controller,
       isSelected: renderContext.isSelected,

@@ -36,6 +36,15 @@ class DataGridState<T extends DataGridRow> with _$DataGridState<T> {
 
   int get visibleRowCount => displayOrder.length;
   List<T> get visibleRows => displayOrder.map((id) => rowsById[id]!).toList();
+
+  List<DataGridColumn> get effectiveColumns {
+    if (selection.mode == SelectionMode.multiple) {
+      final hasPinnedColumns = columns.any((col) => col.pinned);
+      final selectionColumn = DataGridColumn.selection(pinned: hasPinnedColumns);
+      return [selectionColumn, ...columns];
+    }
+    return columns;
+  }
 }
 
 @freezed

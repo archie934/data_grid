@@ -20,11 +20,11 @@ class DataGridCheckboxCell<T extends DataGridRow> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<SelectionState>(
-      stream: controller.selection$,
-      initialData: controller.state.selection,
+    return StreamBuilder<bool>(
+      stream: controller.selection$.map((s) => s.isRowSelected(rowId)).distinct(),
+      initialData: controller.state.selection.isRowSelected(rowId),
       builder: (context, snapshot) {
-        final isSelected = snapshot.data?.isRowSelected(rowId) ?? false;
+        final isSelected = snapshot.data ?? false;
 
         return GestureDetector(
           onTap: () {
@@ -53,21 +53,46 @@ class DataGridCheckboxCell<T extends DataGridRow> extends StatelessWidget {
   }
 }
 
-class DataGridCheckboxHeaderCell<T extends DataGridRow> extends StatelessWidget {
+class DataGridCheckboxHeaderCell<T extends DataGridRow> extends StatefulWidget {
   final DataGridController<T> controller;
 
   const DataGridCheckboxHeaderCell({super.key, required this.controller});
 
   @override
+  State<DataGridCheckboxHeaderCell<T>> createState() => _DataGridCheckboxHeaderCellState<T>();
+}
+
+class _DataGridCheckboxHeaderCellState<T extends DataGridRow> extends State<DataGridCheckboxHeaderCell<T>> {
+  late List<double> visibleRowIds;
+  late bool allSelected;
+  late bool someSelected;
+
+  @override
+  void initState() {
+    super.initState();
+    _updateSelectionState(widget.controller.state);
+  }
+
+  void _updateSelectionState(DataGridState<T> state) {
+    final viewport = state.viewport;
+    visibleRowIds = [];
+
+    for (int i = viewport.firstVisibleRow; i <= viewport.lastVisibleRow && i < state.displayOrder.length; i++) {
+      visibleRowIds.add(state.displayOrder[i]);
+    }
+
+    allSelected = visibleRowIds.isNotEmpty && visibleRowIds.every((id) => state.selection.isRowSelected(id));
+    someSelected = visibleRowIds.any((id) => state.selection.isRowSelected(id)) && !allSelected;
+  }
+
+  @override
   Widget build(BuildContext context) {
     return StreamBuilder<DataGridState<T>>(
-      stream: controller.state$,
-      initialData: controller.state,
+      stream: widget.controller.state$,
+      initialData: widget.controller.state,
       builder: (context, snapshot) {
         final state = snapshot.data!;
-        final allSelected =
-            state.displayOrder.isNotEmpty && state.displayOrder.every((id) => state.selection.isRowSelected(id));
-        final someSelected = state.selection.selectedRowIds.isNotEmpty && !allSelected;
+        _updateSelectionState(state);
 
         return Container(
           decoration: BoxDecoration(
@@ -84,11 +109,9 @@ class DataGridCheckboxHeaderCell<T extends DataGridRow> extends StatelessWidget 
             tristate: true,
             onChanged: (value) {
               if (allSelected || someSelected) {
-                controller.addEvent(ClearSelectionEvent());
+                widget.controller.addEvent(ClearSelectionEvent());
               } else {
-                for (final rowId in state.displayOrder) {
-                  controller.addEvent(SelectRowEvent(rowId: rowId, multiSelect: true));
-                }
+                widget.controller.addEvent(SelectAllRowsEvent());
               }
             },
           ),

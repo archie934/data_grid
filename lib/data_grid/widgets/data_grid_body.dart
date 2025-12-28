@@ -7,6 +7,7 @@ import 'package:data_grid/data_grid/models/data/column.dart';
 import 'package:data_grid/data_grid/models/state/grid_state.dart';
 import 'package:data_grid/data_grid/widgets/data_grid_scroll_view.dart';
 import 'package:data_grid/data_grid/widgets/cells/data_grid_cell.dart';
+import 'package:data_grid/data_grid/widgets/cells/data_grid_checkbox_cell.dart';
 import 'package:data_grid/data_grid/widgets/scroll/scrollbar_vertical.dart';
 import 'package:data_grid/data_grid/widgets/scroll/scrollbar_horizontal.dart';
 import 'package:data_grid/data_grid/renderers/row_renderer.dart';
@@ -16,7 +17,7 @@ import 'package:data_grid/data_grid/renderers/render_context.dart';
 
 const scrollbarWidth = 12.0;
 
-class DataGridBody<T extends DataGridRow> extends StatelessWidget {
+class DataGridBody<T extends DataGridRow> extends StatefulWidget {
   final DataGridState<T> state;
   final DataGridController<T> controller;
   final GridScrollController scrollController;
@@ -37,12 +38,35 @@ class DataGridBody<T extends DataGridRow> extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    final pinnedColumns = state.columns.where((col) => col.pinned && col.visible).toList();
-    final unpinnedColumns = state.columns.where((col) => !col.pinned && col.visible).toList();
+  State<DataGridBody<T>> createState() => _DataGridBodyState<T>();
+}
 
+class _DataGridBodyState<T extends DataGridRow> extends State<DataGridBody<T>> {
+  late List<DataGridColumn> pinnedColumns;
+  late List<DataGridColumn> unpinnedColumns;
+
+  @override
+  void initState() {
+    super.initState();
+    _updateColumns();
+  }
+
+  @override
+  void didUpdateWidget(DataGridBody<T> oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.state.effectiveColumns != widget.state.effectiveColumns) {
+      _updateColumns();
+    }
+  }
+
+  void _updateColumns() {
+    pinnedColumns = widget.state.effectiveColumns.where((col) => col.pinned && col.visible).toList();
+    unpinnedColumns = widget.state.effectiveColumns.where((col) => !col.pinned && col.visible).toList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     if (pinnedColumns.isEmpty) {
-      // Current DataGridScrollView approach
       return NotificationListener<ScrollNotification>(
         onNotification: (notification) {
           return false;
@@ -51,23 +75,34 @@ class DataGridBody<T extends DataGridRow> extends StatelessWidget {
           children: [
             Positioned.fill(
               child: DataGridScrollView(
-                columns: state.columns,
-                rowCount: state.displayOrder.length,
-                rowHeight: rowHeight,
-                verticalDetails: ScrollableDetails.vertical(controller: scrollController.verticalController),
-                horizontalDetails: ScrollableDetails.horizontal(controller: scrollController.horizontalController),
+                columns: widget.state.effectiveColumns,
+                rowCount: widget.state.displayOrder.length,
+                rowHeight: widget.rowHeight,
+                verticalDetails: ScrollableDetails.vertical(controller: widget.scrollController.verticalController),
+                horizontalDetails: ScrollableDetails.horizontal(
+                  controller: widget.scrollController.horizontalController,
+                ),
                 cellBuilder: (context, rowIndex, columnIndex) {
-                  final rowId = state.displayOrder[rowIndex];
-                  final row = state.rowsById[rowId]!;
-                  final column = state.columns[columnIndex];
+                  final rowId = widget.state.displayOrder[rowIndex];
+                  final row = widget.state.rowsById[rowId]!;
+                  final column = widget.state.effectiveColumns[columnIndex];
+
+                  if (column.id == kSelectionColumnId) {
+                    return DataGridCheckboxCell<T>(
+                      row: row,
+                      rowId: row.id,
+                      rowIndex: rowIndex,
+                      controller: widget.controller,
+                    );
+                  }
 
                   return DataGridCell<T>(
                     row: row,
                     rowId: row.id,
                     column: column,
                     rowIndex: rowIndex,
-                    controller: controller,
-                    cellBuilder: cellBuilder,
+                    controller: widget.controller,
+                    cellBuilder: widget.cellBuilder,
                   );
                 },
               ),
@@ -76,14 +111,17 @@ class DataGridBody<T extends DataGridRow> extends StatelessWidget {
               right: 0,
               top: 0,
               bottom: scrollbarWidth,
-              child: CustomVerticalScrollbar(controller: scrollController.verticalController, width: scrollbarWidth),
+              child: CustomVerticalScrollbar(
+                controller: widget.scrollController.verticalController,
+                width: scrollbarWidth,
+              ),
             ),
             Positioned(
               left: 0,
               right: scrollbarWidth,
               bottom: 0,
               child: CustomHorizontalScrollbar(
-                controller: scrollController.horizontalController,
+                controller: widget.scrollController.horizontalController,
                 height: scrollbarWidth,
               ),
             ),
@@ -93,15 +131,15 @@ class DataGridBody<T extends DataGridRow> extends StatelessWidget {
     }
 
     return _PinnedLayout<T>(
-      state: state,
-      controller: controller,
-      scrollController: scrollController,
+      state: widget.state,
+      controller: widget.controller,
+      scrollController: widget.scrollController,
       pinnedColumns: pinnedColumns,
       unpinnedColumns: unpinnedColumns,
-      rowHeight: rowHeight,
-      rowRenderer: rowRenderer,
-      cellRenderer: cellRenderer,
-      cellBuilder: cellBuilder,
+      rowHeight: widget.rowHeight,
+      rowRenderer: widget.rowRenderer,
+      cellRenderer: widget.cellRenderer,
+      cellBuilder: widget.cellBuilder,
     );
   }
 }

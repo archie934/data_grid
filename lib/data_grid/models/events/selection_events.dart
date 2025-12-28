@@ -74,6 +74,20 @@ class ClearSelectionEvent extends DataGridEvent {
   }
 }
 
+class SelectAllRowsEvent extends DataGridEvent {
+  @override
+  DataGridState<T>? apply<T extends DataGridRow>(EventContext<T> context) {
+    final viewport = context.state.viewport;
+    final visibleRowIds = <double>{};
+
+    for (int i = viewport.firstVisibleRow; i <= viewport.lastVisibleRow && i < context.state.displayOrder.length; i++) {
+      visibleRowIds.add(context.state.displayOrder[i]);
+    }
+
+    return context.state.copyWith(selection: context.state.selection.copyWith(selectedRowIds: visibleRowIds));
+  }
+}
+
 class SetSelectionModeEvent extends DataGridEvent {
   final SelectionMode mode;
 

@@ -7,6 +7,7 @@ import 'package:data_grid/data_grid/models/state/grid_state.dart';
 import 'package:data_grid/data_grid/models/events/grid_events.dart';
 import 'package:data_grid/data_grid/delegates/header_layout_delegate.dart';
 import 'package:data_grid/data_grid/widgets/cells/data_grid_header_cell.dart';
+import 'package:data_grid/data_grid/widgets/cells/data_grid_checkbox_cell.dart';
 import 'package:data_grid/data_grid/widgets/data_grid_filter_row.dart';
 import 'package:data_grid/data_grid/renderers/filter_renderer.dart';
 
@@ -54,7 +55,7 @@ class DataGridHeader<T extends DataGridRow> extends StatelessWidget {
   }
 }
 
-class _HeaderRow<T extends DataGridRow> extends StatelessWidget {
+class _HeaderRow<T extends DataGridRow> extends StatefulWidget {
   final DataGridState<T> state;
   final DataGridController<T> controller;
   final GridScrollController scrollController;
@@ -62,18 +63,42 @@ class _HeaderRow<T extends DataGridRow> extends StatelessWidget {
   const _HeaderRow({required this.state, required this.controller, required this.scrollController});
 
   @override
-  Widget build(BuildContext context) {
-    final pinnedColumns = state.columns.where((col) => col.pinned && col.visible).toList();
-    final unpinnedColumns = state.columns.where((col) => !col.pinned && col.visible).toList();
+  State<_HeaderRow<T>> createState() => _HeaderRowState<T>();
+}
 
+class _HeaderRowState<T extends DataGridRow> extends State<_HeaderRow<T>> {
+  late List<DataGridColumn> pinnedColumns;
+  late List<DataGridColumn> unpinnedColumns;
+
+  @override
+  void initState() {
+    super.initState();
+    _updateColumns();
+  }
+
+  @override
+  void didUpdateWidget(_HeaderRow<T> oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.state.effectiveColumns != widget.state.effectiveColumns) {
+      _updateColumns();
+    }
+  }
+
+  void _updateColumns() {
+    pinnedColumns = widget.state.effectiveColumns.where((col) => col.pinned && col.visible).toList();
+    unpinnedColumns = widget.state.effectiveColumns.where((col) => !col.pinned && col.visible).toList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     if (pinnedColumns.isEmpty) {
       return CustomMultiChildLayout(
-        delegate: HeaderLayoutDelegate(columns: state.columns),
+        delegate: HeaderLayoutDelegate(columns: widget.state.effectiveColumns),
         children: [
-          for (var column in state.columns)
+          for (var column in widget.state.effectiveColumns)
             LayoutId(
               id: column.id,
-              child: _HeaderCellWrapper<T>(column: column, controller: controller, sortState: state.sort),
+              child: _HeaderCellWrapper<T>(column: column, controller: widget.controller, sortState: widget.state.sort),
             ),
         ],
       );
@@ -90,7 +115,7 @@ class _HeaderRow<T extends DataGridRow> extends StatelessWidget {
           top: 0,
           bottom: 0,
           child: SingleChildScrollView(
-            controller: scrollController.horizontalController,
+            controller: widget.scrollController.horizontalController,
             scrollDirection: Axis.horizontal,
             child: SizedBox(
               width: unpinnedWidth,
@@ -100,7 +125,11 @@ class _HeaderRow<T extends DataGridRow> extends StatelessWidget {
                   for (var column in unpinnedColumns)
                     LayoutId(
                       id: column.id,
-                      child: _HeaderCellWrapper<T>(column: column, controller: controller, sortState: state.sort),
+                      child: _HeaderCellWrapper<T>(
+                        column: column,
+                        controller: widget.controller,
+                        sortState: widget.state.sort,
+                      ),
                     ),
                 ],
               ),
@@ -126,7 +155,11 @@ class _HeaderRow<T extends DataGridRow> extends StatelessWidget {
                 for (var column in pinnedColumns)
                   LayoutId(
                     id: column.id,
-                    child: _HeaderCellWrapper<T>(column: column, controller: controller, sortState: state.sort),
+                    child: _HeaderCellWrapper<T>(
+                      column: column,
+                      controller: widget.controller,
+                      sortState: widget.state.sort,
+                    ),
                   ),
               ],
             ),
@@ -146,6 +179,10 @@ class _HeaderCellWrapper<T extends DataGridRow> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (column.id == kSelectionColumnId) {
+      return DataGridCheckboxHeaderCell<T>(controller: controller);
+    }
+
     return DataGridHeaderCell(
       column: column,
       sortState: sortState,

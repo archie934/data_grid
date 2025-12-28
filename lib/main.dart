@@ -51,6 +51,27 @@ class _MainAppState extends State<MainApp> {
         appBar: AppBar(
           backgroundColor: Theme.of(context).colorScheme.inversePrimary,
           title: const Text('Flutter Data Grid'),
+          actions: [
+            StreamBuilder<SelectionMode>(
+              stream: controller.selection$.map((s) => s.mode),
+              initialData: controller.state.selection.mode,
+              builder: (context, snapshot) {
+                final isMultiSelect = snapshot.data == SelectionMode.multiple;
+                return Row(
+                  children: [
+                    Text(isMultiSelect ? 'Multi-Select' : 'Single-Select'),
+                    Switch(
+                      value: isMultiSelect,
+                      onChanged: (value) {
+                        controller.setSelectionMode(value ? SelectionMode.multiple : SelectionMode.single);
+                      },
+                    ),
+                    const SizedBox(width: 8),
+                  ],
+                );
+              },
+            ),
+          ],
         ),
         body: DataGrid<SomeRow>(
           controller: controller,

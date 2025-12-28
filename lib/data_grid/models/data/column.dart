@@ -3,6 +3,9 @@ import 'package:data_grid/data_grid/renderers/filter_renderer.dart';
 
 typedef CellEditorBuilder = Widget Function(BuildContext context, dynamic value, ValueChanged<dynamic> onChanged);
 
+const int kSelectionColumnId = -1;
+const double kSelectionColumnWidth = 50.0;
+
 class DataGridColumn {
   final int id;
   final String title;
@@ -76,6 +79,20 @@ class DataGridColumn {
       editable: editable ?? this.editable,
       filterRenderer: filterRenderer ?? this.filterRenderer,
       cellEditorBuilder: cellEditorBuilder ?? this.cellEditorBuilder,
+    );
+  }
+
+  factory DataGridColumn.selection({required bool pinned}) {
+    return DataGridColumn(
+      id: kSelectionColumnId,
+      title: '',
+      width: kSelectionColumnWidth,
+      pinned: pinned,
+      visible: true,
+      resizable: false,
+      sortable: false,
+      filterable: false,
+      editable: false,
     );
   }
 }

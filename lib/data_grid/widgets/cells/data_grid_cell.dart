@@ -4,7 +4,25 @@ import 'package:data_grid/data_grid/controller/data_grid_controller.dart';
 import 'package:data_grid/data_grid/models/data/row.dart';
 import 'package:data_grid/data_grid/models/data/column.dart';
 import 'package:data_grid/data_grid/models/events/selection_events.dart';
-import 'package:data_grid/data_grid/models/state/grid_state.dart';
+
+class _CellState {
+  final bool isSelected;
+  final bool isEditing;
+  final dynamic editingValue;
+
+  _CellState(this.isSelected, this.isEditing, this.editingValue);
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is _CellState &&
+          isSelected == other.isSelected &&
+          isEditing == other.isEditing &&
+          editingValue == other.editingValue;
+
+  @override
+  int get hashCode => Object.hash(isSelected, isEditing, editingValue);
+}
 
 class DataGridCell<T extends DataGridRow> extends StatefulWidget {
   final T row;
@@ -70,20 +88,32 @@ class _DataGridCellState<T extends DataGridRow> extends State<DataGridCell<T>> {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<DataGridState<T>>(
-      stream: widget.controller.state$,
-      initialData: widget.controller.state,
+    return StreamBuilder<_CellState>(
+      stream: widget.controller.state$
+          .map(
+            (state) => _CellState(
+              state.selection.isRowSelected(widget.rowId),
+              state.edit.isCellEditing(widget.rowId, widget.column.id),
+              state.edit.editingValue,
+            ),
+          )
+          .distinct(),
+      initialData: _CellState(
+        widget.controller.state.selection.isRowSelected(widget.rowId),
+        widget.controller.state.edit.isCellEditing(widget.rowId, widget.column.id),
+        widget.controller.state.edit.editingValue,
+      ),
       builder: (context, snapshot) {
-        final state = snapshot.data!;
-        final isSelected = state.selection.isRowSelected(widget.rowId);
-        final isEditing = state.edit.isCellEditing(widget.rowId, widget.column.id);
+        final cellState = snapshot.data!;
+        final isSelected = cellState.isSelected;
+        final isEditing = cellState.isEditing;
 
         Widget cellContent;
         if (isEditing) {
           cellContent = _CellEditor<T>(
             column: widget.column,
             controller: widget.controller,
-            value: state.edit.editingValue,
+            value: cellState.editingValue,
             editController: _editController,
             focusNode: _focusNode,
             onKeyPress: _handleKeyPress,
