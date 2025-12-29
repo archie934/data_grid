@@ -25,6 +25,8 @@ class DataGridColumn<T extends DataGridRow> {
   final CellRenderer? cellRenderer;
   final Function? cellFormatter;
   final dynamic Function(T)? valueAccessor;
+  final void Function(T row, dynamic value)? cellValueSetter;
+  final bool Function(dynamic oldValue, dynamic newValue)? validator;
 
   DataGridColumn({
     required this.id,
@@ -41,6 +43,8 @@ class DataGridColumn<T extends DataGridRow> {
     this.cellRenderer,
     this.cellFormatter,
     this.valueAccessor,
+    this.cellValueSetter,
+    this.validator,
   });
 
   @override
@@ -60,7 +64,9 @@ class DataGridColumn<T extends DataGridRow> {
           filterRenderer == other.filterRenderer &&
           cellEditorBuilder == other.cellEditorBuilder &&
           cellRenderer == other.cellRenderer &&
-          cellFormatter == other.cellFormatter;
+          cellFormatter == other.cellFormatter &&
+          cellValueSetter == other.cellValueSetter &&
+          validator == other.validator;
 
   @override
   int get hashCode => Object.hash(
@@ -77,6 +83,8 @@ class DataGridColumn<T extends DataGridRow> {
     cellEditorBuilder,
     cellRenderer,
     cellFormatter,
+    cellValueSetter,
+    validator,
   );
 
   DataGridColumn<T> copyWith({
@@ -94,6 +102,8 @@ class DataGridColumn<T extends DataGridRow> {
     CellRenderer? cellRenderer,
     Function? cellFormatter,
     dynamic Function(T)? valueAccessor,
+    void Function(T row, dynamic value)? cellValueSetter,
+    bool Function(dynamic oldValue, dynamic newValue)? validator,
   }) {
     return DataGridColumn<T>(
       id: id ?? this.id,
@@ -110,6 +120,8 @@ class DataGridColumn<T extends DataGridRow> {
       cellRenderer: cellRenderer ?? this.cellRenderer,
       cellFormatter: cellFormatter ?? this.cellFormatter,
       valueAccessor: valueAccessor ?? this.valueAccessor,
+      cellValueSetter: cellValueSetter ?? this.cellValueSetter,
+      validator: validator ?? this.validator,
     );
   }
 

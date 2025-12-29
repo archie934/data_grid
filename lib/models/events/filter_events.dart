@@ -11,22 +11,22 @@ class FilterEvent extends DataGridEvent {
   FilterEvent({required this.columnId, required this.operator, required this.value});
 
   @override
-  bool shouldShowLoading(DataGridState state) => state.rowsById.length > 1000;
+  bool shouldShowLoading(DataGridState state) => state.rowsById.length > 10000;
 
   @override
   String? loadingMessage() => 'Filtering data...';
 
   @override
-  DataGridState<T>? apply<T extends DataGridRow>(EventContext<T> context) {
+  Future<DataGridState<T>?> apply<T extends DataGridRow>(EventContext<T> context) async {
     final updatedFilters = Map<int, ColumnFilter>.from(context.state.filter.columnFilters);
     updatedFilters[columnId] = ColumnFilter(columnId: columnId, operator: operator, value: value);
 
     final updatedFilter = context.state.filter.copyWith(columnFilters: updatedFilters);
 
-    final filteredIds = context.dataIndexer.filter(
-      context.state.rowsById,
-      updatedFilters.values.toList(),
-      context.state.columns,
+    final filteredIds = await context.filterDelegate.applyFilters(
+      rowsById: context.state.rowsById,
+      filters: updatedFilters.values.toList(),
+      columns: context.state.columns,
     );
 
     final sortedIds = context.state.sort.hasSort
@@ -48,13 +48,13 @@ class ClearFilterEvent extends DataGridEvent {
   ClearFilterEvent({this.columnId});
 
   @override
-  bool shouldShowLoading(DataGridState state) => state.rowsById.length > 1000;
+  bool shouldShowLoading(DataGridState state) => state.rowsById.length > 10000;
 
   @override
   String? loadingMessage() => 'Clearing filters...';
 
   @override
-  DataGridState<T>? apply<T extends DataGridRow>(EventContext<T> context) {
+  Future<DataGridState<T>?> apply<T extends DataGridRow>(EventContext<T> context) async {
     final updatedFilters = Map<int, ColumnFilter>.from(context.state.filter.columnFilters);
 
     if (columnId != null) {
@@ -67,7 +67,11 @@ class ClearFilterEvent extends DataGridEvent {
 
     final filteredIds = updatedFilters.isEmpty
         ? context.state.rowsById.keys.toList()
-        : context.dataIndexer.filter(context.state.rowsById, updatedFilters.values.toList(), context.state.columns);
+        : await context.filterDelegate.applyFilters(
+            rowsById: context.state.rowsById,
+            filters: updatedFilters.values.toList(),
+            columns: context.state.columns,
+          );
 
     final sortedIds = context.state.sort.hasSort
         ? context.dataIndexer.sortIds(

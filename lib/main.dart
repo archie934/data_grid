@@ -78,20 +78,91 @@ class _MainAppState extends State<MainApp> {
   void initState() {
     super.initState();
 
-    final columns = List.generate(
-      20,
-      (index) => DataGridColumn<SomeRow>(
-        id: index,
-        title: 'Column $index',
-        width: 150,
-        pinned: index % 4 == 0,
+    final columns = [
+      DataGridColumn<SomeRow>(
+        id: 0,
+        title: 'ID',
+        width: 80,
+        pinned: true,
+        editable: false,
+        valueAccessor: (row) => row.id.toInt().toString(),
+      ),
+      DataGridColumn<SomeRow>(
+        id: 1,
+        title: 'Name',
+        width: 200,
+        pinned: true,
         editable: true,
-        cellRenderer: index == 3 ? const RedCellRenderer() : null,
-        valueAccessor: (row) => 'Row ${row.id.toInt()}, Col $index',
+        valueAccessor: (row) => row.name.isEmpty ? 'Item ${row.id.toInt()}' : row.name,
+        cellValueSetter: (row, value) {
+          row.name = value.toString();
+        },
+      ),
+      DataGridColumn<SomeRow>(
+        id: 2,
+        title: 'Quantity',
+        width: 120,
+        editable: true,
+        valueAccessor: (row) => row.quantity.toString(),
+        cellValueSetter: (row, value) {
+          row.quantity = int.tryParse(value.toString()) ?? 0;
+          row.updateTotal();
+        },
+        validator: (oldValue, newValue) {
+          final parsed = int.tryParse(newValue.toString());
+          return parsed != null && parsed >= 0;
+        },
+      ),
+      DataGridColumn<SomeRow>(
+        id: 3,
+        title: 'Price',
+        width: 120,
+        editable: true,
+        cellRenderer: const RedCellRenderer(),
+        valueAccessor: (row) => '\$${row.price.toStringAsFixed(2)}',
+        cellValueSetter: (row, value) {
+          final cleanValue = value.toString().replaceAll('\$', '').trim();
+          row.price = double.tryParse(cleanValue) ?? 0.0;
+          row.updateTotal();
+        },
+        validator: (oldValue, newValue) {
+          final cleanValue = newValue.toString().replaceAll('\$', '').trim();
+          final parsed = double.tryParse(cleanValue);
+          return parsed != null && parsed >= 0;
+        },
+      ),
+      DataGridColumn<SomeRow>(
+        id: 4,
+        title: 'Total',
+        width: 120,
+        editable: false,
+        valueAccessor: (row) => '\$${row.total.toStringAsFixed(2)}',
+      ),
+      ...List.generate(15, (index) {
+        final columnId = index + 5;
+        return DataGridColumn<SomeRow>(
+          id: columnId,
+          title: 'Extra ${index + 1}',
+          width: 150,
+          pinned: false,
+          editable: true,
+          valueAccessor: (row) => row.extraData[columnId] ?? 'Data ${index + 1}',
+          cellValueSetter: (row, value) {
+            row.extraData[columnId] = value;
+          },
+        );
+      }),
+    ];
+
+    final rows = List.generate(
+      1000000,
+      (index) => SomeRow(
+        id: index.toDouble(),
+        name: index % 10 == 0 ? 'Special Item $index' : '',
+        quantity: (index % 20) + 1,
+        price: (index % 10 + 1) * 9.99,
       ),
     );
-
-    final rows = List.generate(1000000, (index) => SomeRow(id: index.toDouble()));
 
     controller = DataGridController<SomeRow>(initialColumns: columns, initialRows: rows, rowHeight: 48.0);
   }

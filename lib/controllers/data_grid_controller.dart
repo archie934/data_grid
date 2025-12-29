@@ -11,11 +11,14 @@ import 'package:data_grid/delegates/viewport_delegate.dart';
 import 'package:data_grid/delegates/default_viewport_delegate.dart';
 import 'package:data_grid/delegates/sort_delegate.dart';
 import 'package:data_grid/delegates/default_sort_delegate.dart';
+import 'package:data_grid/delegates/filter_delegate.dart';
+import 'package:data_grid/delegates/default_filter_delegate.dart';
 import 'package:data_grid/interceptors/data_grid_interceptor.dart';
 
 export 'package:data_grid/interceptors/data_grid_interceptor.dart';
 export 'package:data_grid/delegates/viewport_delegate.dart';
 export 'package:data_grid/delegates/sort_delegate.dart';
+export 'package:data_grid/delegates/filter_delegate.dart';
 
 class DataGridController<T extends DataGridRow> {
   final BehaviorSubject<DataGridState<T>> _stateSubject;
@@ -27,6 +30,7 @@ class DataGridController<T extends DataGridRow> {
 
   late final ViewportDelegate<T> _viewportDelegate;
   late final SortDelegate<T> _sortDelegate;
+  late final FilterDelegate<T> _filterDelegate;
 
   final List<DataGridInterceptor<T>> _interceptors = [];
 
@@ -40,8 +44,11 @@ class DataGridController<T extends DataGridRow> {
     double rowHeight = 48.0,
     Duration sortDebounce = const Duration(milliseconds: 300),
     int sortIsolateThreshold = 10000,
+    Duration filterDebounce = const Duration(milliseconds: 300),
+    int filterIsolateThreshold = 10000,
     ViewportDelegate<T>? viewportDelegate,
     SortDelegate<T>? sortDelegate,
+    FilterDelegate<T>? filterDelegate,
     List<DataGridInterceptor<T>>? interceptors,
     this.canEditCell,
     this.canSelectRow,
@@ -49,12 +56,20 @@ class DataGridController<T extends DataGridRow> {
   }) : _dataIndexer = DataIndexer<T>(),
        _stateSubject = BehaviorSubject<DataGridState<T>>.seeded(DataGridState<T>.initial()) {
     _viewportDelegate = viewportDelegate ?? DefaultViewportDelegate<T>(rowHeight: rowHeight);
+    _filterDelegate =
+        filterDelegate ??
+        DefaultFilterDelegate<T>(
+          dataIndexer: _dataIndexer,
+          filterDebounce: filterDebounce,
+          isolateThreshold: filterIsolateThreshold,
+        );
     _sortDelegate =
         sortDelegate ??
         DefaultSortDelegate<T>(
           dataIndexer: _dataIndexer,
           sortDebounce: sortDebounce,
           isolateThreshold: sortIsolateThreshold,
+          filterDelegate: _filterDelegate,
         );
 
     if (interceptors != null) {
@@ -94,7 +109,7 @@ class DataGridController<T extends DataGridRow> {
       final interceptedEvent = _runBeforeEventInterceptors(event);
       if (interceptedEvent == null) return;
 
-      if (interceptedEvent is CommitCellEditEvent && onCellCommit != null && state.edit.isEditing) {
+      if (interceptedEvent is CommitCellEditEvent && state.edit.isEditing) {
         final cellId = state.edit.editingCellId!;
         final parts = cellId.split('_');
         final rowId = double.parse(parts[0]);
@@ -104,9 +119,20 @@ class DataGridController<T extends DataGridRow> {
         final oldValue = row != null ? _dataIndexer.getCellValue(row, column) : null;
         final newValue = state.edit.editingValue;
 
-        final allowed = await onCellCommit!(rowId, columnId, oldValue, newValue);
-        if (!allowed) {
-          return;
+        if (column.validator != null) {
+          final isValid = column.validator!(oldValue, newValue);
+          if (!isValid) {
+            addEvent(CancelCellEditEvent());
+            return;
+          }
+        }
+
+        if (onCellCommit != null) {
+          final allowed = await onCellCommit!(rowId, columnId, oldValue, newValue);
+          if (!allowed) {
+            addEvent(CancelCellEditEvent());
+            return;
+          }
         }
       }
 
@@ -118,7 +144,8 @@ class DataGridController<T extends DataGridRow> {
         );
       }
 
-      final newState = interceptedEvent.apply(_createContext());
+      final result = interceptedEvent.apply(_createContext());
+      final newState = result is Future ? await result : result;
       if (newState != null) {
         _updateStateWithInterceptors(newState, interceptedEvent);
 
@@ -136,6 +163,7 @@ class DataGridController<T extends DataGridRow> {
       state: state,
       viewportDelegate: _viewportDelegate,
       sortDelegate: _sortDelegate,
+      filterDelegate: _filterDelegate,
       dataIndexer: _dataIndexer,
       dispatchEvent: addEvent,
       canEditCell: canEditCell,
@@ -263,6 +291,7 @@ class DataGridController<T extends DataGridRow> {
   void dispose() {
     _viewportDelegate.dispose();
     _sortDelegate.dispose();
+    _filterDelegate.dispose();
     _disposeController.add(null);
     _disposeController.close();
     _eventSubject.close();

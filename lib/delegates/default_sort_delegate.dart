@@ -6,10 +6,12 @@ import 'package:data_grid/models/events/grid_events.dart';
 import 'package:data_grid/utils/data_indexer.dart';
 import 'package:data_grid/utils/isolate_sort.dart';
 import 'package:data_grid/delegates/sort_delegate.dart';
+import 'package:data_grid/delegates/filter_delegate.dart';
 
 /// Default sort delegate with debouncing and isolate-based sorting for large datasets.
 class DefaultSortDelegate<T extends DataGridRow> extends SortDelegate<T> {
   final DataIndexer<T> _dataIndexer;
+  final FilterDelegate<T>? _filterDelegate;
   final Duration _debounce;
   final int _isolateThreshold;
 
@@ -19,7 +21,9 @@ class DefaultSortDelegate<T extends DataGridRow> extends SortDelegate<T> {
     required DataIndexer<T> dataIndexer,
     required Duration sortDebounce,
     int isolateThreshold = 10000,
+    FilterDelegate<T>? filterDelegate,
   }) : _dataIndexer = dataIndexer,
+       _filterDelegate = filterDelegate,
        _debounce = sortDebounce,
        _isolateThreshold = isolateThreshold;
 
@@ -38,15 +42,17 @@ class DefaultSortDelegate<T extends DataGridRow> extends SortDelegate<T> {
       final updatedSort = currentState.sort.copyWith(sortColumns: updatedSortColumns);
 
       if (updatedSortColumns.isEmpty) {
+        final displayOrder = currentState.filter.hasFilters && _filterDelegate != null
+            ? await _filterDelegate.applyFilters(
+                rowsById: currentState.rowsById,
+                filters: currentState.filter.columnFilters.values.toList(),
+                columns: currentState.columns,
+              )
+            : currentState.rowsById.keys.toList();
+
         final result = SortResult(
           sortState: updatedSort.copyWith(sortColumns: []),
-          displayOrder: currentState.filter.hasFilters
-              ? _dataIndexer.filter(
-                  currentState.rowsById,
-                  currentState.filter.columnFilters.values.toList(),
-                  currentState.columns,
-                )
-              : currentState.rowsById.keys.toList(),
+          displayOrder: displayOrder,
         );
         onComplete(result);
         completer.complete(result);
@@ -54,11 +60,11 @@ class DefaultSortDelegate<T extends DataGridRow> extends SortDelegate<T> {
       }
 
       try {
-        final idsToSort = currentState.filter.hasFilters
-            ? _dataIndexer.filter(
-                currentState.rowsById,
-                currentState.filter.columnFilters.values.toList(),
-                currentState.columns,
+        final idsToSort = currentState.filter.hasFilters && _filterDelegate != null
+            ? await _filterDelegate.applyFilters(
+                rowsById: currentState.rowsById,
+                filters: currentState.filter.columnFilters.values.toList(),
+                columns: currentState.columns,
               )
             : currentState.rowsById.keys.toList();
 

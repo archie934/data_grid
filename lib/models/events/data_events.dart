@@ -10,17 +10,17 @@ class LoadDataEvent<T> extends DataGridEvent {
   LoadDataEvent({required this.rows, this.append = false});
 
   @override
-  DataGridState<TRow>? apply<TRow extends DataGridRow>(EventContext<TRow> context) {
+  Future<DataGridState<TRow>?> apply<TRow extends DataGridRow>(EventContext<TRow> context) async {
     final rowsMap = {for (var row in rows) (row as TRow).id: row as TRow};
     final newRowsById = append ? {...context.state.rowsById, ...rowsMap} : rowsMap;
 
     context.dataIndexer.setData(newRowsById);
 
     final filteredIds = context.state.filter.hasFilters
-        ? context.dataIndexer.filter(
-            newRowsById,
-            context.state.filter.columnFilters.values.toList(),
-            context.state.columns,
+        ? await context.filterDelegate.applyFilters(
+            rowsById: newRowsById,
+            filters: context.state.filter.columnFilters.values.toList(),
+            columns: context.state.columns,
           )
         : newRowsById.keys.toList();
 
@@ -58,7 +58,7 @@ class InsertRowEvent extends DataGridEvent {
   InsertRowEvent({required this.row, this.position});
 
   @override
-  DataGridState<T>? apply<T extends DataGridRow>(EventContext<T> context) {
+  Future<DataGridState<T>?> apply<T extends DataGridRow>(EventContext<T> context) async {
     final newRowsById = Map<double, T>.from(context.state.rowsById);
     newRowsById[row.id] = row as T;
 
@@ -72,10 +72,10 @@ class InsertRowEvent extends DataGridEvent {
     context.dataIndexer.setData(newRowsById);
 
     final filteredIds = context.state.filter.hasFilters
-        ? context.dataIndexer.filter(
-            newRowsById,
-            context.state.filter.columnFilters.values.toList(),
-            context.state.columns,
+        ? await context.filterDelegate.applyFilters(
+            rowsById: newRowsById,
+            filters: context.state.filter.columnFilters.values.toList(),
+            columns: context.state.columns,
           )
         : newDisplayOrder;
 
@@ -93,7 +93,7 @@ class InsertRowsEvent extends DataGridEvent {
   InsertRowsEvent({required this.rows});
 
   @override
-  DataGridState<T>? apply<T extends DataGridRow>(EventContext<T> context) {
+  Future<DataGridState<T>?> apply<T extends DataGridRow>(EventContext<T> context) async {
     final newRowsById = Map<double, T>.from(context.state.rowsById);
     for (final row in rows) {
       newRowsById[row.id] = row as T;
@@ -109,10 +109,10 @@ class InsertRowsEvent extends DataGridEvent {
     context.dataIndexer.setData(newRowsById);
 
     final filteredIds = context.state.filter.hasFilters
-        ? context.dataIndexer.filter(
-            newRowsById,
-            context.state.filter.columnFilters.values.toList(),
-            context.state.columns,
+        ? await context.filterDelegate.applyFilters(
+            rowsById: newRowsById,
+            filters: context.state.filter.columnFilters.values.toList(),
+            columns: context.state.columns,
           )
         : newDisplayOrder;
 
@@ -191,7 +191,7 @@ class UpdateRowEvent extends DataGridEvent {
   UpdateRowEvent({required this.rowId, required this.newRow});
 
   @override
-  DataGridState<T>? apply<T extends DataGridRow>(EventContext<T> context) {
+  Future<DataGridState<T>?> apply<T extends DataGridRow>(EventContext<T> context) async {
     if (!context.state.rowsById.containsKey(rowId)) {
       return null;
     }
@@ -202,10 +202,10 @@ class UpdateRowEvent extends DataGridEvent {
     context.dataIndexer.setData(newRowsById);
 
     final filteredIds = context.state.filter.hasFilters
-        ? context.dataIndexer.filter(
-            newRowsById,
-            context.state.filter.columnFilters.values.toList(),
-            context.state.columns,
+        ? await context.filterDelegate.applyFilters(
+            rowsById: newRowsById,
+            filters: context.state.filter.columnFilters.values.toList(),
+            columns: context.state.columns,
           )
         : context.state.displayOrder;
 
@@ -231,6 +231,14 @@ class UpdateCellEvent extends DataGridEvent {
       return null;
     }
 
-    return context.state;
+    final column = context.state.columns.firstWhere((c) => c.id == columnId);
+    if (column.cellValueSetter != null) {
+      column.cellValueSetter!(row, value);
+    }
+
+    final newRowsById = Map<double, T>.of(context.state.rowsById);
+    context.dataIndexer.setData(newRowsById);
+
+    return context.state.copyWith(rowsById: newRowsById);
   }
 }

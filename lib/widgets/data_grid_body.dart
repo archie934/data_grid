@@ -89,7 +89,7 @@ class _DataGridBodyState<T extends DataGridRow> extends State<DataGridBody<T>> {
   }
 
   void _updateRowRenderer() {
-    effectiveRowRenderer = widget.rowRenderer ?? DefaultRowRenderer<T>(cellRenderer: widget.cellRenderer);
+    effectiveRowRenderer = widget.rowRenderer ?? DefaultRowRenderer<T>();
   }
 
   @override
@@ -149,7 +149,13 @@ class _DataGridBodyState<T extends DataGridRow> extends State<DataGridBody<T>> {
                           return DataGridCheckboxCell<T>(row: row, rowId: row.id, rowIndex: rowIndex);
                         }
 
-                        return DataGridCell<T>(row: row, rowId: row.id, column: column, rowIndex: rowIndex);
+                        return DataGridCell<T>(
+                          row: row,
+                          rowId: row.id,
+                          column: column,
+                          rowIndex: rowIndex,
+                          isPinned: column.pinned,
+                        );
                       },
                     ),
                   ),
