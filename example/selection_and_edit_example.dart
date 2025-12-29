@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:data_grid/data_grid/controller/data_grid_controller.dart';
-import 'package:data_grid/data_grid/models/data/column.dart';
-import 'package:data_grid/data_grid/models/data/row.dart';
-import 'package:data_grid/data_grid/models/state/grid_state.dart';
+import 'package:data_grid/controllers/data_grid_controller.dart';
+import 'package:data_grid/models/data/column.dart';
+import 'package:data_grid/models/data/row.dart';
+import 'package:data_grid/models/state/grid_state.dart';
 
 class ExampleRow extends DataGridRow {
   final String name;

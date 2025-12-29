@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:data_grid/data_grid/data_grid.dart';
+import 'package:data_grid/data_grid.dart';
 
 class RedCellRenderer extends CellRenderer<SomeRow> {
   const RedCellRenderer();
