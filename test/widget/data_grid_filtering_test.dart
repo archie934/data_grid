@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:data_grid/data_grid.dart';
 import 'package:data_grid/models/enums/filter_operator.dart';
-import 'package:data_grid/models/enums/sort_direction.dart';
 
 class TestRow extends DataGridRow {
   final String name;
