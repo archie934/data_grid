@@ -2,6 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:data_grid/data_grid.dart';
 import 'package:data_grid/models/enums/selection_mode.dart';
 
+class SomeRow implements DataGridRow {
+  @override
+  double id;
+  String name;
+  int quantity;
+  double price;
+  double total;
+  Map<int, dynamic> extraData;
+
+  SomeRow({required this.id, this.name = '', this.quantity = 0, this.price = 0.0, Map<int, dynamic>? extraData})
+    : total = quantity * price,
+      extraData = extraData ?? {};
+
+  void updateTotal() {
+    total = quantity * price;
+  }
+}
+
 class RedCellRenderer extends CellRenderer<SomeRow> {
   const RedCellRenderer();
 

@@ -62,11 +62,7 @@ class DataGridColumn<T extends DataGridRow> {
           filterable == other.filterable &&
           editable == other.editable &&
           filterRenderer == other.filterRenderer &&
-          cellEditorBuilder == other.cellEditorBuilder &&
-          cellRenderer == other.cellRenderer &&
-          cellFormatter == other.cellFormatter &&
-          cellValueSetter == other.cellValueSetter &&
-          validator == other.validator;
+          cellRenderer == other.cellRenderer;
 
   @override
   int get hashCode => Object.hash(
@@ -80,11 +76,7 @@ class DataGridColumn<T extends DataGridRow> {
     filterable,
     editable,
     filterRenderer,
-    cellEditorBuilder,
     cellRenderer,
-    cellFormatter,
-    cellValueSetter,
-    validator,
   );
 
   DataGridColumn<T> copyWith({
