@@ -2,11 +2,12 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:data_grid/data_grid/models/data/column.dart';
+import 'package:data_grid/data_grid/models/data/row.dart';
 import 'package:data_grid/data_grid/widgets/viewport/data_grid_viewport.dart';
 import 'package:data_grid/data_grid/widgets/viewport/data_grid_viewport_delegate.dart';
 
-class DataGridScrollView extends TwoDimensionalScrollView {
-  final List<DataGridColumn> columns;
+class DataGridScrollView<T extends DataGridRow> extends TwoDimensionalScrollView {
+  final List<DataGridColumn<T>> columns;
   final int rowCount;
   final double rowHeight;
   final Widget Function(BuildContext context, int row, int column) cellBuilder;

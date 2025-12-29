@@ -17,8 +17,8 @@ import 'package:data_grid/data_grid/theme/data_grid_theme.dart';
 class DataGridRowWithPinnedCells<T extends DataGridRow> extends StatelessWidget {
   final T row;
   final int index;
-  final List<DataGridColumn> pinnedColumns;
-  final List<DataGridColumn> unpinnedColumns;
+  final List<DataGridColumn<T>> pinnedColumns;
+  final List<DataGridColumn<T>> unpinnedColumns;
   final double pinnedWidth;
   final double unpinnedWidth;
   final double horizontalOffset;
@@ -127,7 +127,7 @@ class DataGridRowWithPinnedCells<T extends DataGridRow> extends StatelessWidget 
 
 class _RowCell<T extends DataGridRow> extends StatelessWidget {
   final T row;
-  final DataGridColumn column;
+  final DataGridColumn<T> column;
   final Widget Function(T row, int columnId)? cellBuilder;
 
   const _RowCell({required this.row, required this.column, this.cellBuilder});

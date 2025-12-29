@@ -29,18 +29,10 @@ class _CellState {
 class DataGridCell<T extends DataGridRow> extends StatefulWidget {
   final T row;
   final double rowId;
-  final DataGridColumn column;
+  final DataGridColumn<T> column;
   final int rowIndex;
-  final Widget Function(T row, int columnId)? cellBuilder;
 
-  const DataGridCell({
-    super.key,
-    required this.row,
-    required this.rowId,
-    required this.column,
-    required this.rowIndex,
-    this.cellBuilder,
-  });
+  const DataGridCell({super.key, required this.row, required this.rowId, required this.column, required this.rowIndex});
 
   @override
   State<DataGridCell<T>> createState() => _DataGridCellState<T>();
@@ -119,9 +111,7 @@ class _DataGridCellState<T extends DataGridRow> extends State<DataGridCell<T>> {
             onKeyPress: _handleKeyPress,
           );
         } else {
-          cellContent = widget.cellBuilder != null
-              ? widget.cellBuilder!(widget.row, widget.column.id)
-              : Text('Row ${widget.row.id}, Col ${widget.column.id}', overflow: TextOverflow.ellipsis);
+          cellContent = Text('Row ${widget.row.id}, Col ${widget.column.id}', overflow: TextOverflow.ellipsis);
         }
 
         return Semantics(
@@ -179,7 +169,7 @@ class _DataGridCellState<T extends DataGridRow> extends State<DataGridCell<T>> {
 }
 
 class _CellEditor<T extends DataGridRow> extends StatefulWidget {
-  final DataGridColumn column;
+  final DataGridColumn<T> column;
   final dynamic value;
   final TextEditingController editController;
   final FocusNode focusNode;

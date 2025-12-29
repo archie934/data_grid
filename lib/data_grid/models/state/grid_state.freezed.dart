@@ -17,7 +17,7 @@ final _privateConstructorUsedError = UnsupportedError(
 
 /// @nodoc
 mixin _$DataGridState<T extends DataGridRow> {
-  List<DataGridColumn> get columns => throw _privateConstructorUsedError;
+  List<DataGridColumn<T>> get columns => throw _privateConstructorUsedError;
   Map<double, T> get rowsById => throw _privateConstructorUsedError;
   List<double> get displayOrder => throw _privateConstructorUsedError;
   ViewportState get viewport => throw _privateConstructorUsedError;
@@ -44,7 +44,7 @@ abstract class $DataGridStateCopyWith<T extends DataGridRow, $Res> {
   ) = _$DataGridStateCopyWithImpl<T, $Res, DataGridState<T>>;
   @useResult
   $Res call({
-    List<DataGridColumn> columns,
+    List<DataGridColumn<T>> columns,
     Map<double, T> rowsById,
     List<double> displayOrder,
     ViewportState viewport,
@@ -101,7 +101,7 @@ class _$DataGridStateCopyWithImpl<
             columns: null == columns
                 ? _value.columns
                 : columns // ignore: cast_nullable_to_non_nullable
-                      as List<DataGridColumn>,
+                      as List<DataGridColumn<T>>,
             rowsById: null == rowsById
                 ? _value.rowsById
                 : rowsById // ignore: cast_nullable_to_non_nullable
@@ -218,7 +218,7 @@ abstract class _$$DataGridStateImplCopyWith<T extends DataGridRow, $Res>
   @override
   @useResult
   $Res call({
-    List<DataGridColumn> columns,
+    List<DataGridColumn<T>> columns,
     Map<double, T> rowsById,
     List<double> displayOrder,
     ViewportState viewport,
@@ -276,7 +276,7 @@ class __$$DataGridStateImplCopyWithImpl<T extends DataGridRow, $Res>
         columns: null == columns
             ? _value._columns
             : columns // ignore: cast_nullable_to_non_nullable
-                  as List<DataGridColumn>,
+                  as List<DataGridColumn<T>>,
         rowsById: null == rowsById
             ? _value._rowsById
             : rowsById // ignore: cast_nullable_to_non_nullable
@@ -326,7 +326,7 @@ class __$$DataGridStateImplCopyWithImpl<T extends DataGridRow, $Res>
 
 class _$DataGridStateImpl<T extends DataGridRow> extends _DataGridState<T> {
   const _$DataGridStateImpl({
-    required final List<DataGridColumn> columns,
+    required final List<DataGridColumn<T>> columns,
     required final Map<double, T> rowsById,
     required final List<double> displayOrder,
     required this.viewport,
@@ -342,9 +342,9 @@ class _$DataGridStateImpl<T extends DataGridRow> extends _DataGridState<T> {
        _displayOrder = displayOrder,
        super._();
 
-  final List<DataGridColumn> _columns;
+  final List<DataGridColumn<T>> _columns;
   @override
-  List<DataGridColumn> get columns {
+  List<DataGridColumn<T>> get columns {
     if (_columns is EqualUnmodifiableListView) return _columns;
     // ignore: implicit_dynamic_type
     return EqualUnmodifiableListView(_columns);
@@ -444,7 +444,7 @@ class _$DataGridStateImpl<T extends DataGridRow> extends _DataGridState<T> {
 
 abstract class _DataGridState<T extends DataGridRow> extends DataGridState<T> {
   const factory _DataGridState({
-    required final List<DataGridColumn> columns,
+    required final List<DataGridColumn<T>> columns,
     required final Map<double, T> rowsById,
     required final List<double> displayOrder,
     required final ViewportState viewport,
@@ -459,7 +459,7 @@ abstract class _DataGridState<T extends DataGridRow> extends DataGridState<T> {
   const _DataGridState._() : super._();
 
   @override
-  List<DataGridColumn> get columns;
+  List<DataGridColumn<T>> get columns;
   @override
   Map<double, T> get rowsById;
   @override

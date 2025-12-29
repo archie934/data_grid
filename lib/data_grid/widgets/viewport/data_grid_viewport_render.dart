@@ -1,30 +1,31 @@
 import 'package:flutter/widgets.dart';
 import 'package:data_grid/data_grid/models/data/column.dart';
+import 'package:data_grid/data_grid/models/data/row.dart';
 import 'package:data_grid/data_grid/widgets/viewport/data_grid_viewport_delegate.dart';
 
 /// The render object that performs the actual layout of the 2D grid.
 /// This implements the lazy rendering logic that only builds visible cells.
-class RenderDataGridViewport extends RenderTwoDimensionalViewport {
+class RenderDataGridViewport<T extends DataGridRow> extends RenderTwoDimensionalViewport {
   RenderDataGridViewport({
     required super.verticalOffset,
     required super.verticalAxisDirection,
     required super.horizontalOffset,
     required super.horizontalAxisDirection,
-    required DataGridChildDelegate super.delegate,
+    required DataGridChildDelegate<T> super.delegate,
     required super.mainAxis,
     required super.childManager,
-    required List<DataGridColumn> columns,
+    required List<DataGridColumn<T>> columns,
     required int rowCount,
     required double rowHeight,
     super.cacheExtent,
     super.clipBehavior,
-  })  : _columns = columns,
-        _rowCount = rowCount,
-        _rowHeight = rowHeight;
+  }) : _columns = columns,
+       _rowCount = rowCount,
+       _rowHeight = rowHeight;
 
-  List<DataGridColumn> _columns;
-  List<DataGridColumn> get columns => _columns;
-  set columns(List<DataGridColumn> value) {
+  List<DataGridColumn<T>> _columns;
+  List<DataGridColumn<T>> get columns => _columns;
+  set columns(List<DataGridColumn<T>> value) {
     if (_columns == value) return;
     _columns = value;
     markNeedsLayout();
@@ -96,7 +97,7 @@ class RenderDataGridViewport extends RenderTwoDimensionalViewport {
     // STEP 4: Layout all visible cells
     // Calculate starting Y offset accounting for partially scrolled rows
     final double startingYOffset = (firstVisibleRow * _rowHeight) - verticalScrollOffset;
-    
+
     double yOffset = startingYOffset; // Vertical position within viewport (can be negative)
     for (int row = firstVisibleRow; row < lastVisibleRow; row++) {
       double xOffset = firstVisibleColumnOffset; // Horizontal position within viewport (can be negative)
@@ -136,4 +137,3 @@ class RenderDataGridViewport extends RenderTwoDimensionalViewport {
     horizontalOffset.applyContentDimensions(0, (totalWidth - viewportWidth).clamp(0, double.infinity));
   }
 }
-

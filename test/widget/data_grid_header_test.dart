@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:data_grid/data_grid/data_grid.dart';
-import 'package:data_grid/data_grid/widgets/cells/data_grid_header_cell.dart';
 
 class TestRow extends DataGridRow {
   final String name;
@@ -14,7 +13,7 @@ class TestRow extends DataGridRow {
 void main() {
   group('DataGridHeaderCell', () {
     testWidgets('renders column title', (tester) async {
-      final column = DataGridColumn(id: 1, title: 'Test Column', width: 150);
+      final column = DataGridColumn<TestRow>(id: 1, title: 'Test Column', width: 150, valueAccessor: (row) => row.name);
       final sortState = SortState.initial();
 
       await tester.pumpWidget(
@@ -29,7 +28,7 @@ void main() {
     });
 
     testWidgets('shows ascending sort icon when sorted ascending', (tester) async {
-      final column = DataGridColumn(id: 1, title: 'Test Column', width: 150);
+      final column = DataGridColumn<TestRow>(id: 1, title: 'Test Column', width: 150, valueAccessor: (row) => row.name);
       final sortState = SortState(
         sortColumns: [SortColumn(columnId: 1, direction: SortDirection.ascending, priority: 0)],
       );
@@ -46,7 +45,7 @@ void main() {
     });
 
     testWidgets('shows descending sort icon when sorted descending', (tester) async {
-      final column = DataGridColumn(id: 1, title: 'Test Column', width: 150);
+      final column = DataGridColumn<TestRow>(id: 1, title: 'Test Column', width: 150, valueAccessor: (row) => row.name);
       final sortState = SortState(
         sortColumns: [SortColumn(columnId: 1, direction: SortDirection.descending, priority: 0)],
       );
@@ -63,7 +62,7 @@ void main() {
     });
 
     testWidgets('cycles through sort states on tap', (tester) async {
-      final column = DataGridColumn(id: 1, title: 'Test Column', width: 150);
+      final column = DataGridColumn<TestRow>(id: 1, title: 'Test Column', width: 150, valueAccessor: (row) => row.name);
       SortDirection? lastDirection;
 
       await tester.pumpWidget(
@@ -129,7 +128,7 @@ void main() {
     });
 
     testWidgets('shows priority number for multi-sort', (tester) async {
-      final column = DataGridColumn(id: 1, title: 'Test Column', width: 150);
+      final column = DataGridColumn<TestRow>(id: 1, title: 'Test Column', width: 150, valueAccessor: (row) => row.name);
       final sortState = SortState(
         sortColumns: [
           SortColumn(columnId: 2, direction: SortDirection.ascending, priority: 0),
@@ -149,7 +148,7 @@ void main() {
     });
 
     testWidgets('triggers resize on drag', (tester) async {
-      final column = DataGridColumn(id: 1, title: 'Test Column', width: 150);
+      final column = DataGridColumn<TestRow>(id: 1, title: 'Test Column', width: 150, valueAccessor: (row) => row.name);
       double? resizeDelta;
 
       await tester.pumpWidget(
@@ -178,7 +177,7 @@ void main() {
     });
 
     testWidgets('shows resize cursor on hover', (tester) async {
-      final column = DataGridColumn(id: 1, title: 'Test Column', width: 150);
+      final column = DataGridColumn<TestRow>(id: 1, title: 'Test Column', width: 150, valueAccessor: (row) => row.name);
 
       await tester.pumpWidget(
         MaterialApp(

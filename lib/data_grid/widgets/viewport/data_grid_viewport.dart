@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:data_grid/data_grid/models/data/column.dart';
+import 'package:data_grid/data_grid/models/data/row.dart';
 import 'package:data_grid/data_grid/widgets/viewport/data_grid_viewport_delegate.dart';
 import 'package:data_grid/data_grid/widgets/viewport/data_grid_viewport_render.dart';
 
 /// The viewport widget that displays a scrollable window into the 2D grid.
 /// This widget creates and manages the render object that performs layout.
-class DataGridViewport extends TwoDimensionalViewport {
-  final List<DataGridColumn> columns;
+class DataGridViewport<T extends DataGridRow> extends TwoDimensionalViewport {
+  final List<DataGridColumn<T>> columns;
   final int rowCount;
   final double rowHeight;
 
@@ -54,4 +55,3 @@ class DataGridViewport extends TwoDimensionalViewport {
       ..rowHeight = rowHeight;
   }
 }
-

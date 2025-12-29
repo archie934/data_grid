@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:data_grid/data_grid/controller/data_grid_controller.dart';
 import 'package:data_grid/data_grid/controller/grid_scroll_controller.dart';
 import 'package:data_grid/data_grid/models/data/column.dart';
@@ -8,15 +7,14 @@ import 'package:data_grid/data_grid/models/data/row.dart';
 class RowRenderContext<T extends DataGridRow> {
   final DataGridController<T> controller;
   final GridScrollController scrollController;
-  final List<DataGridColumn> pinnedColumns;
-  final List<DataGridColumn> unpinnedColumns;
+  final List<DataGridColumn<T>> pinnedColumns;
+  final List<DataGridColumn<T>> unpinnedColumns;
   final double pinnedWidth;
   final double unpinnedWidth;
   final double horizontalOffset;
   final double rowHeight;
   final bool isSelected;
   final bool isHovered;
-  final Widget Function(T row, int columnId)? cellBuilder;
 
   const RowRenderContext({
     required this.controller,
@@ -29,7 +27,6 @@ class RowRenderContext<T extends DataGridRow> {
     required this.rowHeight,
     required this.isSelected,
     required this.isHovered,
-    this.cellBuilder,
   });
 }
 
@@ -40,7 +37,6 @@ class CellRenderContext<T extends DataGridRow> {
   final bool isHovered;
   final bool isPinned;
   final int rowIndex;
-  final Widget Function(T row, int columnId)? cellBuilder;
 
   const CellRenderContext({
     required this.controller,
@@ -48,6 +44,5 @@ class CellRenderContext<T extends DataGridRow> {
     required this.isHovered,
     required this.isPinned,
     required this.rowIndex,
-    this.cellBuilder,
   });
 }

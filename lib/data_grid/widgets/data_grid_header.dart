@@ -45,11 +45,11 @@ class _HeaderRow<T extends DataGridRow> extends StatefulWidget {
 }
 
 class _HeaderRowState<T extends DataGridRow> extends State<_HeaderRow<T>> {
-  late List<DataGridColumn> pinnedColumns;
-  late List<DataGridColumn> unpinnedColumns;
+  late List<DataGridColumn<T>> pinnedColumns;
+  late List<DataGridColumn<T>> unpinnedColumns;
   late double pinnedWidth;
   late double unpinnedWidth;
-  List<DataGridColumn> effectiveColumns = [];
+  List<DataGridColumn<T>> effectiveColumns = [];
 
   @override
   void didChangeDependencies() {
@@ -58,7 +58,7 @@ class _HeaderRowState<T extends DataGridRow> extends State<_HeaderRow<T>> {
     _updateColumns(state.effectiveColumns);
   }
 
-  bool _columnsEqual(List<DataGridColumn> a, List<DataGridColumn> b) {
+  bool _columnsEqual(List<DataGridColumn<T>> a, List<DataGridColumn<T>> b) {
     if (a.length != b.length) return false;
     for (int i = 0; i < a.length; i++) {
       if (a[i].id != b[i].id ||
@@ -71,7 +71,7 @@ class _HeaderRowState<T extends DataGridRow> extends State<_HeaderRow<T>> {
     return true;
   }
 
-  void _updateColumns(List<DataGridColumn> columns) {
+  void _updateColumns(List<DataGridColumn<T>> columns) {
     if (_columnsEqual(effectiveColumns, columns)) return;
     effectiveColumns = columns;
     pinnedColumns = columns.where((col) => col.pinned && col.visible).toList();

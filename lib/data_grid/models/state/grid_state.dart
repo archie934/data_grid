@@ -7,7 +7,7 @@ part 'grid_state.freezed.dart';
 @freezed
 class DataGridState<T extends DataGridRow> with _$DataGridState<T> {
   const factory DataGridState({
-    required List<DataGridColumn> columns,
+    required List<DataGridColumn<T>> columns,
     required Map<double, T> rowsById,
     required List<double> displayOrder,
     required ViewportState viewport,
@@ -37,10 +37,10 @@ class DataGridState<T extends DataGridRow> with _$DataGridState<T> {
   int get visibleRowCount => displayOrder.length;
   List<T> get visibleRows => displayOrder.map((id) => rowsById[id]!).toList();
 
-  List<DataGridColumn> get effectiveColumns {
+  List<DataGridColumn<T>> get effectiveColumns {
     if (selection.mode == SelectionMode.multiple) {
       final hasPinnedColumns = columns.any((col) => col.pinned);
-      final selectionColumn = DataGridColumn.selection(pinned: hasPinnedColumns);
+      final selectionColumn = DataGridColumn<T>.selection(pinned: hasPinnedColumns);
       return [selectionColumn, ...columns];
     }
     return columns;

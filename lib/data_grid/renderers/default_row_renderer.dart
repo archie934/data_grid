@@ -12,9 +12,6 @@ import 'package:data_grid/data_grid/widgets/cells/data_grid_checkbox_cell.dart';
 import 'package:data_grid/data_grid/widgets/visible_row_tracker.dart';
 import 'package:data_grid/data_grid/theme/data_grid_theme.dart';
 
-/// Default row renderer implementation.
-///
-/// Renders rows with support for pinned columns, selection, and zebra striping.
 class DefaultRowRenderer<T extends DataGridRow> extends RowRenderer<T> {
   final CellRenderer<T>? cellRenderer;
 
@@ -93,7 +90,7 @@ class _UnpinnedCells<T extends DataGridRow> extends StatelessWidget {
             width: renderContext.unpinnedWidth,
             height: renderContext.rowHeight,
             child: CustomMultiChildLayout(
-              delegate: BodyLayoutDelegate(columns: renderContext.unpinnedColumns),
+              delegate: BodyLayoutDelegate<T>(columns: renderContext.unpinnedColumns),
               children: [
                 for (var column in renderContext.unpinnedColumns)
                   LayoutId(
@@ -136,7 +133,7 @@ class _PinnedCells<T extends DataGridRow> extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(border: theme.borders.pinnedBorder, boxShadow: theme.borders.pinnedShadow),
         child: CustomMultiChildLayout(
-          delegate: BodyLayoutDelegate(columns: renderContext.pinnedColumns),
+          delegate: BodyLayoutDelegate<T>(columns: renderContext.pinnedColumns),
           children: [
             for (var column in renderContext.pinnedColumns)
               LayoutId(
@@ -159,7 +156,7 @@ class _PinnedCells<T extends DataGridRow> extends StatelessWidget {
 
 class _RendererCell<T extends DataGridRow> extends StatelessWidget {
   final T row;
-  final DataGridColumn column;
+  final DataGridColumn<T> column;
   final int index;
   final RowRenderContext<T> renderContext;
   final CellRenderer<T> cellRenderer;
@@ -186,8 +183,12 @@ class _RendererCell<T extends DataGridRow> extends StatelessWidget {
       isHovered: renderContext.isHovered,
       isPinned: isPinned,
       rowIndex: index,
-      cellBuilder: renderContext.cellBuilder,
     );
+
+    if (column.cellRenderer != null) {
+      final columnCellRenderer = column.cellRenderer as CellRenderer<T>;
+      return columnCellRenderer.buildCell(context, row, column, index, cellContext);
+    }
 
     return cellRenderer.buildCell(context, row, column, index, cellContext);
   }

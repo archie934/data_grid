@@ -1,12 +1,16 @@
 import 'package:flutter/widgets.dart';
 import 'package:data_grid/data_grid/renderers/filter_renderer.dart';
+import 'package:data_grid/data_grid/renderers/cell_renderer.dart';
+import 'package:data_grid/data_grid/models/data/row.dart';
 
 typedef CellEditorBuilder = Widget Function(BuildContext context, dynamic value, ValueChanged<dynamic> onChanged);
+
+typedef CellFormatter<T extends DataGridRow> = String Function(T row, DataGridColumn column);
 
 const int kSelectionColumnId = -1;
 const double kSelectionColumnWidth = 50.0;
 
-class DataGridColumn {
+class DataGridColumn<T extends DataGridRow> {
   final int id;
   final String title;
   final double width;
@@ -18,6 +22,9 @@ class DataGridColumn {
   final bool editable;
   final FilterRenderer? filterRenderer;
   final CellEditorBuilder? cellEditorBuilder;
+  final CellRenderer? cellRenderer;
+  final Function? cellFormatter;
+  final dynamic Function(T)? valueAccessor;
 
   DataGridColumn({
     required this.id,
@@ -31,6 +38,9 @@ class DataGridColumn {
     this.editable = true,
     this.filterRenderer,
     this.cellEditorBuilder,
+    this.cellRenderer,
+    this.cellFormatter,
+    this.valueAccessor,
   });
 
   @override
@@ -48,13 +58,29 @@ class DataGridColumn {
           filterable == other.filterable &&
           editable == other.editable &&
           filterRenderer == other.filterRenderer &&
-          cellEditorBuilder == other.cellEditorBuilder;
+          cellEditorBuilder == other.cellEditorBuilder &&
+          cellRenderer == other.cellRenderer &&
+          cellFormatter == other.cellFormatter &&
+          valueAccessor == other.valueAccessor;
 
   @override
-  int get hashCode =>
-      Object.hash(id, title, width, pinned, visible, resizable, sortable, filterable, editable, filterRenderer);
+  int get hashCode => Object.hash(
+    id,
+    title,
+    width,
+    pinned,
+    visible,
+    resizable,
+    sortable,
+    filterable,
+    editable,
+    filterRenderer,
+    cellEditorBuilder,
+    cellRenderer,
+    Object.hash(cellFormatter, valueAccessor),
+  );
 
-  DataGridColumn copyWith({
+  DataGridColumn<T> copyWith({
     int? id,
     String? title,
     double? width,
@@ -66,8 +92,11 @@ class DataGridColumn {
     bool? editable,
     FilterRenderer? filterRenderer,
     CellEditorBuilder? cellEditorBuilder,
+    CellRenderer? cellRenderer,
+    Function? cellFormatter,
+    dynamic Function(T)? valueAccessor,
   }) {
-    return DataGridColumn(
+    return DataGridColumn<T>(
       id: id ?? this.id,
       title: title ?? this.title,
       width: width ?? this.width,
@@ -79,11 +108,14 @@ class DataGridColumn {
       editable: editable ?? this.editable,
       filterRenderer: filterRenderer ?? this.filterRenderer,
       cellEditorBuilder: cellEditorBuilder ?? this.cellEditorBuilder,
+      cellRenderer: cellRenderer ?? this.cellRenderer,
+      cellFormatter: cellFormatter ?? this.cellFormatter,
+      valueAccessor: valueAccessor ?? this.valueAccessor,
     );
   }
 
   factory DataGridColumn.selection({required bool pinned}) {
-    return DataGridColumn(
+    return DataGridColumn<T>(
       id: kSelectionColumnId,
       title: '',
       width: kSelectionColumnWidth,

@@ -34,9 +34,6 @@ class DataGrid<T extends DataGridRow> extends StatefulWidget {
   /// Custom filter renderer for advanced filter widget customization.
   final FilterRenderer? filterRenderer;
 
-  /// Legacy cell builder function (deprecated, use cellRenderer instead).
-  final Widget Function(T row, int columnId)? cellBuilder;
-
   /// Whether to show the loading overlay (default: true)
   final bool showLoadingOverlay;
 
@@ -62,7 +59,6 @@ class DataGrid<T extends DataGridRow> extends StatefulWidget {
     this.rowRenderer,
     this.cellRenderer,
     this.filterRenderer,
-    this.cellBuilder,
     this.showLoadingOverlay = true,
     this.loadingOverlayBuilder,
     this.loadingBackdropColor,
@@ -116,6 +112,37 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
     super.dispose();
   }
 
+  KeyEventResult _handleKeyEvent(KeyEvent event) {
+    if (event is! KeyDownEvent) return KeyEventResult.ignored;
+
+    if (widget.controller.state.edit.isEditing) {
+      return KeyEventResult.ignored;
+    }
+
+    if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+      widget.controller.addEvent(NavigateUpEvent());
+      return KeyEventResult.handled;
+    } else if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+      widget.controller.addEvent(NavigateDownEvent());
+      return KeyEventResult.handled;
+    } else if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+      widget.controller.addEvent(NavigateLeftEvent());
+      return KeyEventResult.handled;
+    } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
+      widget.controller.addEvent(NavigateRightEvent());
+      return KeyEventResult.handled;
+    } else if (event.logicalKey == LogicalKeyboardKey.escape) {
+      widget.controller.addEvent(ClearSelectionEvent());
+      return KeyEventResult.handled;
+    } else if (event.logicalKey == LogicalKeyboardKey.keyA &&
+        (HardwareKeyboard.instance.isControlPressed || HardwareKeyboard.instance.isMetaPressed)) {
+      widget.controller.addEvent(SelectAllVisibleEvent());
+      return KeyEventResult.handled;
+    }
+
+    return KeyEventResult.ignored;
+  }
+
   @override
   Widget build(BuildContext context) {
     final themeData = widget.theme ?? DataGridThemeData.defaultTheme();
@@ -161,7 +188,6 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
                                 rowHeight: effectiveRowHeight,
                                 rowRenderer: _rowRenderer,
                                 cellRenderer: _cellRenderer,
-                                cellBuilder: widget.cellBuilder,
                               ),
                             ),
                           ],
@@ -184,36 +210,5 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
         },
       ),
     );
-  }
-
-  KeyEventResult _handleKeyEvent(KeyEvent event) {
-    if (event is! KeyDownEvent) return KeyEventResult.ignored;
-
-    if (widget.controller.state.edit.isEditing) {
-      return KeyEventResult.ignored;
-    }
-
-    if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
-      widget.controller.addEvent(NavigateUpEvent());
-      return KeyEventResult.handled;
-    } else if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
-      widget.controller.addEvent(NavigateDownEvent());
-      return KeyEventResult.handled;
-    } else if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
-      widget.controller.addEvent(NavigateLeftEvent());
-      return KeyEventResult.handled;
-    } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
-      widget.controller.addEvent(NavigateRightEvent());
-      return KeyEventResult.handled;
-    } else if (event.logicalKey == LogicalKeyboardKey.escape) {
-      widget.controller.addEvent(ClearSelectionEvent());
-      return KeyEventResult.handled;
-    } else if (event.logicalKey == LogicalKeyboardKey.keyA &&
-        (HardwareKeyboard.instance.isControlPressed || HardwareKeyboard.instance.isMetaPressed)) {
-      widget.controller.addEvent(SelectAllVisibleEvent());
-      return KeyEventResult.handled;
-    }
-
-    return KeyEventResult.ignored;
   }
 }

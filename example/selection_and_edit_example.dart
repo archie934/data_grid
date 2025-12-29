@@ -43,12 +43,13 @@ class _DataGridExampleState extends State<DataGridExample> {
 
     controller = DataGridController<ExampleRow>(
       initialColumns: [
-        DataGridColumn(id: 0, title: 'Name', width: 200, editable: true),
-        DataGridColumn(
+        DataGridColumn<ExampleRow>(id: 0, title: 'Name', width: 200, editable: true, valueAccessor: (row) => row.name),
+        DataGridColumn<ExampleRow>(
           id: 1,
           title: 'Age',
           width: 100,
           editable: true,
+          valueAccessor: (row) => row.age,
           cellEditorBuilder: (context, value, onChanged) {
             return TextField(
               decoration: const InputDecoration(border: OutlineInputBorder(), contentPadding: EdgeInsets.all(8)),
@@ -62,25 +63,19 @@ class _DataGridExampleState extends State<DataGridExample> {
             );
           },
         ),
-        DataGridColumn(id: 2, title: 'Email', width: 250, editable: true),
+        DataGridColumn<ExampleRow>(
+          id: 2,
+          title: 'Email',
+          width: 250,
+          editable: true,
+          valueAccessor: (row) => row.email,
+        ),
       ],
       initialRows: [
         ExampleRow(id: 1, name: 'John Doe', age: 30, email: 'john@example.com'),
         ExampleRow(id: 2, name: 'Jane Smith', age: 25, email: 'jane@example.com'),
         ExampleRow(id: 3, name: 'Bob Johnson', age: 35, email: 'bob@example.com'),
       ],
-      cellValueAccessor: (row, column) {
-        switch (column.id) {
-          case 0:
-            return row.name;
-          case 1:
-            return row.age;
-          case 2:
-            return row.email;
-          default:
-            return null;
-        }
-      },
       canEditCell: (rowId, columnId) {
         return true;
       },

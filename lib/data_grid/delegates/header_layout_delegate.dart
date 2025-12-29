@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:data_grid/data_grid/models/data/column.dart';
+import 'package:data_grid/data_grid/models/data/row.dart';
 
-class HeaderLayoutDelegate extends MultiChildLayoutDelegate {
-  final List<DataGridColumn> columns;
+class HeaderLayoutDelegate<T extends DataGridRow> extends MultiChildLayoutDelegate {
+  final List<DataGridColumn<T>> columns;
 
   HeaderLayoutDelegate({required this.columns});
 
@@ -24,7 +25,7 @@ class HeaderLayoutDelegate extends MultiChildLayoutDelegate {
   }
 
   @override
-  bool shouldRelayout(covariant HeaderLayoutDelegate oldDelegate) {
+  bool shouldRelayout(covariant HeaderLayoutDelegate<T> oldDelegate) {
     if (columns.length != oldDelegate.columns.length) return true;
 
     for (var i = 0; i < columns.length; i++) {

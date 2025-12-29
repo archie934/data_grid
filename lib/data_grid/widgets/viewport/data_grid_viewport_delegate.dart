@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:data_grid/data_grid/models/data/column.dart';
+import 'package:data_grid/data_grid/models/data/row.dart';
 
 /// Delegate that provides children (cells) for the 2D grid viewport.
 /// This is responsible for building widgets at specific grid coordinates.
-class DataGridChildDelegate extends TwoDimensionalChildDelegate {
-  final List<DataGridColumn> columns;
+class DataGridChildDelegate<T extends DataGridRow> extends TwoDimensionalChildDelegate {
+  final List<DataGridColumn<T>> columns;
   final int rowCount;
   final Widget Function(BuildContext context, int row, int column) cellBuilder;
 
@@ -31,7 +32,7 @@ class DataGridChildDelegate extends TwoDimensionalChildDelegate {
   /// Determines if the delegate needs to rebuild children.
   /// Returns true if columns or row count has changed.
   @override
-  bool shouldRebuild(covariant DataGridChildDelegate oldDelegate) {
+  bool shouldRebuild(covariant DataGridChildDelegate<T> oldDelegate) {
     return oldDelegate.columns != columns || oldDelegate.rowCount != rowCount;
   }
 }
@@ -47,4 +48,3 @@ class DataGridVicinity extends ChildVicinity {
   /// Convenience getter to access the column index
   int get column => xIndex;
 }
-

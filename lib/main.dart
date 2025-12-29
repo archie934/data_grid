@@ -1,6 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:data_grid/data_grid/data_grid.dart';
 
+class RedCellRenderer extends CellRenderer<SomeRow> {
+  const RedCellRenderer();
+
+  @override
+  Widget buildCell(
+    BuildContext context,
+    SomeRow row,
+    DataGridColumn column,
+    int rowIndex,
+    CellRenderContext<SomeRow> renderContext,
+  ) {
+    final theme = DataGridTheme.of(context);
+    return Container(
+      color: Colors.red,
+      padding: theme.padding.cellPadding,
+      alignment: Alignment.centerLeft,
+      child: Text(
+        'Row ${row.id.toInt()}, Col ${column.id}',
+        style: const TextStyle(color: Colors.white),
+        overflow: TextOverflow.ellipsis,
+      ),
+    );
+  }
+}
+
 // Example: Customizing DataGrid theme
 // Using Border objects for complete control over cell borders
 final customTheme = DataGridThemeData(
@@ -55,19 +80,20 @@ class _MainAppState extends State<MainApp> {
 
     final columns = List.generate(
       20,
-      (index) => DataGridColumn(id: index, title: 'Column $index', width: 150, pinned: index % 4 == 0, editable: true),
+      (index) => DataGridColumn<SomeRow>(
+        id: index,
+        title: 'Column $index',
+        width: 150,
+        pinned: index % 4 == 0,
+        editable: true,
+        cellRenderer: index == 3 ? const RedCellRenderer() : null,
+        valueAccessor: (row) => 'Row ${row.id.toInt()}, Col $index',
+      ),
     );
 
     final rows = List.generate(1000000, (index) => SomeRow(id: index.toDouble()));
 
-    controller = DataGridController<SomeRow>(
-      initialColumns: columns,
-      initialRows: rows,
-      rowHeight: 48.0,
-      cellValueAccessor: (row, column) {
-        return 'Row ${row.id.toInt()}, Col ${column.id}';
-      },
-    );
+    controller = DataGridController<SomeRow>(initialColumns: columns, initialRows: rows, rowHeight: 48.0);
   }
 
   @override
@@ -112,13 +138,6 @@ class _MainAppState extends State<MainApp> {
           // When using a custom theme, remove rowHeight and headerHeight
           // to let the theme control these dimensions
           theme: customTheme,
-          cellBuilder: (row, columnId) {
-            return Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              alignment: Alignment.centerLeft,
-              child: Text('Row ${row.id.toInt()}, Col $columnId'),
-            );
-          },
         ),
       ),
     );

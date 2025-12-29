@@ -13,7 +13,6 @@ import 'package:data_grid/data_grid/controller/delegates/sort_delegate.dart';
 import 'package:data_grid/data_grid/controller/delegates/default_sort_delegate.dart';
 import 'package:data_grid/data_grid/controller/interceptors/data_grid_interceptor.dart';
 
-export 'package:data_grid/data_grid/utils/data_indexer.dart' show CellValueAccessor;
 export 'package:data_grid/data_grid/controller/interceptors/data_grid_interceptor.dart';
 export 'package:data_grid/data_grid/controller/delegates/viewport_delegate.dart';
 export 'package:data_grid/data_grid/controller/delegates/sort_delegate.dart';
@@ -36,10 +35,9 @@ class DataGridController<T extends DataGridRow> {
   final Future<bool> Function(double rowId, int columnId, dynamic oldValue, dynamic newValue)? onCellCommit;
 
   DataGridController({
-    List<DataGridColumn>? initialColumns,
+    List<DataGridColumn<T>>? initialColumns,
     List<T>? initialRows,
     double rowHeight = 48.0,
-    CellValueAccessor<T>? cellValueAccessor,
     Duration sortDebounce = const Duration(milliseconds: 300),
     int sortIsolateThreshold = 10000,
     ViewportDelegate<T>? viewportDelegate,
@@ -48,7 +46,7 @@ class DataGridController<T extends DataGridRow> {
     this.canEditCell,
     this.canSelectRow,
     this.onCellCommit,
-  }) : _dataIndexer = DataIndexer<T>(cellValueAccessor: cellValueAccessor),
+  }) : _dataIndexer = DataIndexer<T>(),
        _stateSubject = BehaviorSubject<DataGridState<T>>.seeded(DataGridState<T>.initial()) {
     _viewportDelegate = viewportDelegate ?? DefaultViewportDelegate<T>(rowHeight: rowHeight);
     _sortDelegate =
@@ -79,7 +77,7 @@ class DataGridController<T extends DataGridRow> {
   Stream<Set<double>> get renderedRowIds$ => _renderedRowIds.stream;
   Set<double> get renderedRowIds => _renderedRowIds.value;
 
-  void _initialize(List<DataGridColumn> columns, List<T> rows) {
+  void _initialize(List<DataGridColumn<T>> columns, List<T> rows) {
     final rowsById = {for (var row in rows) row.id: row};
     final displayOrder = rows.map((r) => r.id).toList();
     _dataIndexer.setData(rowsById);
@@ -192,7 +190,7 @@ class DataGridController<T extends DataGridRow> {
     }
   }
 
-  void setColumns(List<DataGridColumn> columns) {
+  void setColumns(List<DataGridColumn<T>> columns) {
     _updateStateWithInterceptors(state.copyWith(columns: columns), null);
   }
 

@@ -18,21 +18,20 @@ class DataGridBody<T extends DataGridRow> extends StatefulWidget {
   final double rowHeight;
   final RowRenderer<T>? rowRenderer;
   final CellRenderer<T>? cellRenderer;
-  final Widget Function(T row, int columnId)? cellBuilder;
 
-  const DataGridBody({super.key, required this.rowHeight, this.rowRenderer, this.cellRenderer, this.cellBuilder});
+  const DataGridBody({super.key, required this.rowHeight, this.rowRenderer, this.cellRenderer});
 
   @override
   State<DataGridBody<T>> createState() => _DataGridBodyState<T>();
 }
 
 class _DataGridBodyState<T extends DataGridRow> extends State<DataGridBody<T>> {
-  late List<DataGridColumn> pinnedColumns;
-  late List<DataGridColumn> unpinnedColumns;
+  late List<DataGridColumn<T>> pinnedColumns;
+  late List<DataGridColumn<T>> unpinnedColumns;
   late double pinnedWidth;
   late double unpinnedWidth;
   late RowRenderer<T> effectiveRowRenderer;
-  List<DataGridColumn> effectiveColumns = [];
+  List<DataGridColumn<T>> effectiveColumns = [];
 
   @override
   void didChangeDependencies() {
@@ -50,7 +49,7 @@ class _DataGridBodyState<T extends DataGridRow> extends State<DataGridBody<T>> {
     }
   }
 
-  bool _columnsEqual(List<DataGridColumn> a, List<DataGridColumn> b) {
+  bool _columnsEqual(List<DataGridColumn<T>> a, List<DataGridColumn<T>> b) {
     if (a.length != b.length) return false;
 
     for (int i = 0; i < a.length; i++) {
@@ -68,7 +67,7 @@ class _DataGridBodyState<T extends DataGridRow> extends State<DataGridBody<T>> {
     return true;
   }
 
-  void _updateColumns(List<DataGridColumn> columns) {
+  void _updateColumns(List<DataGridColumn<T>> columns) {
     if (_columnsEqual(effectiveColumns, columns)) return;
     effectiveColumns = columns;
     pinnedColumns = columns.where((col) => col.pinned && col.visible).toList();
@@ -113,13 +112,7 @@ class _DataGridBodyState<T extends DataGridRow> extends State<DataGridBody<T>> {
                       return DataGridCheckboxCell<T>(row: row, rowId: row.id, rowIndex: rowIndex);
                     }
 
-                    return DataGridCell<T>(
-                      row: row,
-                      rowId: row.id,
-                      column: column,
-                      rowIndex: rowIndex,
-                      cellBuilder: widget.cellBuilder,
-                    );
+                    return DataGridCell<T>(row: row, rowId: row.id, column: column, rowIndex: rowIndex);
                   },
                 ),
               ),
@@ -148,19 +141,17 @@ class _DataGridBodyState<T extends DataGridRow> extends State<DataGridBody<T>> {
       unpinnedWidth: unpinnedWidth,
       rowHeight: widget.rowHeight,
       rowRenderer: effectiveRowRenderer,
-      cellBuilder: widget.cellBuilder,
     );
   }
 }
 
 class _PinnedLayout<T extends DataGridRow> extends StatelessWidget {
-  final List<DataGridColumn> pinnedColumns;
-  final List<DataGridColumn> unpinnedColumns;
+  final List<DataGridColumn<T>> pinnedColumns;
+  final List<DataGridColumn<T>> unpinnedColumns;
   final double pinnedWidth;
   final double unpinnedWidth;
   final double rowHeight;
   final RowRenderer<T> rowRenderer;
-  final Widget Function(T row, int columnId)? cellBuilder;
 
   const _PinnedLayout({
     required this.pinnedColumns,
@@ -169,7 +160,6 @@ class _PinnedLayout<T extends DataGridRow> extends StatelessWidget {
     required this.unpinnedWidth,
     required this.rowHeight,
     required this.rowRenderer,
-    this.cellBuilder,
   });
 
   @override
@@ -234,7 +224,6 @@ class _PinnedLayout<T extends DataGridRow> extends StatelessWidget {
                         rowHeight: rowHeight,
                         isSelected: controller.state.selection.isRowSelected(row.id),
                         isHovered: false,
-                        cellBuilder: cellBuilder,
                       );
 
                       return rowRenderer.buildRow(context, row, index, renderContext);

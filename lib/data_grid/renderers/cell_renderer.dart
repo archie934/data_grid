@@ -19,19 +19,19 @@ abstract class CellRenderer<T extends DataGridRow> {
   Widget buildCell(
     BuildContext context,
     T row,
-    DataGridColumn column,
+    DataGridColumn<T> column,
     int rowIndex,
     CellRenderContext<T> renderContext,
   );
 
   /// Optional: Determine if cell is editable
-  bool isCellEditable(T row, DataGridColumn column) => false;
+  bool isCellEditable(T row, DataGridColumn<T> column) => false;
 
   /// Optional: Build custom editor widget
   Widget? buildEditor(
     BuildContext context,
     T row,
-    DataGridColumn column,
+    DataGridColumn<T> column,
     dynamic currentValue,
     void Function(dynamic newValue) onValueChanged,
   ) => null;

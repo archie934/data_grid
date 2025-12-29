@@ -2,13 +2,10 @@ import 'package:data_grid/data_grid/models/data/column.dart';
 import 'package:data_grid/data_grid/models/data/row.dart';
 import 'package:data_grid/data_grid/models/state/grid_state.dart';
 
-typedef CellValueAccessor<T> = dynamic Function(T row, DataGridColumn column);
-
 class DataIndexer<T extends DataGridRow> {
   Map<double, T> _data = {};
-  final CellValueAccessor<T>? cellValueAccessor;
 
-  DataIndexer({this.cellValueAccessor});
+  DataIndexer();
 
   void setData(Map<double, T> data) {
     _data = data;
@@ -16,7 +13,7 @@ class DataIndexer<T extends DataGridRow> {
 
   T? getRow(double rowId) => _data[rowId];
 
-  List<double> sort(Map<double, T> rowsById, List<SortColumn> sortColumns, List<DataGridColumn> columns) {
+  List<double> sort(Map<double, T> rowsById, List<SortColumn> sortColumns, List<DataGridColumn<T>> columns) {
     if (sortColumns.isEmpty) {
       return rowsById.keys.toList();
     }
@@ -45,7 +42,7 @@ class DataIndexer<T extends DataGridRow> {
     Map<double, T> rowsById,
     List<double> idsToSort,
     List<SortColumn> sortColumns,
-    List<DataGridColumn> columns,
+    List<DataGridColumn<T>> columns,
   ) {
     if (sortColumns.isEmpty) {
       return idsToSort;
@@ -71,7 +68,7 @@ class DataIndexer<T extends DataGridRow> {
     return sortedIds;
   }
 
-  List<double> filter(Map<double, T> rowsById, List<ColumnFilter> filters, List<DataGridColumn> columns) {
+  List<double> filter(Map<double, T> rowsById, List<ColumnFilter> filters, List<DataGridColumn<T>> columns) {
     if (filters.isEmpty) {
       return rowsById.keys.toList();
     }
@@ -101,15 +98,14 @@ class DataIndexer<T extends DataGridRow> {
 
   /// Get cell value for a specific row and column
   /// Made public to support isolate sorting
-  dynamic getCellValue(T row, DataGridColumn column) {
-    if (cellValueAccessor != null) {
-      return cellValueAccessor!(row, column);
+  dynamic getCellValue(T row, DataGridColumn<T> column) {
+    if (column.valueAccessor != null) {
+      return column.valueAccessor!(row);
     }
     return null;
   }
 
-  // Keep for internal backward compatibility
-  dynamic _getCellValue(T row, DataGridColumn column) => getCellValue(row, column);
+  dynamic _getCellValue(T row, DataGridColumn<T> column) => getCellValue(row, column);
 
   int _compareValues(dynamic a, dynamic b) {
     if (a == null && b == null) return 0;

@@ -18,11 +18,11 @@ class DataGridFilterRow<T extends DataGridRow> extends StatefulWidget {
 
 class _DataGridFilterRowState<T extends DataGridRow> extends State<DataGridFilterRow<T>> {
   late bool hasFilterableColumns;
-  late List<DataGridColumn> pinnedColumns;
-  late List<DataGridColumn> unpinnedColumns;
+  late List<DataGridColumn<T>> pinnedColumns;
+  late List<DataGridColumn<T>> unpinnedColumns;
   late double pinnedWidth;
   late double unpinnedWidth;
-  List<DataGridColumn> effectiveColumns = [];
+  List<DataGridColumn<T>> effectiveColumns = [];
 
   @override
   void didChangeDependencies() {
@@ -31,7 +31,7 @@ class _DataGridFilterRowState<T extends DataGridRow> extends State<DataGridFilte
     _updateColumns(state.effectiveColumns);
   }
 
-  bool _columnsEqual(List<DataGridColumn> a, List<DataGridColumn> b) {
+  bool _columnsEqual(List<DataGridColumn<T>> a, List<DataGridColumn<T>> b) {
     if (a.length != b.length) return false;
     for (int i = 0; i < a.length; i++) {
       if (a[i].id != b[i].id ||
@@ -44,7 +44,7 @@ class _DataGridFilterRowState<T extends DataGridRow> extends State<DataGridFilte
     return true;
   }
 
-  void _updateColumns(List<DataGridColumn> columns) {
+  void _updateColumns(List<DataGridColumn<T>> columns) {
     if (_columnsEqual(effectiveColumns, columns)) return;
     effectiveColumns = columns;
     hasFilterableColumns = columns.any((col) => col.filterable && col.visible);
