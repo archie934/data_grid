@@ -54,8 +54,10 @@ class DataGridRowWithPinnedCells<T extends DataGridRow> extends StatelessWidget 
 
         return GestureDetector(
           onTap: () {
-            final isMultiSelectMode = controller.state.selection.mode == SelectionMode.multiple;
-            controller.addEvent(SelectRowEvent(rowId: row.id, multiSelect: isMultiSelectMode));
+            if (controller.state.selection.mode != SelectionMode.none) {
+              final isMultiSelectMode = controller.state.selection.mode == SelectionMode.multiple;
+              controller.addEvent(SelectRowEvent(rowId: row.id, multiSelect: isMultiSelectMode));
+            }
           },
           child: Container(
             height: rowHeight,

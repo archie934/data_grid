@@ -116,14 +116,18 @@ class _MainAppState extends State<MainApp> {
               stream: controller.selection$.map((s) => s.mode),
               initialData: controller.state.selection.mode,
               builder: (context, snapshot) {
-                final isMultiSelect = snapshot.data == SelectionMode.multiple;
+                final mode = snapshot.data!;
                 return Row(
                   children: [
-                    Text(isMultiSelect ? 'Multi-Select' : 'Single-Select'),
-                    Switch(
-                      value: isMultiSelect,
-                      onChanged: (value) {
-                        controller.setSelectionMode(value ? SelectionMode.multiple : SelectionMode.single);
+                    SegmentedButton<SelectionMode>(
+                      segments: const [
+                        ButtonSegment(value: SelectionMode.none, label: Text('None')),
+                        ButtonSegment(value: SelectionMode.single, label: Text('Single')),
+                        ButtonSegment(value: SelectionMode.multiple, label: Text('Multi')),
+                      ],
+                      selected: {mode},
+                      onSelectionChanged: (Set<SelectionMode> newSelection) {
+                        controller.setSelectionMode(newSelection.first);
                       },
                     ),
                     const SizedBox(width: 8),

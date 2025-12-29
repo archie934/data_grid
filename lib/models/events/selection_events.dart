@@ -11,6 +11,10 @@ class SelectRowEvent extends DataGridEvent {
 
   @override
   DataGridState<T>? apply<T extends DataGridRow>(EventContext<T> context) {
+    if (context.state.selection.mode == SelectionMode.none) {
+      return null;
+    }
+
     if (context.canSelectRow != null && !context.canSelectRow!(rowId)) {
       return null;
     }
@@ -46,6 +50,10 @@ class SelectRowsRangeEvent extends DataGridEvent {
 
   @override
   DataGridState<T>? apply<T extends DataGridRow>(EventContext<T> context) {
+    if (context.state.selection.mode == SelectionMode.none) {
+      return null;
+    }
+
     final selectedRows = Set<double>.from(context.state.selection.selectedRowIds);
 
     final startIdx = context.state.displayOrder.indexOf(startRowId);
@@ -81,6 +89,10 @@ class SelectAllRowsEvent extends DataGridEvent {
 
   @override
   DataGridState<T>? apply<T extends DataGridRow>(EventContext<T> context) {
+    if (context.state.selection.mode == SelectionMode.none) {
+      return null;
+    }
+
     final Set<double> visibleRowIds;
 
     if (rowIds != null) {

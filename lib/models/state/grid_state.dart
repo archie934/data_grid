@@ -45,6 +45,8 @@ class DataGridState<T extends DataGridRow> with _$DataGridState<T> {
     }
     return columns;
   }
+
+  bool get isSelectionEnabled => selection.mode != SelectionMode.none;
 }
 
 @freezed
@@ -72,7 +74,7 @@ class ViewportState with _$ViewportState {
   );
 }
 
-enum SelectionMode { single, multiple }
+enum SelectionMode { none, single, multiple }
 
 @freezed
 class SelectionState with _$SelectionState {

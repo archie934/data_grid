@@ -123,7 +123,7 @@ DataGrid<MyRow>(
 - **Column Resizing** - Drag column borders
 - **Sorting** - Multi-column sort with isolate processing and debouncing
 - **Filtering** - 11 filter operators with loading overlay
-- **Row Selection** - Single/multi/range selection
+- **Row Selection** - Single/multi/range selection, or can be disabled
 - **Horizontal Scrolling** - Synchronized header/body
 - **Reactive State** - RxDart streams
 - **Loading State** - Event-driven loading overlay (auto-triggers for >1000 rows)
@@ -204,6 +204,14 @@ controller.addEvent(FilterEvent(
 ### Selection
 ```dart
 controller.addEvent(SelectRowEvent(rowId: 123, multiSelect: true));
+
+// Disable selection completely
+controller.disableSelection();
+
+// Or set selection mode directly
+controller.setSelectionMode(SelectionMode.none);  // Disable
+controller.setSelectionMode(SelectionMode.single);  // Single row
+controller.setSelectionMode(SelectionMode.multiple);  // Multiple rows with checkboxes
 ```
 
 ### Column Resize

@@ -6,6 +6,10 @@ import 'package:data_grid/models/events/event_context.dart';
 class NavigateUpEvent extends DataGridEvent {
   @override
   DataGridState<T>? apply<T extends DataGridRow>(EventContext<T> context) {
+    if (context.state.selection.mode == SelectionMode.none) {
+      return null;
+    }
+
     final focusedRowId = context.state.selection.focusedRowId;
     if (focusedRowId == null) return null;
 
@@ -22,6 +26,10 @@ class NavigateUpEvent extends DataGridEvent {
 class NavigateDownEvent extends DataGridEvent {
   @override
   DataGridState<T>? apply<T extends DataGridRow>(EventContext<T> context) {
+    if (context.state.selection.mode == SelectionMode.none) {
+      return null;
+    }
+
     final focusedRowId = context.state.selection.focusedRowId;
     if (focusedRowId == null) {
       if (context.state.displayOrder.isEmpty) return null;
@@ -58,6 +66,10 @@ class NavigateRightEvent extends DataGridEvent {
 class SelectAllVisibleEvent extends DataGridEvent {
   @override
   DataGridState<T>? apply<T extends DataGridRow>(EventContext<T> context) {
+    if (context.state.selection.mode == SelectionMode.none) {
+      return null;
+    }
+
     final viewport = context.state.viewport;
     final visibleRowIds = <double>{};
 

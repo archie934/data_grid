@@ -230,6 +230,10 @@ class DataGridController<T extends DataGridRow> {
     setSelectionMode(enable ? SelectionMode.multiple : SelectionMode.single);
   }
 
+  void disableSelection() {
+    setSelectionMode(SelectionMode.none);
+  }
+
   void startEditCell(double rowId, int columnId) {
     addEvent(StartCellEditEvent(rowId: rowId, columnId: columnId));
   }

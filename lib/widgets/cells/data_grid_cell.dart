@@ -124,7 +124,7 @@ class _DataGridCellState<T extends DataGridRow> extends State<DataGridCell<T>> {
               : () {
                   if (isSelected && controller.state.selection.focusedRowId == widget.rowId && widget.column.editable) {
                     controller.startEditCell(widget.rowId, widget.column.id);
-                  } else {
+                  } else if (controller.state.selection.mode != SelectionMode.none) {
                     final isMultiSelectMode = controller.state.selection.mode == SelectionMode.multiple;
                     controller.addEvent(SelectRowEvent(rowId: widget.rowId, multiSelect: isMultiSelectMode));
                   }
@@ -135,7 +135,7 @@ class _DataGridCellState<T extends DataGridRow> extends State<DataGridCell<T>> {
 
               if (isSelected && controller.state.selection.focusedRowId == widget.rowId && widget.column.editable) {
                 controller.startEditCell(widget.rowId, widget.column.id);
-              } else {
+              } else if (controller.state.selection.mode != SelectionMode.none) {
                 final isMultiSelectMode = controller.state.selection.mode == SelectionMode.multiple;
                 controller.addEvent(SelectRowEvent(rowId: widget.rowId, multiSelect: isMultiSelectMode));
               }

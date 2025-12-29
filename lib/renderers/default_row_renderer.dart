@@ -29,8 +29,10 @@ class DefaultRowRenderer<T extends DataGridRow> extends RowRenderer<T> {
       controller: renderContext.controller,
       child: GestureDetector(
         onTap: () {
-          final isMultiSelectMode = renderContext.controller.state.selection.mode == SelectionMode.multiple;
-          renderContext.controller.addEvent(SelectRowEvent(rowId: row.id, multiSelect: isMultiSelectMode));
+          if (renderContext.controller.state.selection.mode != SelectionMode.none) {
+            final isMultiSelectMode = renderContext.controller.state.selection.mode == SelectionMode.multiple;
+            renderContext.controller.addEvent(SelectRowEvent(rowId: row.id, multiSelect: isMultiSelectMode));
+          }
         },
         child: Container(
           height: renderContext.rowHeight,
