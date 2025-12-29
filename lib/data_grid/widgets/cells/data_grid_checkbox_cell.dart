@@ -3,25 +3,20 @@ import 'package:rxdart/rxdart.dart';
 import 'package:data_grid/data_grid/controller/data_grid_controller.dart';
 import 'package:data_grid/data_grid/models/data/row.dart';
 import 'package:data_grid/data_grid/models/events/selection_events.dart';
+import 'package:data_grid/data_grid/widgets/data_grid_inherited.dart';
 import 'package:data_grid/data_grid/theme/data_grid_theme.dart';
 
 class DataGridCheckboxCell<T extends DataGridRow> extends StatelessWidget {
   final T row;
   final double rowId;
   final int rowIndex;
-  final DataGridController<T> controller;
 
-  const DataGridCheckboxCell({
-    super.key,
-    required this.row,
-    required this.rowId,
-    required this.rowIndex,
-    required this.controller,
-  });
+  const DataGridCheckboxCell({super.key, required this.row, required this.rowId, required this.rowIndex});
 
   @override
   Widget build(BuildContext context) {
     final theme = DataGridTheme.of(context);
+    final controller = context.dataGridController<T>()!;
 
     return StreamBuilder<bool>(
       stream: controller.selection$.map((s) => s.isRowSelected(rowId)).distinct(),
@@ -61,9 +56,7 @@ class DataGridCheckboxCell<T extends DataGridRow> extends StatelessWidget {
 }
 
 class DataGridCheckboxHeaderCell<T extends DataGridRow> extends StatefulWidget {
-  final DataGridController<T> controller;
-
-  const DataGridCheckboxHeaderCell({super.key, required this.controller});
+  const DataGridCheckboxHeaderCell({super.key});
 
   @override
   State<DataGridCheckboxHeaderCell<T>> createState() => _DataGridCheckboxHeaderCellState<T>();
@@ -73,9 +66,10 @@ class _DataGridCheckboxHeaderCellState<T extends DataGridRow> extends State<Data
   @override
   Widget build(BuildContext context) {
     final theme = DataGridTheme.of(context);
+    final controller = context.dataGridController<T>()!;
 
     return StreamBuilder<_CheckboxHeaderState>(
-      stream: Rx.combineLatest2(widget.controller.renderedRowIds$, widget.controller.selection$, (
+      stream: Rx.combineLatest2(controller.renderedRowIds$, controller.selection$, (
         Set<double> renderedRowIds,
         selection,
       ) {
@@ -86,7 +80,7 @@ class _DataGridCheckboxHeaderCellState<T extends DataGridRow> extends State<Data
 
         return _CheckboxHeaderState(allVisibleSelected, someSelected, renderedRowIds);
       }).distinct(),
-      initialData: _computeInitialState(),
+      initialData: _computeInitialState(controller),
       builder: (context, snapshot) {
         final headerState = snapshot.data!;
 
@@ -99,9 +93,9 @@ class _DataGridCheckboxHeaderCellState<T extends DataGridRow> extends State<Data
           checked: headerState.allVisibleSelected,
           onTap: () {
             if (headerState.allVisibleSelected || headerState.someSelected) {
-              widget.controller.addEvent(ClearSelectionEvent());
+              controller.addEvent(ClearSelectionEvent());
             } else {
-              widget.controller.addEvent(
+              controller.addEvent(
                 SelectAllRowsEvent(rowIds: headerState.visibleRowIds.isEmpty ? null : headerState.visibleRowIds),
               );
             }
@@ -115,9 +109,9 @@ class _DataGridCheckboxHeaderCellState<T extends DataGridRow> extends State<Data
               tristate: true,
               onChanged: (value) {
                 if (headerState.allVisibleSelected || headerState.someSelected) {
-                  widget.controller.addEvent(ClearSelectionEvent());
+                  controller.addEvent(ClearSelectionEvent());
                 } else {
-                  widget.controller.addEvent(
+                  controller.addEvent(
                     SelectAllRowsEvent(rowIds: headerState.visibleRowIds.isEmpty ? null : headerState.visibleRowIds),
                   );
                 }
@@ -129,9 +123,9 @@ class _DataGridCheckboxHeaderCellState<T extends DataGridRow> extends State<Data
     );
   }
 
-  _CheckboxHeaderState _computeInitialState() {
-    final state = widget.controller.state;
-    final renderedRowIds = widget.controller.renderedRowIds;
+  _CheckboxHeaderState _computeInitialState(DataGridController<T> controller) {
+    final state = controller.state;
+    final renderedRowIds = controller.renderedRowIds;
 
     final allVisibleSelected =
         renderedRowIds.isNotEmpty && renderedRowIds.every((id) => state.selection.isRowSelected(id));

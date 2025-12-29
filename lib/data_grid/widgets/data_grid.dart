@@ -8,6 +8,7 @@ import 'package:data_grid/data_grid/models/state/grid_state.dart';
 import 'package:data_grid/data_grid/models/events/grid_events.dart';
 import 'package:data_grid/data_grid/widgets/data_grid_header.dart';
 import 'package:data_grid/data_grid/widgets/data_grid_body.dart';
+import 'package:data_grid/data_grid/widgets/data_grid_inherited.dart';
 import 'package:data_grid/data_grid/widgets/overlays/loading_overlay.dart';
 import 'package:data_grid/data_grid/renderers/row_renderer.dart';
 import 'package:data_grid/data_grid/renderers/cell_renderer.dart';
@@ -110,67 +111,69 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
 
     return DataGridTheme(
       data: themeData,
-      child: Focus(
-        autofocus: true,
-        onKeyEvent: (node, event) => _handleKeyEvent(event),
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            widget.controller.addEvent(
-              ViewportResizeEvent(width: constraints.maxWidth, height: constraints.maxHeight - effectiveHeaderHeight),
-            );
+      child: StreamBuilder<DataGridState<T>>(
+        stream: widget.controller.state$,
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-            return StreamBuilder<DataGridState<T>>(
-              stream: widget.controller.state$,
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return const Center(child: CircularProgressIndicator());
-                }
+          final state = snapshot.data!;
+          final rowCount = state.displayOrder.length;
+          final columnCount = state.effectiveColumns.length;
 
-                final state = snapshot.data!;
-                final rowCount = state.displayOrder.length;
-                final columnCount = state.effectiveColumns.length;
+          return DataGridInherited<T>(
+            controller: widget.controller,
+            scrollController: _scrollController,
+            state: state,
+            child: Focus(
+              autofocus: true,
+              onKeyEvent: (node, event) => _handleKeyEvent(event),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  widget.controller.addEvent(
+                    ViewportResizeEvent(
+                      width: constraints.maxWidth,
+                      height: constraints.maxHeight - effectiveHeaderHeight,
+                    ),
+                  );
 
-                return Semantics(
-                  label: 'Data grid with $rowCount rows and $columnCount columns',
-                  child: Stack(
-                    children: [
-                      Column(
-                        children: [
-                          DataGridHeader<T>(
-                            state: state,
-                            controller: widget.controller,
-                            scrollController: _scrollController,
-                            defaultFilterRenderer: _filterRenderer,
-                            headerHeight: effectiveHeaderHeight,
-                          ),
-                          Expanded(
-                            child: DataGridBody<T>(
-                              state: state,
-                              controller: widget.controller,
-                              scrollController: _scrollController,
-                              rowHeight: effectiveRowHeight,
-                              rowRenderer: _rowRenderer,
-                              cellRenderer: _cellRenderer,
-                              cellBuilder: widget.cellBuilder,
+                  return Semantics(
+                    label: 'Data grid with $rowCount rows and $columnCount columns',
+                    child: Stack(
+                      children: [
+                        Column(
+                          children: [
+                            DataGridHeader<T>(
+                              defaultFilterRenderer: _filterRenderer,
+                              headerHeight: effectiveHeaderHeight,
                             ),
-                          ),
-                        ],
-                      ),
-                      if (state.isLoading && widget.showLoadingOverlay)
-                        widget.loadingOverlayBuilder != null
-                            ? widget.loadingOverlayBuilder!(context, state.loadingMessage)
-                            : DataGridLoadingOverlay(
-                                message: state.loadingMessage,
-                                backdropColor: widget.loadingBackdropColor,
-                                indicatorColor: widget.loadingIndicatorColor,
+                            Expanded(
+                              child: DataGridBody<T>(
+                                rowHeight: effectiveRowHeight,
+                                rowRenderer: _rowRenderer,
+                                cellRenderer: _cellRenderer,
+                                cellBuilder: widget.cellBuilder,
                               ),
-                    ],
-                  ),
-                );
-              },
-            );
-          },
-        ),
+                            ),
+                          ],
+                        ),
+                        if (state.isLoading && widget.showLoadingOverlay)
+                          widget.loadingOverlayBuilder != null
+                              ? widget.loadingOverlayBuilder!(context, state.loadingMessage)
+                              : DataGridLoadingOverlay(
+                                  message: state.loadingMessage,
+                                  backdropColor: widget.loadingBackdropColor,
+                                  indicatorColor: widget.loadingIndicatorColor,
+                                ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          );
+        },
       ),
     );
   }

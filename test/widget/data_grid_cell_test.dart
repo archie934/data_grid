@@ -64,7 +64,6 @@ void main() {
               rowId: 1.0,
               column: column,
               rowIndex: 0,
-              controller: controller,
               cellBuilder: (row, columnId) => Text(row.name),
             ),
           ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:data_grid/data_grid/models/data/row.dart';
 import 'package:data_grid/data_grid/models/data/column.dart';
 import 'package:data_grid/data_grid/models/events/grid_events.dart';
+import 'package:data_grid/data_grid/models/state/grid_state.dart';
 import 'package:data_grid/data_grid/delegates/body_layout_delegate.dart';
 import 'package:data_grid/data_grid/renderers/row_renderer.dart';
 import 'package:data_grid/data_grid/renderers/cell_renderer.dart';
@@ -31,7 +32,8 @@ class DefaultRowRenderer<T extends DataGridRow> extends RowRenderer<T> {
       controller: renderContext.controller,
       child: GestureDetector(
         onTap: () {
-          renderContext.controller.addEvent(SelectRowEvent(rowId: row.id, multiSelect: false));
+          final isMultiSelectMode = renderContext.controller.state.selection.mode == SelectionMode.multiple;
+          renderContext.controller.addEvent(SelectRowEvent(rowId: row.id, multiSelect: isMultiSelectMode));
         },
         child: Container(
           height: renderContext.rowHeight,
@@ -175,7 +177,7 @@ class _RendererCell<T extends DataGridRow> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (column.id == kSelectionColumnId) {
-      return DataGridCheckboxCell<T>(row: row, rowId: row.id, rowIndex: index, controller: renderContext.controller);
+      return DataGridCheckboxCell<T>(row: row, rowId: row.id, rowIndex: index);
     }
 
     final cellContext = CellRenderContext<T>(

@@ -1,13 +1,11 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:data_grid/data_grid/controller/data_grid_controller.dart';
-import 'package:data_grid/data_grid/controller/grid_scroll_controller.dart';
 import 'package:data_grid/data_grid/models/data/row.dart';
 import 'package:data_grid/data_grid/models/data/column.dart';
-import 'package:data_grid/data_grid/models/state/grid_state.dart';
 import 'package:data_grid/data_grid/widgets/data_grid_scroll_view.dart';
 import 'package:data_grid/data_grid/widgets/cells/data_grid_cell.dart';
 import 'package:data_grid/data_grid/widgets/cells/data_grid_checkbox_cell.dart';
+import 'package:data_grid/data_grid/widgets/data_grid_inherited.dart';
 import 'package:data_grid/data_grid/widgets/scroll/scrollbar_vertical.dart';
 import 'package:data_grid/data_grid/widgets/scroll/scrollbar_horizontal.dart';
 import 'package:data_grid/data_grid/renderers/row_renderer.dart';
@@ -17,24 +15,12 @@ import 'package:data_grid/data_grid/renderers/render_context.dart';
 import 'package:data_grid/data_grid/theme/data_grid_theme.dart';
 
 class DataGridBody<T extends DataGridRow> extends StatefulWidget {
-  final DataGridState<T> state;
-  final DataGridController<T> controller;
-  final GridScrollController scrollController;
   final double rowHeight;
   final RowRenderer<T>? rowRenderer;
   final CellRenderer<T>? cellRenderer;
   final Widget Function(T row, int columnId)? cellBuilder;
 
-  const DataGridBody({
-    super.key,
-    required this.state,
-    required this.controller,
-    required this.scrollController,
-    required this.rowHeight,
-    this.rowRenderer,
-    this.cellRenderer,
-    this.cellBuilder,
-  });
+  const DataGridBody({super.key, required this.rowHeight, this.rowRenderer, this.cellRenderer, this.cellBuilder});
 
   @override
   State<DataGridBody<T>> createState() => _DataGridBodyState<T>();
@@ -46,20 +32,19 @@ class _DataGridBodyState<T extends DataGridRow> extends State<DataGridBody<T>> {
   late double pinnedWidth;
   late double unpinnedWidth;
   late RowRenderer<T> effectiveRowRenderer;
+  List<DataGridColumn> effectiveColumns = [];
 
   @override
-  void initState() {
-    super.initState();
-    _updateColumns();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final state = context.dataGridState<T>()!;
+    _updateColumns(state.effectiveColumns);
     _updateRowRenderer();
   }
 
   @override
   void didUpdateWidget(DataGridBody<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (!_columnsEqual(oldWidget.state.effectiveColumns, widget.state.effectiveColumns)) {
-      _updateColumns();
-    }
     if (oldWidget.rowRenderer != widget.rowRenderer || oldWidget.cellRenderer != widget.cellRenderer) {
       _updateRowRenderer();
     }
@@ -83,9 +68,11 @@ class _DataGridBodyState<T extends DataGridRow> extends State<DataGridBody<T>> {
     return true;
   }
 
-  void _updateColumns() {
-    pinnedColumns = widget.state.effectiveColumns.where((col) => col.pinned && col.visible).toList();
-    unpinnedColumns = widget.state.effectiveColumns.where((col) => !col.pinned && col.visible).toList();
+  void _updateColumns(List<DataGridColumn> columns) {
+    if (_columnsEqual(effectiveColumns, columns)) return;
+    effectiveColumns = columns;
+    pinnedColumns = columns.where((col) => col.pinned && col.visible).toList();
+    unpinnedColumns = columns.where((col) => !col.pinned && col.visible).toList();
     pinnedWidth = pinnedColumns.fold<double>(0.0, (sum, col) => sum + col.width);
     unpinnedWidth = unpinnedColumns.fold<double>(0.0, (sum, col) => sum + col.width);
   }
@@ -97,7 +84,10 @@ class _DataGridBodyState<T extends DataGridRow> extends State<DataGridBody<T>> {
   @override
   Widget build(BuildContext context) {
     final theme = DataGridTheme.of(context);
+    final state = context.dataGridState<T>()!;
+    final scrollController = context.gridScrollController<T>()!;
     final scrollbarWidth = theme.dimensions.scrollbarWidth;
+    _updateColumns(state.effectiveColumns);
 
     if (pinnedColumns.isEmpty) {
       return NotificationListener<ScrollNotification>(
@@ -107,50 +97,45 @@ class _DataGridBodyState<T extends DataGridRow> extends State<DataGridBody<T>> {
         child: Stack(
           children: [
             Positioned.fill(
-              child: DataGridScrollView(
-                columns: widget.state.effectiveColumns,
-                rowCount: widget.state.displayOrder.length,
-                rowHeight: widget.rowHeight,
-                verticalDetails: ScrollableDetails.vertical(controller: widget.scrollController.verticalController),
-                horizontalDetails: ScrollableDetails.horizontal(
-                  controller: widget.scrollController.horizontalController,
-                ),
-                cellBuilder: (context, rowIndex, columnIndex) {
-                  final rowId = widget.state.displayOrder[rowIndex];
-                  final row = widget.state.rowsById[rowId]!;
-                  final column = widget.state.effectiveColumns[columnIndex];
+              child: ScrollConfiguration(
+                behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
+                child: DataGridScrollView(
+                  columns: state.effectiveColumns,
+                  rowCount: state.displayOrder.length,
+                  rowHeight: widget.rowHeight,
+                  verticalDetails: ScrollableDetails.vertical(controller: scrollController.verticalController),
+                  horizontalDetails: ScrollableDetails.horizontal(controller: scrollController.horizontalController),
+                  cellBuilder: (context, rowIndex, columnIndex) {
+                    final rowId = state.displayOrder[rowIndex];
+                    final row = state.rowsById[rowId]!;
+                    final column = state.effectiveColumns[columnIndex];
 
-                  if (column.id == kSelectionColumnId) {
-                    return DataGridCheckboxCell<T>(
+                    if (column.id == kSelectionColumnId) {
+                      return DataGridCheckboxCell<T>(row: row, rowId: row.id, rowIndex: rowIndex);
+                    }
+
+                    return DataGridCell<T>(
                       row: row,
                       rowId: row.id,
+                      column: column,
                       rowIndex: rowIndex,
-                      controller: widget.controller,
+                      cellBuilder: widget.cellBuilder,
                     );
-                  }
-
-                  return DataGridCell<T>(
-                    row: row,
-                    rowId: row.id,
-                    column: column,
-                    rowIndex: rowIndex,
-                    controller: widget.controller,
-                    cellBuilder: widget.cellBuilder,
-                  );
-                },
+                  },
+                ),
               ),
             ),
             Positioned(
               right: 0,
               top: 0,
               bottom: scrollbarWidth,
-              child: CustomVerticalScrollbar(controller: widget.scrollController.verticalController),
+              child: CustomVerticalScrollbar(controller: scrollController.verticalController),
             ),
             Positioned(
               left: 0,
               right: scrollbarWidth,
               bottom: 0,
-              child: CustomHorizontalScrollbar(controller: widget.scrollController.horizontalController),
+              child: CustomHorizontalScrollbar(controller: scrollController.horizontalController),
             ),
           ],
         ),
@@ -158,9 +143,6 @@ class _DataGridBodyState<T extends DataGridRow> extends State<DataGridBody<T>> {
     }
 
     return _PinnedLayout<T>(
-      state: widget.state,
-      controller: widget.controller,
-      scrollController: widget.scrollController,
       pinnedColumns: pinnedColumns,
       unpinnedColumns: unpinnedColumns,
       pinnedWidth: pinnedWidth,
@@ -173,9 +155,6 @@ class _DataGridBodyState<T extends DataGridRow> extends State<DataGridBody<T>> {
 }
 
 class _PinnedLayout<T extends DataGridRow> extends StatelessWidget {
-  final DataGridState<T> state;
-  final DataGridController<T> controller;
-  final GridScrollController scrollController;
   final List<DataGridColumn> pinnedColumns;
   final List<DataGridColumn> unpinnedColumns;
   final double pinnedWidth;
@@ -185,9 +164,6 @@ class _PinnedLayout<T extends DataGridRow> extends StatelessWidget {
   final Widget Function(T row, int columnId)? cellBuilder;
 
   const _PinnedLayout({
-    required this.state,
-    required this.controller,
-    required this.scrollController,
     required this.pinnedColumns,
     required this.unpinnedColumns,
     required this.pinnedWidth,
@@ -200,6 +176,9 @@ class _PinnedLayout<T extends DataGridRow> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = DataGridTheme.of(context);
+    final state = context.dataGridState<T>()!;
+    final controller = context.dataGridController<T>()!;
+    final scrollController = context.gridScrollController<T>()!;
     final scrollbarWidth = theme.dimensions.scrollbarWidth;
 
     return Stack(
@@ -207,7 +186,6 @@ class _PinnedLayout<T extends DataGridRow> extends StatelessWidget {
         Positioned.fill(
           child: Listener(
             onPointerSignal: (event) {
-              // Handle mouse wheel horizontal scrolling
               if (event is PointerScrollEvent) {
                 if (scrollController.horizontalController.hasClients) {
                   final offset = scrollController.horizontalController.offset;
@@ -218,7 +196,6 @@ class _PinnedLayout<T extends DataGridRow> extends StatelessWidget {
               }
             },
             onPointerMove: (event) {
-              // Handle drag gestures for horizontal scrolling
               if (event.localPosition.dx > pinnedWidth && event.delta.dx.abs() > event.delta.dy.abs()) {
                 if (scrollController.horizontalController.hasClients) {
                   final offset = scrollController.horizontalController.offset;
@@ -235,32 +212,35 @@ class _PinnedLayout<T extends DataGridRow> extends StatelessWidget {
                     ? scrollController.horizontalController.offset
                     : 0.0;
 
-                return ListView.builder(
-                  controller: scrollController.verticalController,
-                  itemCount: state.displayOrder.length,
-                  itemExtent: rowHeight,
-                  addAutomaticKeepAlives: false,
-                  addRepaintBoundaries: true,
-                  itemBuilder: (context, index) {
-                    final rowId = state.displayOrder[index];
-                    final row = state.rowsById[rowId]!;
+                return ScrollConfiguration(
+                  behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
+                  child: ListView.builder(
+                    controller: scrollController.verticalController,
+                    itemCount: state.displayOrder.length,
+                    itemExtent: rowHeight,
+                    addAutomaticKeepAlives: false,
+                    addRepaintBoundaries: true,
+                    itemBuilder: (context, index) {
+                      final rowId = state.displayOrder[index];
+                      final row = state.rowsById[rowId]!;
 
-                    final renderContext = RowRenderContext<T>(
-                      controller: controller,
-                      scrollController: scrollController,
-                      pinnedColumns: pinnedColumns,
-                      unpinnedColumns: unpinnedColumns,
-                      pinnedWidth: pinnedWidth,
-                      unpinnedWidth: unpinnedWidth,
-                      horizontalOffset: horizontalOffset,
-                      rowHeight: rowHeight,
-                      isSelected: controller.state.selection.isRowSelected(row.id),
-                      isHovered: false,
-                      cellBuilder: cellBuilder,
-                    );
+                      final renderContext = RowRenderContext<T>(
+                        controller: controller,
+                        scrollController: scrollController,
+                        pinnedColumns: pinnedColumns,
+                        unpinnedColumns: unpinnedColumns,
+                        pinnedWidth: pinnedWidth,
+                        unpinnedWidth: unpinnedWidth,
+                        horizontalOffset: horizontalOffset,
+                        rowHeight: rowHeight,
+                        isSelected: controller.state.selection.isRowSelected(row.id),
+                        isHovered: false,
+                        cellBuilder: cellBuilder,
+                      );
 
-                    return rowRenderer.buildRow(context, row, index, renderContext);
-                  },
+                      return rowRenderer.buildRow(context, row, index, renderContext);
+                    },
+                  ),
                 );
               },
             ),

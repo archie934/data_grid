@@ -17,6 +17,7 @@ export 'widgets/data_grid.dart';
 export 'widgets/data_grid_header.dart';
 export 'widgets/data_grid_body.dart';
 export 'widgets/data_grid_scroll_view.dart';
+export 'widgets/data_grid_inherited.dart';
 
 // Cell widgets (for customization)
 export 'widgets/cells/data_grid_cell.dart';

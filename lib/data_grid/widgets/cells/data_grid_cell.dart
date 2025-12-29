@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:data_grid/data_grid/controller/data_grid_controller.dart';
 import 'package:data_grid/data_grid/models/data/row.dart';
 import 'package:data_grid/data_grid/models/data/column.dart';
 import 'package:data_grid/data_grid/models/events/selection_events.dart';
+import 'package:data_grid/data_grid/models/state/grid_state.dart';
+import 'package:data_grid/data_grid/widgets/data_grid_inherited.dart';
 import 'package:data_grid/data_grid/theme/data_grid_theme.dart';
 
 class _CellState {
@@ -30,7 +31,6 @@ class DataGridCell<T extends DataGridRow> extends StatefulWidget {
   final double rowId;
   final DataGridColumn column;
   final int rowIndex;
-  final DataGridController<T> controller;
   final Widget Function(T row, int columnId)? cellBuilder;
 
   const DataGridCell({
@@ -39,7 +39,6 @@ class DataGridCell<T extends DataGridRow> extends StatefulWidget {
     required this.rowId,
     required this.column,
     required this.rowIndex,
-    required this.controller,
     this.cellBuilder,
   });
 
@@ -66,17 +65,21 @@ class _DataGridCellState<T extends DataGridRow> extends State<DataGridCell<T>> {
   }
 
   void _onFocusChange() {
-    if (!_focusNode.hasFocus && widget.controller.state.edit.isCellEditing(widget.rowId, widget.column.id)) {
-      widget.controller.commitCellEdit();
+    final controller = context.dataGridController<T>();
+    if (controller != null &&
+        !_focusNode.hasFocus &&
+        controller.state.edit.isCellEditing(widget.rowId, widget.column.id)) {
+      controller.commitCellEdit();
     }
   }
 
   void _handleKeyPress(KeyEvent event) {
-    if (event is KeyDownEvent) {
+    final controller = context.dataGridController<T>();
+    if (controller != null && event is KeyDownEvent) {
       if (event.logicalKey == LogicalKeyboardKey.enter) {
-        widget.controller.commitCellEdit();
+        controller.commitCellEdit();
       } else if (event.logicalKey == LogicalKeyboardKey.escape) {
-        widget.controller.cancelCellEdit();
+        controller.cancelCellEdit();
       }
     }
   }
@@ -84,9 +87,10 @@ class _DataGridCellState<T extends DataGridRow> extends State<DataGridCell<T>> {
   @override
   Widget build(BuildContext context) {
     final theme = DataGridTheme.of(context);
+    final controller = context.dataGridController<T>()!;
 
     return StreamBuilder<_CellState>(
-      stream: widget.controller.state$
+      stream: controller.state$
           .map(
             (state) => _CellState(
               state.selection.isRowSelected(widget.rowId),
@@ -96,9 +100,9 @@ class _DataGridCellState<T extends DataGridRow> extends State<DataGridCell<T>> {
           )
           .distinct(),
       initialData: _CellState(
-        widget.controller.state.selection.isRowSelected(widget.rowId),
-        widget.controller.state.edit.isCellEditing(widget.rowId, widget.column.id),
-        widget.controller.state.edit.editingValue,
+        controller.state.selection.isRowSelected(widget.rowId),
+        controller.state.edit.isCellEditing(widget.rowId, widget.column.id),
+        controller.state.edit.editingValue,
       ),
       builder: (context, snapshot) {
         final cellState = snapshot.data!;
@@ -109,7 +113,6 @@ class _DataGridCellState<T extends DataGridRow> extends State<DataGridCell<T>> {
         if (isEditing) {
           cellContent = _CellEditor<T>(
             column: widget.column,
-            controller: widget.controller,
             value: cellState.editingValue,
             editController: _editController,
             focusNode: _focusNode,
@@ -129,24 +132,22 @@ class _DataGridCellState<T extends DataGridRow> extends State<DataGridCell<T>> {
           onTap: isEditing
               ? null
               : () {
-                  if (isSelected && widget.controller.state.selection.focusedRowId == widget.rowId) {
-                    if (widget.column.editable) {
-                      widget.controller.startEditCell(widget.rowId, widget.column.id);
-                    }
+                  if (isSelected && controller.state.selection.focusedRowId == widget.rowId && widget.column.editable) {
+                    controller.startEditCell(widget.rowId, widget.column.id);
                   } else {
-                    widget.controller.addEvent(SelectRowEvent(rowId: widget.rowId, multiSelect: false));
+                    final isMultiSelectMode = controller.state.selection.mode == SelectionMode.multiple;
+                    controller.addEvent(SelectRowEvent(rowId: widget.rowId, multiSelect: isMultiSelectMode));
                   }
                 },
           child: GestureDetector(
             onTap: () {
-              if (!isEditing) {
-                if (isSelected && widget.controller.state.selection.focusedRowId == widget.rowId) {
-                  if (widget.column.editable) {
-                    widget.controller.startEditCell(widget.rowId, widget.column.id);
-                  }
-                } else {
-                  widget.controller.addEvent(SelectRowEvent(rowId: widget.rowId, multiSelect: false));
-                }
+              if (isEditing) return;
+
+              if (isSelected && controller.state.selection.focusedRowId == widget.rowId && widget.column.editable) {
+                controller.startEditCell(widget.rowId, widget.column.id);
+              } else {
+                final isMultiSelectMode = controller.state.selection.mode == SelectionMode.multiple;
+                controller.addEvent(SelectRowEvent(rowId: widget.rowId, multiSelect: isMultiSelectMode));
               }
             },
             child: Container(
@@ -179,7 +180,6 @@ class _DataGridCellState<T extends DataGridRow> extends State<DataGridCell<T>> {
 
 class _CellEditor<T extends DataGridRow> extends StatefulWidget {
   final DataGridColumn column;
-  final DataGridController<T> controller;
   final dynamic value;
   final TextEditingController editController;
   final FocusNode focusNode;
@@ -187,7 +187,6 @@ class _CellEditor<T extends DataGridRow> extends StatefulWidget {
 
   const _CellEditor({
     required this.column,
-    required this.controller,
     required this.value,
     required this.editController,
     required this.focusNode,
@@ -234,12 +233,13 @@ class _CellEditorState<T extends DataGridRow> extends State<_CellEditor<T>> {
   @override
   Widget build(BuildContext context) {
     final theme = DataGridTheme.of(context);
+    final controller = context.dataGridController<T>()!;
 
     if (widget.column.cellEditorBuilder != null) {
       return widget.column.cellEditorBuilder!(
         context,
         widget.value,
-        (newValue) => widget.controller.updateCellEditValue(newValue),
+        (newValue) => controller.updateCellEditValue(newValue),
       );
     }
 
@@ -256,7 +256,7 @@ class _CellEditorState<T extends DataGridRow> extends State<_CellEditor<T>> {
           contentPadding: theme.padding.editorPadding,
           isDense: true,
         ),
-        onChanged: (newValue) => widget.controller.updateCellEditValue(newValue),
+        onChanged: (newValue) => controller.updateCellEditValue(newValue),
       ),
     );
   }

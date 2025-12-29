@@ -1,27 +1,16 @@
+import 'package:data_grid/data_grid/widgets/data_grid_inherited.dart';
 import 'package:flutter/material.dart';
-import 'package:data_grid/data_grid/controller/data_grid_controller.dart';
-import 'package:data_grid/data_grid/controller/grid_scroll_controller.dart';
 import 'package:data_grid/data_grid/models/data/row.dart';
 import 'package:data_grid/data_grid/models/data/column.dart';
-import 'package:data_grid/data_grid/models/state/grid_state.dart';
 import 'package:data_grid/data_grid/models/events/grid_events.dart';
 import 'package:data_grid/data_grid/delegates/header_layout_delegate.dart';
 import 'package:data_grid/data_grid/renderers/filter_renderer.dart';
 import 'package:data_grid/data_grid/theme/data_grid_theme.dart';
 
 class DataGridFilterRow<T extends DataGridRow> extends StatefulWidget {
-  final DataGridState<T> state;
-  final DataGridController<T> controller;
-  final GridScrollController scrollController;
   final FilterRenderer defaultFilterRenderer;
 
-  const DataGridFilterRow({
-    super.key,
-    required this.state,
-    required this.controller,
-    required this.scrollController,
-    required this.defaultFilterRenderer,
-  });
+  const DataGridFilterRow({super.key, required this.defaultFilterRenderer});
 
   @override
   State<DataGridFilterRow<T>> createState() => _DataGridFilterRowState<T>();
@@ -31,19 +20,13 @@ class _DataGridFilterRowState<T extends DataGridRow> extends State<DataGridFilte
   late bool hasFilterableColumns;
   late List<DataGridColumn> pinnedColumns;
   late List<DataGridColumn> unpinnedColumns;
+  List<DataGridColumn> effectiveColumns = [];
 
   @override
-  void initState() {
-    super.initState();
-    _updateColumns();
-  }
-
-  @override
-  void didUpdateWidget(DataGridFilterRow<T> oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (!_columnsEqual(oldWidget.state.effectiveColumns, widget.state.effectiveColumns)) {
-      _updateColumns();
-    }
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final state = context.dataGridState<T>()!;
+    _updateColumns(state.effectiveColumns);
   }
 
   bool _columnsEqual(List<DataGridColumn> a, List<DataGridColumn> b) {
@@ -59,31 +42,32 @@ class _DataGridFilterRowState<T extends DataGridRow> extends State<DataGridFilte
     return true;
   }
 
-  void _updateColumns() {
-    hasFilterableColumns = widget.state.effectiveColumns.any((col) => col.filterable && col.visible);
-    pinnedColumns = widget.state.effectiveColumns.where((col) => col.pinned && col.visible).toList();
-    unpinnedColumns = widget.state.effectiveColumns.where((col) => !col.pinned && col.visible).toList();
+  void _updateColumns(List<DataGridColumn> columns) {
+    if (_columnsEqual(effectiveColumns, columns)) return;
+    effectiveColumns = columns;
+    hasFilterableColumns = columns.any((col) => col.filterable && col.visible);
+    pinnedColumns = columns.where((col) => col.pinned && col.visible).toList();
+    unpinnedColumns = columns.where((col) => !col.pinned && col.visible).toList();
   }
 
   @override
   Widget build(BuildContext context) {
+    final state = context.dataGridState<T>()!;
+    final scrollController = context.gridScrollController<T>()!;
+    _updateColumns(state.effectiveColumns);
+
     if (!hasFilterableColumns) {
       return const SizedBox.shrink();
     }
 
     if (pinnedColumns.isEmpty) {
       return CustomMultiChildLayout(
-        delegate: HeaderLayoutDelegate(columns: widget.state.effectiveColumns),
+        delegate: HeaderLayoutDelegate(columns: state.effectiveColumns),
         children: [
-          for (var column in widget.state.effectiveColumns)
+          for (var column in state.effectiveColumns)
             LayoutId(
               id: column.id,
-              child: _FilterCell<T>(
-                column: column,
-                state: widget.state,
-                controller: widget.controller,
-                defaultFilterRenderer: widget.defaultFilterRenderer,
-              ),
+              child: _FilterCell<T>(column: column, defaultFilterRenderer: widget.defaultFilterRenderer),
             ),
         ],
       );
@@ -101,10 +85,10 @@ class _DataGridFilterRowState<T extends DataGridRow> extends State<DataGridFilte
           bottom: 0,
           child: ClipRect(
             child: AnimatedBuilder(
-              animation: widget.scrollController.horizontalController,
+              animation: scrollController.horizontalController,
               builder: (context, child) {
-                final offset = widget.scrollController.horizontalController.hasClients
-                    ? widget.scrollController.horizontalController.offset
+                final offset = scrollController.horizontalController.hasClients
+                    ? scrollController.horizontalController.offset
                     : 0.0;
                 return Transform.translate(
                   offset: Offset(-offset, 0),
@@ -116,12 +100,7 @@ class _DataGridFilterRowState<T extends DataGridRow> extends State<DataGridFilte
                         for (var column in unpinnedColumns)
                           LayoutId(
                             id: column.id,
-                            child: _FilterCell<T>(
-                              column: column,
-                              state: widget.state,
-                              controller: widget.controller,
-                              defaultFilterRenderer: widget.defaultFilterRenderer,
-                            ),
+                            child: _FilterCell<T>(column: column, defaultFilterRenderer: widget.defaultFilterRenderer),
                           ),
                       ],
                     ),
@@ -151,12 +130,7 @@ class _DataGridFilterRowState<T extends DataGridRow> extends State<DataGridFilte
                     for (var column in pinnedColumns)
                       LayoutId(
                         id: column.id,
-                        child: _FilterCell<T>(
-                          column: column,
-                          state: widget.state,
-                          controller: widget.controller,
-                          defaultFilterRenderer: widget.defaultFilterRenderer,
-                        ),
+                        child: _FilterCell<T>(column: column, defaultFilterRenderer: widget.defaultFilterRenderer),
                       ),
                   ],
                 ),
@@ -171,20 +145,15 @@ class _DataGridFilterRowState<T extends DataGridRow> extends State<DataGridFilte
 
 class _FilterCell<T extends DataGridRow> extends StatelessWidget {
   final DataGridColumn column;
-  final DataGridState<T> state;
-  final DataGridController<T> controller;
   final FilterRenderer defaultFilterRenderer;
 
-  const _FilterCell({
-    required this.column,
-    required this.state,
-    required this.controller,
-    required this.defaultFilterRenderer,
-  });
+  const _FilterCell({required this.column, required this.defaultFilterRenderer});
 
   @override
   Widget build(BuildContext context) {
     final theme = DataGridTheme.of(context);
+    final state = context.dataGridState<T>()!;
+    final controller = context.dataGridController<T>()!;
 
     if (!column.filterable) {
       return Container(

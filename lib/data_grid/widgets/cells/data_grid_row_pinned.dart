@@ -4,6 +4,7 @@ import 'package:data_grid/data_grid/controller/grid_scroll_controller.dart';
 import 'package:data_grid/data_grid/models/data/row.dart';
 import 'package:data_grid/data_grid/models/data/column.dart';
 import 'package:data_grid/data_grid/models/events/grid_events.dart';
+import 'package:data_grid/data_grid/models/state/grid_state.dart';
 import 'package:data_grid/data_grid/delegates/body_layout_delegate.dart';
 import 'package:data_grid/data_grid/theme/data_grid_theme.dart';
 
@@ -53,7 +54,8 @@ class DataGridRowWithPinnedCells<T extends DataGridRow> extends StatelessWidget 
 
         return GestureDetector(
           onTap: () {
-            controller.addEvent(SelectRowEvent(rowId: row.id, multiSelect: false));
+            final isMultiSelectMode = controller.state.selection.mode == SelectionMode.multiple;
+            controller.addEvent(SelectRowEvent(rowId: row.id, multiSelect: isMultiSelectMode));
           },
           child: Container(
             height: rowHeight,
