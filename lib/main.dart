@@ -55,7 +55,7 @@ class _MainAppState extends State<MainApp> {
 
     final columns = List.generate(
       20,
-      (index) => DataGridColumn(id: index, title: 'Column $index', width: 150, pinned: index % 3 == 0, editable: true),
+      (index) => DataGridColumn(id: index, title: 'Column $index', width: 150, pinned: index % 4 == 0, editable: true),
     );
 
     final rows = List.generate(1000000, (index) => SomeRow(id: index.toDouble()));

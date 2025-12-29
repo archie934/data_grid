@@ -84,7 +84,6 @@ class _HeaderRowState<T extends DataGridRow> extends State<_HeaderRow<T>> {
   Widget build(BuildContext context) {
     final state = context.dataGridState<T>()!;
     final scrollController = context.gridScrollController<T>()!;
-    _updateColumns(state.effectiveColumns);
 
     if (pinnedColumns.isEmpty) {
       return CustomMultiChildLayout(

@@ -87,7 +87,6 @@ class _DataGridBodyState<T extends DataGridRow> extends State<DataGridBody<T>> {
     final state = context.dataGridState<T>()!;
     final scrollController = context.gridScrollController<T>()!;
     final scrollbarWidth = theme.dimensions.scrollbarWidth;
-    _updateColumns(state.effectiveColumns);
 
     if (pinnedColumns.isEmpty) {
       return NotificationListener<ScrollNotification>(

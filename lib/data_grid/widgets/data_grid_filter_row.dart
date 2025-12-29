@@ -20,6 +20,8 @@ class _DataGridFilterRowState<T extends DataGridRow> extends State<DataGridFilte
   late bool hasFilterableColumns;
   late List<DataGridColumn> pinnedColumns;
   late List<DataGridColumn> unpinnedColumns;
+  late double pinnedWidth;
+  late double unpinnedWidth;
   List<DataGridColumn> effectiveColumns = [];
 
   @override
@@ -48,13 +50,14 @@ class _DataGridFilterRowState<T extends DataGridRow> extends State<DataGridFilte
     hasFilterableColumns = columns.any((col) => col.filterable && col.visible);
     pinnedColumns = columns.where((col) => col.pinned && col.visible).toList();
     unpinnedColumns = columns.where((col) => !col.pinned && col.visible).toList();
+    pinnedWidth = pinnedColumns.fold<double>(0.0, (sum, col) => sum + col.width);
+    unpinnedWidth = unpinnedColumns.fold<double>(0.0, (sum, col) => sum + col.width);
   }
 
   @override
   Widget build(BuildContext context) {
     final state = context.dataGridState<T>()!;
     final scrollController = context.gridScrollController<T>()!;
-    _updateColumns(state.effectiveColumns);
 
     if (!hasFilterableColumns) {
       return const SizedBox.shrink();
@@ -72,9 +75,6 @@ class _DataGridFilterRowState<T extends DataGridRow> extends State<DataGridFilte
         ],
       );
     }
-
-    final pinnedWidth = pinnedColumns.fold<double>(0.0, (sum, col) => sum + col.width);
-    final unpinnedWidth = unpinnedColumns.fold<double>(0.0, (sum, col) => sum + col.width);
 
     return Stack(
       children: [

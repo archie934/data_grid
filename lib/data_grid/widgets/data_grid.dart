@@ -80,6 +80,7 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
   late CellRenderer<T> _cellRenderer;
   late FilterRenderer _filterRenderer;
   StreamSubscription? _scrollSubscription;
+  Size? _lastViewportSize;
 
   @override
   void initState() {
@@ -92,6 +93,18 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
     _scrollSubscription = _scrollController.scrollEvent$.listen((event) {
       widget.controller.addEvent(event);
     });
+  }
+
+  void _notifyViewportResize(double width, double height) {
+    final newSize = Size(width, height);
+    if (_lastViewportSize != newSize) {
+      _lastViewportSize = newSize;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          widget.controller.addEvent(ViewportResizeEvent(width: width, height: height));
+        }
+      });
+    }
   }
 
   @override
@@ -131,12 +144,7 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
               onKeyEvent: (node, event) => _handleKeyEvent(event),
               child: LayoutBuilder(
                 builder: (context, constraints) {
-                  widget.controller.addEvent(
-                    ViewportResizeEvent(
-                      width: constraints.maxWidth,
-                      height: constraints.maxHeight - effectiveHeaderHeight,
-                    ),
-                  );
+                  _notifyViewportResize(constraints.maxWidth, constraints.maxHeight - effectiveHeaderHeight);
 
                   return Semantics(
                     label: 'Data grid with $rowCount rows and $columnCount columns',
