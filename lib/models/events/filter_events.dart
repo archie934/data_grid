@@ -2,6 +2,7 @@ import 'package:data_grid/models/data/row.dart';
 import 'package:data_grid/models/state/grid_state.dart';
 import 'package:data_grid/models/events/base_event.dart';
 import 'package:data_grid/models/events/event_context.dart';
+import 'package:data_grid/models/enums/filter_operator.dart';
 
 class FilterEvent extends DataGridEvent {
   final int columnId;

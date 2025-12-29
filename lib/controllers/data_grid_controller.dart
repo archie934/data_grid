@@ -6,6 +6,7 @@ import 'package:data_grid/models/state/grid_state.dart';
 import 'package:data_grid/models/events/grid_events.dart';
 import 'package:data_grid/models/events/event_context.dart';
 import 'package:data_grid/models/events/edit_events.dart';
+import 'package:data_grid/models/enums/selection_mode.dart';
 import 'package:data_grid/utils/data_indexer.dart';
 import 'package:data_grid/delegates/viewport_delegate.dart';
 import 'package:data_grid/delegates/default_viewport_delegate.dart';

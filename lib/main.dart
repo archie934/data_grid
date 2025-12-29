@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:data_grid/data_grid.dart';
+import 'package:data_grid/models/enums/selection_mode.dart';
 
 class RedCellRenderer extends CellRenderer<SomeRow> {
   const RedCellRenderer();

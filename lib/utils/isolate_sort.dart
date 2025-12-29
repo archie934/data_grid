@@ -1,4 +1,5 @@
 import 'package:data_grid/models/state/grid_state.dart';
+import 'package:data_grid/models/enums/sort_direction.dart';
 
 /// Data structure for passing sort parameters to isolate
 class SortParameters {
@@ -6,11 +7,7 @@ class SortParameters {
   final List<SortColumn> sortColumns;
   final int rowCount;
 
-  SortParameters({
-    required this.columnValues,
-    required this.sortColumns,
-    required this.rowCount,
-  });
+  SortParameters({required this.columnValues, required this.sortColumns, required this.rowCount});
 }
 
 /// Top-level function that performs sorting in an isolate
@@ -25,7 +22,7 @@ List<int> performSortInIsolate(SortParameters params) {
   indices.sort((aIdx, bIdx) {
     for (var i = 0; i < params.sortColumns.length; i++) {
       final sortCol = params.sortColumns[i];
-      
+
       // Get values for this sort column
       final aValue = params.columnValues[i][aIdx];
       final bValue = params.columnValues[i][bIdx];
@@ -65,4 +62,3 @@ int _compareValues(dynamic a, dynamic b) {
 
   return a.toString().compareTo(b.toString());
 }
-

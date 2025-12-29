@@ -1,6 +1,9 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:data_grid/models/data/column.dart';
 import 'package:data_grid/models/data/row.dart';
+import 'package:data_grid/models/enums/selection_mode.dart';
+import 'package:data_grid/models/enums/sort_direction.dart';
+import 'package:data_grid/models/enums/filter_operator.dart';
 
 part 'grid_state.freezed.dart';
 
@@ -74,8 +77,6 @@ class ViewportState with _$ViewportState {
   );
 }
 
-enum SelectionMode { none, single, multiple }
-
 @freezed
 class SelectionState with _$SelectionState {
   const factory SelectionState({
@@ -111,8 +112,6 @@ class SortColumn with _$SortColumn {
       _SortColumn;
 }
 
-enum SortDirection { ascending, descending }
-
 @freezed
 class FilterState with _$FilterState {
   const factory FilterState({required Map<int, ColumnFilter> columnFilters}) = _FilterState;
@@ -128,20 +127,6 @@ class FilterState with _$FilterState {
 class ColumnFilter with _$ColumnFilter {
   const factory ColumnFilter({required int columnId, required FilterOperator operator, required dynamic value}) =
       _ColumnFilter;
-}
-
-enum FilterOperator {
-  equals,
-  notEquals,
-  contains,
-  startsWith,
-  endsWith,
-  greaterThan,
-  lessThan,
-  greaterThanOrEqual,
-  lessThanOrEqual,
-  isEmpty,
-  isNotEmpty,
 }
 
 @freezed

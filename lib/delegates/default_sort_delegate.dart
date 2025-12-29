@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:data_grid/models/data/row.dart';
 import 'package:data_grid/models/state/grid_state.dart';
 import 'package:data_grid/models/events/grid_events.dart';
+import 'package:data_grid/models/enums/sort_direction.dart';
 import 'package:data_grid/utils/data_indexer.dart';
 import 'package:data_grid/utils/isolate_sort.dart';
 import 'package:data_grid/delegates/sort_delegate.dart';

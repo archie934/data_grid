@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:data_grid/models/data/row.dart';
 import 'package:data_grid/models/data/column.dart';
 import 'package:data_grid/models/events/selection_events.dart';
-import 'package:data_grid/models/state/grid_state.dart';
+import 'package:data_grid/models/enums/selection_mode.dart';
 import 'package:data_grid/widgets/data_grid_inherited.dart';
 import 'package:data_grid/theme/data_grid_theme.dart';
 
@@ -89,83 +89,90 @@ class _DataGridCellState<T extends DataGridRow> extends State<DataGridCell<T>> {
     final theme = DataGridTheme.of(context);
     final controller = context.dataGridController<T>()!;
 
-    return StreamBuilder<_CellState>(
-      stream: controller.state$
-          .map(
-            (state) => _CellState(
-              state.selection.isRowSelected(widget.rowId),
-              state.edit.isCellEditing(widget.rowId, widget.column.id),
-              state.edit.editingValue,
-            ),
-          )
-          .distinct(),
-      initialData: _CellState(
-        controller.state.selection.isRowSelected(widget.rowId),
-        controller.state.edit.isCellEditing(widget.rowId, widget.column.id),
-        controller.state.edit.editingValue,
-      ),
-      builder: (context, snapshot) {
-        final cellState = snapshot.data!;
-        final isSelected = cellState.isSelected;
-        final isEditing = cellState.isEditing;
+    return StreamBuilder<bool>(
+      stream: controller.selection$.map((s) => s.isRowSelected(widget.rowId)).distinct(),
+      initialData: controller.state.selection.isRowSelected(widget.rowId),
+      builder: (context, selectionSnapshot) {
+        final isSelected = selectionSnapshot.data ?? false;
 
-        Widget cellContent;
-        if (isEditing) {
-          cellContent = _CellEditor<T>(
-            column: widget.column,
-            value: cellState.editingValue,
-            editController: _editController,
-            focusNode: _focusNode,
-            onKeyPress: _handleKeyPress,
-          );
-        } else {
-          final value = widget.column.valueAccessor?.call(widget.row);
-          final displayText = value?.toString() ?? '';
-          cellContent = Text(displayText, overflow: TextOverflow.ellipsis);
-        }
+        return StreamBuilder<_CellState>(
+          stream: controller.state$
+              .map(
+                (state) => _CellState(
+                  isSelected,
+                  state.edit.isCellEditing(widget.rowId, widget.column.id),
+                  state.edit.editingValue,
+                ),
+              )
+              .distinct(),
+          initialData: _CellState(
+            isSelected,
+            controller.state.edit.isCellEditing(widget.rowId, widget.column.id),
+            controller.state.edit.editingValue,
+          ),
+          builder: (context, snapshot) {
+            final cellState = snapshot.data!;
+            final isEditing = cellState.isEditing;
 
-        return Semantics(
-          label: 'Cell row ${widget.rowIndex + 1} column ${widget.column.title}',
-          value: isEditing ? 'Editing' : null,
-          selected: isSelected,
-          button: true,
-          onTap: isEditing
-              ? null
-              : () {
+            Widget cellContent;
+            if (isEditing) {
+              cellContent = _CellEditor<T>(
+                column: widget.column,
+                value: cellState.editingValue,
+                editController: _editController,
+                focusNode: _focusNode,
+                onKeyPress: _handleKeyPress,
+              );
+            } else {
+              final value = widget.column.valueAccessor?.call(widget.row);
+              final displayText = value?.toString() ?? '';
+              cellContent = Text(displayText, overflow: TextOverflow.ellipsis);
+            }
+
+            return Semantics(
+              label: 'Cell row ${widget.rowIndex + 1} column ${widget.column.title}',
+              value: isEditing ? 'Editing' : null,
+              selected: isSelected,
+              button: true,
+              onTap: isEditing
+                  ? null
+                  : () {
+                      if (controller.state.selection.mode != SelectionMode.none) {
+                        final isMultiSelectMode = controller.state.selection.mode == SelectionMode.multiple;
+                        controller.addEvent(SelectRowEvent(rowId: widget.rowId, multiSelect: isMultiSelectMode));
+                      }
+                    },
+              child: GestureDetector(
+                onDoubleTap: () {
+                  if (!isEditing && widget.column.editable) {
+                    controller.startEditCell(widget.rowId, widget.column.id);
+                  }
+                },
+                onTap: () {
+                  if (isEditing) return;
+
                   if (controller.state.selection.mode != SelectionMode.none) {
                     final isMultiSelectMode = controller.state.selection.mode == SelectionMode.multiple;
                     controller.addEvent(SelectRowEvent(rowId: widget.rowId, multiSelect: isMultiSelectMode));
                   }
                 },
-          child: GestureDetector(
-            onDoubleTap: () {
-              if (!isEditing && widget.column.editable) {
-                controller.startEditCell(widget.rowId, widget.column.id);
-              }
-            },
-            onTap: () {
-              if (isEditing) return;
-
-              if (controller.state.selection.mode != SelectionMode.none) {
-                final isMultiSelectMode = controller.state.selection.mode == SelectionMode.multiple;
-                controller.addEvent(SelectRowEvent(rowId: widget.rowId, multiSelect: isMultiSelectMode));
-              }
-            },
-            child: Container(
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? theme.colors.selectionColor
-                    : (widget.rowIndex % 2 == 0 ? theme.colors.evenRowColor : theme.colors.oddRowColor),
-                border: isEditing
-                    ? theme.borders.editingBorder
-                    : (widget.isPinned ? theme.borders.pinnedBorder : theme.borders.cellBorder),
-                boxShadow: widget.isPinned ? theme.borders.pinnedShadow : null,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? theme.colors.selectionColor
+                        : (widget.rowIndex % 2 == 0 ? theme.colors.evenRowColor : theme.colors.oddRowColor),
+                    border: isEditing
+                        ? theme.borders.editingBorder
+                        : (widget.isPinned ? theme.borders.pinnedBorder : theme.borders.cellBorder),
+                    boxShadow: widget.isPinned ? theme.borders.pinnedShadow : null,
+                  ),
+                  padding: isEditing ? EdgeInsets.zero : theme.padding.cellPadding,
+                  alignment: isEditing ? Alignment.center : Alignment.centerLeft,
+                  child: cellContent,
+                ),
               ),
-              padding: isEditing ? EdgeInsets.zero : theme.padding.cellPadding,
-              alignment: isEditing ? Alignment.center : Alignment.centerLeft,
-              child: cellContent,
-            ),
-          ),
+            );
+          },
         );
       },
     );
