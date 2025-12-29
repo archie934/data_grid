@@ -2,7 +2,7 @@
 
 A high-performance, reactive data grid for Flutter with comprehensive features including virtualization, sorting, filtering, cell editing, row selection, column pinning, and keyboard navigation.
 
-> ⚠️ **Experimental / Proof of Concept**: This package is in early development and serves as a proof of concept for building high-performance data grids in Flutter. APIs may change, and several features have known limitations (see below).
+> **Early Development - Beta**: This package is in active development. While core features are stable and well-tested, some advanced features are still being refined. APIs may evolve based on community feedback. See [Known Issues & Roadmap](#-known-issues--roadmap) below for current limitations.
 
 ## ✨ Features
 
@@ -22,40 +22,64 @@ A high-performance, reactive data grid for Flutter with comprehensive features i
 - **Efficient Updates** - Reactive state management with RxDart
 - **O(1) Viewport** - Constant-time visibility calculations
 
-## ⚠️ Current Limitations
+## 📦 Installation
 
-As this is an **experimental proof of concept**, please be aware of the following limitations:
+Add this to your package's `pubspec.yaml` file:
 
-### Selection
-- ✅ **Row selection** fully implemented (none/single/multiple modes)
-- ❌ **Cell selection** not yet supported
-- ❌ **Column selection** not implemented
+```yaml
+dependencies:
+  data_grid: ^0.0.1
+```
 
-### Keyboard Navigation
-- ⚠️ **Arrow key navigation** implemented but has issues in some scenarios
-- ⚠️ **Keyboard shortcuts** may not work consistently
-- ❌ **Tab navigation** between cells not fully working
-- ❌ **Keyboard editing** triggers need improvement
+Then run:
 
-### Accessibility
-- ❌ **Screen reader support** limited due to virtualization complexity
-- ❌ **ARIA labels** not comprehensively implemented
-- ❌ **Focus management** needs improvement for accessibility tools
-- ⚠️ **Contrast ratios** depend on custom theming
+```bash
+flutter pub get
+```
 
-### Other Known Issues
-- ⚠️ **Cell editing** may have edge cases with rapid interactions
-- ⚠️ **Pinned columns** work but have minor rendering artifacts in some cases
-- ❌ **Column reordering** via drag-and-drop not implemented
-- ❌ **Context menus** not implemented
-- ❌ **Copy/paste** functionality not available
+Import the package in your Dart code:
 
-### Production Readiness
-This package is **not recommended for production use** without:
-- Thorough testing in your specific use case
-- Understanding of the limitations above
-- Willingness to handle edge cases
-- Potential API changes in future versions
+```dart
+import 'package:data_grid/data_grid.dart';
+```
+
+## ⚠️ Known Issues & Roadmap
+
+This package is in active development. Core features work well, but some advanced features are still being refined:
+
+### What Works Well ✅
+- **Row selection** - Fully implemented with none/single/multiple modes
+- **Virtualized rendering** - Smooth scrolling with 100k+ rows
+- **Sorting & filtering** - Multi-column support with background processing
+- **Column management** - Resize, pin, hide/show columns
+- **Cell editing** - Inline editing with validation (some edge cases remain)
+- **Theming** - Comprehensive customization options
+
+### In Progress / Known Issues ⚠️
+- **Keyboard navigation** - Arrow keys work but may have issues in some scenarios
+- **Tab navigation** - Between cells needs improvement
+- **Pinned columns** - Minor rendering artifacts in some cases
+- **Cell editing** - Edge cases with rapid interactions being addressed
+
+### Planned Features 🚀
+- **Cell selection** - Individual cell selection and ranges
+- **Column selection** - Select entire columns
+- **Accessibility** - Improved screen reader support and ARIA labels
+- **Column reordering** - Drag-and-drop reordering
+- **Context menus** - Right-click menus for rows/cells
+- **Copy/paste** - Clipboard integration
+
+### Production Use
+This package is suitable for:
+- ✅ Internal tools and dashboards
+- ✅ Admin panels and data management UIs
+- ✅ Projects willing to work around known limitations
+- ✅ Applications that can test thoroughly for their use case
+
+Consider waiting for v1.0 if you need:
+- ❌ Full accessibility compliance
+- ❌ Rock-solid keyboard navigation
+- ❌ Complete feature parity with enterprise data grids
 
 **Contributions welcome!** If you'd like to help improve any of these areas, please see the Contributing section.
 
@@ -775,6 +799,7 @@ Contributions are welcome! This is an experimental project and could benefit fro
 ```bash
 # Clone the repo
 git clone https://github.com/archie934/data_grid.git
+cd data_grid
 
 # Install dependencies
 flutter pub get
@@ -786,6 +811,8 @@ dart run build_runner build --delete-conflicting-outputs
 flutter test
 
 # Run the example app
+cd example
+flutter pub get
 flutter run
 ```
 

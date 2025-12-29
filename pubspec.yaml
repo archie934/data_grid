@@ -1,7 +1,10 @@
 name: data_grid
-description: A new Flutter project.
-publish_to: 'none'
-version: 0.1.0
+description: High-performance, reactive data grid for Flutter with virtualization, sorting, filtering, cell editing, row selection, column pinning, and keyboard navigation.
+version: 0.0.1
+
+repository: https://github.com/archie934/data_grid
+homepage: https://github.com/archie934/data_grid
+issue_tracker: https://github.com/archie934/data_grid/issues
 
 environment:
   sdk: '>=3.10.0 <4.0.0'
@@ -23,5 +26,3 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-  assets: 
-    - assets/images/

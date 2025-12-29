@@ -25,3 +25,7 @@ doc/api/
 
 .flutter-plugins
 .flutter-plugins-dependencies
+
+# VS Code - keep launch.json for contributors, ignore personal settings
+.vscode/*
+!.vscode/launch.json

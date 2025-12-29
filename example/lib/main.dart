@@ -11,9 +11,7 @@ class SomeRow implements DataGridRow {
   double total;
   Map<int, dynamic> extraData;
 
-  SomeRow({required this.id, this.name = '', this.quantity = 0, this.price = 0.0, Map<int, dynamic>? extraData})
-    : total = quantity * price,
-      extraData = extraData ?? {};
+  SomeRow({required this.id, this.name = '', this.quantity = 0, this.price = 0.0, Map<int, dynamic>? extraData}) : total = quantity * price, extraData = extraData ?? {};
 
   void updateTotal() {
     total = quantity * price;
@@ -24,13 +22,7 @@ class RedCellRenderer extends CellRenderer<SomeRow> {
   const RedCellRenderer();
 
   @override
-  Widget buildCell(
-    BuildContext context,
-    SomeRow row,
-    DataGridColumn column,
-    int rowIndex,
-    CellRenderContext<SomeRow> renderContext,
-  ) {
+  Widget buildCell(BuildContext context, SomeRow row, DataGridColumn column, int rowIndex, CellRenderContext<SomeRow> renderContext) {
     final theme = DataGridTheme.of(context);
     return Container(
       color: Colors.red,
@@ -49,10 +41,7 @@ class RedCellRenderer extends CellRenderer<SomeRow> {
 // Using Border objects for complete control over cell borders
 final customTheme = DataGridThemeData(
   dimensions: DataGridDimensions.defaults().copyWith(scrollbarWidth: 16.0, rowHeight: 100.0, headerHeight: 56.0),
-  padding: DataGridPadding.defaults().copyWith(
-    cellPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-    headerPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-  ),
+  padding: DataGridPadding.defaults().copyWith(cellPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12), headerPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12)),
   colors: DataGridColors.defaults().copyWith(
     selectionColor: Colors.purple.withValues(alpha: 0.15),
     evenRowColor: Colors.white,
@@ -98,14 +87,7 @@ class _MainAppState extends State<MainApp> {
     super.initState();
 
     final columns = [
-      DataGridColumn<SomeRow>(
-        id: 0,
-        title: 'ID',
-        width: 80,
-        pinned: true,
-        editable: false,
-        valueAccessor: (row) => row.id.toInt().toString(),
-      ),
+      DataGridColumn<SomeRow>(id: 0, title: 'ID', width: 80, pinned: true, editable: false, valueAccessor: (row) => row.id.toInt().toString()),
       DataGridColumn<SomeRow>(
         id: 1,
         title: 'Name',
@@ -150,13 +132,7 @@ class _MainAppState extends State<MainApp> {
           return parsed != null && parsed >= 0;
         },
       ),
-      DataGridColumn<SomeRow>(
-        id: 4,
-        title: 'Total',
-        width: 120,
-        editable: false,
-        valueAccessor: (row) => '\$${row.total.toStringAsFixed(2)}',
-      ),
+      DataGridColumn<SomeRow>(id: 4, title: 'Total', width: 120, editable: false, valueAccessor: (row) => '\$${row.total.toStringAsFixed(2)}'),
       ...List.generate(15, (index) {
         final columnId = index + 5;
         return DataGridColumn<SomeRow>(
@@ -173,15 +149,7 @@ class _MainAppState extends State<MainApp> {
       }),
     ];
 
-    final rows = List.generate(
-      1000000,
-      (index) => SomeRow(
-        id: index.toDouble(),
-        name: index % 10 == 0 ? 'Special Item $index' : '',
-        quantity: (index % 20) + 1,
-        price: (index % 10 + 1) * 9.99,
-      ),
-    );
+    final rows = List.generate(1000000, (index) => SomeRow(id: index.toDouble(), name: index % 10 == 0 ? 'Special Item $index' : '', quantity: (index % 20) + 1, price: (index % 10 + 1) * 9.99));
 
     controller = DataGridController<SomeRow>(initialColumns: columns, initialRows: rows, rowHeight: 48.0);
   }
@@ -231,7 +199,7 @@ class _MainAppState extends State<MainApp> {
           controller: controller,
           // When using a custom theme, remove rowHeight and headerHeight
           // to let the theme control these dimensions
-          theme: customTheme,
+          // theme: customTheme,
         ),
       ),
     );
