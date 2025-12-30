@@ -86,15 +86,24 @@ class _HeaderRowState<T extends DataGridRow> extends State<_HeaderRow<T>> {
     final scrollController = context.gridScrollController<T>()!;
 
     if (pinnedColumns.isEmpty) {
-      return CustomMultiChildLayout(
-        delegate: HeaderLayoutDelegate(columns: state.effectiveColumns),
-        children: [
-          for (var column in state.effectiveColumns)
-            LayoutId(
-              id: column.id,
-              child: _HeaderCellWrapper<T>(column: column, sortState: state.sort),
-            ),
-        ],
+      return AnimatedBuilder(
+        animation: scrollController.horizontalController,
+        builder: (context, child) {
+          final horizontalOffset = scrollController.horizontalController.hasClients
+              ? scrollController.horizontalController.offset
+              : 0.0;
+
+          return CustomMultiChildLayout(
+            delegate: HeaderLayoutDelegate(columns: state.effectiveColumns, horizontalOffset: horizontalOffset),
+            children: [
+              for (var column in state.effectiveColumns)
+                LayoutId(
+                  id: column.id,
+                  child: _HeaderCellWrapper<T>(column: column, sortState: state.sort),
+                ),
+            ],
+          );
+        },
       );
     }
 
@@ -177,7 +186,7 @@ class _HeaderCellWrapper<T extends DataGridRow> extends StatelessWidget {
       column: column,
       sortState: sortState,
       onSort: (direction) {
-        controller.addEvent(SortEvent(columnId: column.id, direction: direction, multiSort: false));
+        controller.addEvent(SortEvent(columnId: column.id, direction: direction));
       },
       onResize: (delta) {
         final theme = DataGridTheme.of(context);

@@ -64,15 +64,24 @@ class _DataGridFilterRowState<T extends DataGridRow> extends State<DataGridFilte
     }
 
     if (pinnedColumns.isEmpty) {
-      return CustomMultiChildLayout(
-        delegate: HeaderLayoutDelegate(columns: state.effectiveColumns),
-        children: [
-          for (var column in state.effectiveColumns)
-            LayoutId(
-              id: column.id,
-              child: _FilterCell<T>(column: column, defaultFilterRenderer: widget.defaultFilterRenderer),
-            ),
-        ],
+      return AnimatedBuilder(
+        animation: scrollController.horizontalController,
+        builder: (context, child) {
+          final horizontalOffset = scrollController.horizontalController.hasClients
+              ? scrollController.horizontalController.offset
+              : 0.0;
+
+          return CustomMultiChildLayout(
+            delegate: HeaderLayoutDelegate(columns: state.effectiveColumns, horizontalOffset: horizontalOffset),
+            children: [
+              for (var column in state.effectiveColumns)
+                LayoutId(
+                  id: column.id,
+                  child: _FilterCell<T>(column: column, defaultFilterRenderer: widget.defaultFilterRenderer),
+                ),
+            ],
+          );
+        },
       );
     }
 

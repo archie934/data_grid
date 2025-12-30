@@ -97,19 +97,18 @@ class SelectionState with _$SelectionState {
 
 @freezed
 class SortState with _$SortState {
-  const factory SortState({required List<SortColumn> sortColumns}) = _SortState;
+  const factory SortState({SortColumn? sortColumn}) = _SortState;
 
   const SortState._();
 
-  factory SortState.initial() => const SortState(sortColumns: []);
+  factory SortState.initial() => const SortState();
 
-  bool get hasSort => sortColumns.isNotEmpty;
+  bool get hasSort => sortColumn != null;
 }
 
 @freezed
 class SortColumn with _$SortColumn {
-  const factory SortColumn({required int columnId, required SortDirection direction, required int priority}) =
-      _SortColumn;
+  const factory SortColumn({required int columnId, required SortDirection direction}) = _SortColumn;
 }
 
 @freezed

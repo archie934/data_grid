@@ -34,9 +34,10 @@ class _DataGridHeaderCellState extends State<DataGridHeaderCell> {
   @override
   Widget build(BuildContext context) {
     final theme = DataGridTheme.of(context);
-    final sortColumn = widget.sortState.sortColumns.where((s) => s.columnId == widget.column.id).firstOrNull;
+    final sortColumn = widget.sortState.sortColumn;
+    final isSorted = sortColumn != null && sortColumn.columnId == widget.column.id;
 
-    final sortLabel = sortColumn == null
+    final sortLabel = !isSorted
         ? 'Sort by ${widget.column.title}'
         : sortColumn.direction == SortDirection.ascending
         ? '${widget.column.title} sorted ascending'
@@ -46,7 +47,7 @@ class _DataGridHeaderCellState extends State<DataGridHeaderCell> {
       label: sortLabel,
       button: true,
       onTap: () {
-        if (sortColumn == null) {
+        if (!isSorted) {
           widget.onSort(SortDirection.ascending);
         } else if (sortColumn.direction == SortDirection.ascending) {
           widget.onSort(SortDirection.descending);
@@ -60,7 +61,7 @@ class _DataGridHeaderCellState extends State<DataGridHeaderCell> {
           children: [
             InkWell(
               onTap: () {
-                if (sortColumn == null) {
+                if (!isSorted) {
                   widget.onSort(SortDirection.ascending);
                 } else if (sortColumn.direction == SortDirection.ascending) {
                   widget.onSort(SortDirection.descending);
@@ -79,14 +80,12 @@ class _DataGridHeaderCellState extends State<DataGridHeaderCell> {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    if (sortColumn != null) ...[
+                    if (isSorted) ...[
                       SizedBox(width: theme.padding.iconSpacing),
                       Icon(
                         sortColumn.direction == SortDirection.ascending ? Icons.arrow_upward : Icons.arrow_downward,
                         size: 16,
                       ),
-                      if (widget.sortState.sortColumns.length > 1)
-                        Text('${sortColumn.priority + 1}', style: const TextStyle(fontSize: 10)),
                     ],
                   ],
                 ),

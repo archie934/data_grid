@@ -7,9 +7,8 @@ import 'package:data_grid/models/enums/sort_direction.dart';
 class SortEvent extends DataGridEvent {
   final int columnId;
   final SortDirection? direction;
-  final bool multiSort;
 
-  SortEvent({required this.columnId, this.direction, this.multiSort = false});
+  SortEvent({required this.columnId, this.direction});
 
   @override
   bool shouldShowLoading(DataGridState state) => state.rowsById.length > 1000;

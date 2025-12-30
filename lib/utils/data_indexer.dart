@@ -15,24 +15,22 @@ class DataIndexer<T extends DataGridRow> {
 
   T? getRow(double rowId) => _data[rowId];
 
-  List<double> sort(Map<double, T> rowsById, List<SortColumn> sortColumns, List<DataGridColumn<T>> columns) {
-    if (sortColumns.isEmpty) {
+  List<double> sort(Map<double, T> rowsById, SortColumn? sortColumn, List<DataGridColumn<T>> columns) {
+    if (sortColumn == null) {
       return rowsById.keys.toList();
     }
 
     final ids = rowsById.keys.toList();
+    final column = columns.firstWhere((c) => c.id == sortColumn.columnId);
 
     ids.sort((aId, bId) {
-      for (final sortCol in sortColumns) {
-        final column = columns.firstWhere((c) => c.id == sortCol.columnId);
-        final aValue = _getCellValue(rowsById[aId]!, column);
-        final bValue = _getCellValue(rowsById[bId]!, column);
+      final aValue = _getCellValue(rowsById[aId]!, column);
+      final bValue = _getCellValue(rowsById[bId]!, column);
 
-        final comparison = _compareValues(aValue, bValue);
+      final comparison = _compareValues(aValue, bValue);
 
-        if (comparison != 0) {
-          return sortCol.direction == SortDirection.ascending ? comparison : -comparison;
-        }
+      if (comparison != 0) {
+        return sortColumn.direction == SortDirection.ascending ? comparison : -comparison;
       }
       return 0;
     });
@@ -43,26 +41,20 @@ class DataIndexer<T extends DataGridRow> {
   List<double> sortIds(
     Map<double, T> rowsById,
     List<double> idsToSort,
-    List<SortColumn> sortColumns,
+    SortColumn sortColumn,
     List<DataGridColumn<T>> columns,
   ) {
-    if (sortColumns.isEmpty) {
-      return idsToSort;
-    }
-
     final sortedIds = List<double>.from(idsToSort);
+    final column = columns.firstWhere((c) => c.id == sortColumn.columnId);
 
     sortedIds.sort((aId, bId) {
-      for (final sortCol in sortColumns) {
-        final column = columns.firstWhere((c) => c.id == sortCol.columnId);
-        final aValue = _getCellValue(rowsById[aId]!, column);
-        final bValue = _getCellValue(rowsById[bId]!, column);
+      final aValue = _getCellValue(rowsById[aId]!, column);
+      final bValue = _getCellValue(rowsById[bId]!, column);
 
-        final comparison = _compareValues(aValue, bValue);
+      final comparison = _compareValues(aValue, bValue);
 
-        if (comparison != 0) {
-          return sortCol.direction == SortDirection.ascending ? comparison : -comparison;
-        }
+      if (comparison != 0) {
+        return sortColumn.direction == SortDirection.ascending ? comparison : -comparison;
       }
       return 0;
     });

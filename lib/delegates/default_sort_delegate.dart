@@ -3,7 +3,6 @@ import 'package:flutter/foundation.dart';
 import 'package:data_grid/models/data/row.dart';
 import 'package:data_grid/models/state/grid_state.dart';
 import 'package:data_grid/models/events/grid_events.dart';
-import 'package:data_grid/models/enums/sort_direction.dart';
 import 'package:data_grid/utils/data_indexer.dart';
 import 'package:data_grid/utils/isolate_sort.dart';
 import 'package:data_grid/delegates/sort_delegate.dart';
@@ -39,10 +38,10 @@ class DefaultSortDelegate<T extends DataGridRow> extends SortDelegate<T> {
     final completer = Completer<SortResult?>();
 
     _debounceTimer = Timer(_debounce, () async {
-      final updatedSortColumns = _updateSortColumns(event, currentState.sort);
-      final updatedSort = currentState.sort.copyWith(sortColumns: updatedSortColumns);
+      final updatedSortColumn = _updateSortColumn(event, currentState.sort);
+      final updatedSort = currentState.sort.copyWith(sortColumn: updatedSortColumn);
 
-      if (updatedSortColumns.isEmpty) {
+      if (updatedSortColumn == null) {
         final displayOrder = currentState.filter.hasFilters && _filterDelegate != null
             ? await _filterDelegate.applyFilters(
                 rowsById: currentState.rowsById,
@@ -51,10 +50,7 @@ class DefaultSortDelegate<T extends DataGridRow> extends SortDelegate<T> {
               )
             : currentState.rowsById.keys.toList();
 
-        final result = SortResult(
-          sortState: updatedSort.copyWith(sortColumns: []),
-          displayOrder: displayOrder,
-        );
+        final result = SortResult(sortState: updatedSort, displayOrder: displayOrder);
         onComplete(result);
         completer.complete(result);
         return;
@@ -70,27 +66,21 @@ class DefaultSortDelegate<T extends DataGridRow> extends SortDelegate<T> {
             : currentState.rowsById.keys.toList();
 
         final List<double> sortedIds;
+        final column = currentState.columns.firstWhere((c) => c.id == updatedSortColumn.columnId);
 
         if (currentState.rowsById.length > _isolateThreshold) {
-          final columnValues = <List<dynamic>>[];
-          for (final sortCol in updatedSortColumns) {
-            final column = currentState.columns.firstWhere((c) => c.id == sortCol.columnId);
-            final values = idsToSort
-                .map((id) => _dataIndexer.getCellValue(currentState.rowsById[id]!, column))
-                .toList();
-            columnValues.add(values);
-          }
+          final values = idsToSort.map((id) => _dataIndexer.getCellValue(currentState.rowsById[id]!, column)).toList();
 
           final params = SortParameters(
-            columnValues: columnValues,
-            sortColumns: updatedSortColumns,
+            columnValues: values,
+            direction: updatedSortColumn.direction,
             rowCount: idsToSort.length,
           );
 
           final isolateResult = await compute(performSortInIsolate, params);
           sortedIds = isolateResult.map((idx) => idsToSort[idx]).toList();
         } else {
-          sortedIds = _dataIndexer.sortIds(currentState.rowsById, idsToSort, updatedSortColumns, currentState.columns);
+          sortedIds = _dataIndexer.sortIds(currentState.rowsById, idsToSort, updatedSortColumn, currentState.columns);
         }
 
         final result = SortResult(sortState: updatedSort, displayOrder: sortedIds);
@@ -104,23 +94,21 @@ class DefaultSortDelegate<T extends DataGridRow> extends SortDelegate<T> {
     return completer.future;
   }
 
-  List<SortColumn> _updateSortColumns(SortEvent event, SortState currentSort) {
-    final existing = currentSort.sortColumns.where((s) => s.columnId == event.columnId).firstOrNull;
-    final updatedColumns = currentSort.sortColumns.where((s) => s.columnId != event.columnId).toList();
-
-    if (existing == null) {
-      return [
-        ...updatedColumns,
-        SortColumn(columnId: event.columnId, direction: SortDirection.ascending, priority: updatedColumns.length),
-      ];
-    } else if (existing.direction == SortDirection.ascending) {
-      return [
-        ...updatedColumns,
-        SortColumn(columnId: event.columnId, direction: SortDirection.descending, priority: updatedColumns.length),
-      ];
-    } else {
-      return updatedColumns;
+  SortColumn? _updateSortColumn(SortEvent event, SortState currentSort) {
+    // If direction is explicitly provided, use it
+    if (event.direction != null) {
+      return SortColumn(columnId: event.columnId, direction: event.direction!);
     }
+
+    // Direction is null - clear sort for this column
+    // If this column was sorted, clear it; otherwise return current state
+    final existing = currentSort.sortColumn;
+    if (existing != null && existing.columnId == event.columnId) {
+      return null; // Clear the sort
+    }
+
+    // Column wasn't sorted, nothing to clear
+    return existing;
   }
 
   @override

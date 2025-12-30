@@ -30,9 +30,7 @@ void main() {
 
     testWidgets('shows ascending sort icon when sorted ascending', (tester) async {
       final column = DataGridColumn<TestRow>(id: 1, title: 'Test Column', width: 150, valueAccessor: (row) => row.name);
-      final sortState = SortState(
-        sortColumns: [SortColumn(columnId: 1, direction: SortDirection.ascending, priority: 0)],
-      );
+      final sortState = SortState(sortColumn: SortColumn(columnId: 1, direction: SortDirection.ascending));
 
       await tester.pumpWidget(
         MaterialApp(
@@ -47,9 +45,7 @@ void main() {
 
     testWidgets('shows descending sort icon when sorted descending', (tester) async {
       final column = DataGridColumn<TestRow>(id: 1, title: 'Test Column', width: 150, valueAccessor: (row) => row.name);
-      final sortState = SortState(
-        sortColumns: [SortColumn(columnId: 1, direction: SortDirection.descending, priority: 0)],
-      );
+      final sortState = SortState(sortColumn: SortColumn(columnId: 1, direction: SortDirection.descending));
 
       await tester.pumpWidget(
         MaterialApp(
@@ -90,9 +86,7 @@ void main() {
           home: Scaffold(
             body: DataGridHeaderCell(
               column: column,
-              sortState: SortState(
-                sortColumns: [SortColumn(columnId: 1, direction: SortDirection.ascending, priority: 0)],
-              ),
+              sortState: SortState(sortColumn: SortColumn(columnId: 1, direction: SortDirection.ascending)),
               onSort: (direction) {
                 lastDirection = direction;
               },
@@ -111,9 +105,7 @@ void main() {
           home: Scaffold(
             body: DataGridHeaderCell(
               column: column,
-              sortState: SortState(
-                sortColumns: [SortColumn(columnId: 1, direction: SortDirection.descending, priority: 0)],
-              ),
+              sortState: SortState(sortColumn: SortColumn(columnId: 1, direction: SortDirection.descending)),
               onSort: (direction) {
                 lastDirection = direction;
               },
@@ -128,14 +120,9 @@ void main() {
       expect(lastDirection, null);
     });
 
-    testWidgets('shows priority number for multi-sort', (tester) async {
+    testWidgets('does not show sort icon for different column', (tester) async {
       final column = DataGridColumn<TestRow>(id: 1, title: 'Test Column', width: 150, valueAccessor: (row) => row.name);
-      final sortState = SortState(
-        sortColumns: [
-          SortColumn(columnId: 2, direction: SortDirection.ascending, priority: 0),
-          SortColumn(columnId: 1, direction: SortDirection.ascending, priority: 1),
-        ],
-      );
+      final sortState = SortState(sortColumn: SortColumn(columnId: 2, direction: SortDirection.ascending));
 
       await tester.pumpWidget(
         MaterialApp(
@@ -145,7 +132,8 @@ void main() {
         ),
       );
 
-      expect(find.text('2'), findsOneWidget);
+      expect(find.byIcon(Icons.arrow_upward), findsNothing);
+      expect(find.byIcon(Icons.arrow_downward), findsNothing);
     });
 
     testWidgets('triggers resize on drag', (tester) async {

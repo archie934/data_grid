@@ -51,6 +51,13 @@ class RenderDataGridViewport<T extends DataGridRow> extends RenderTwoDimensional
   /// This is where the lazy rendering magic happens - only visible cells are built and positioned.
   @override
   void layoutChildSequence() {
+    // Handle empty grid
+    if (_columns.isEmpty || _rowCount == 0) {
+      verticalOffset.applyContentDimensions(0, 0);
+      horizontalOffset.applyContentDimensions(0, 0);
+      return;
+    }
+
     // STEP 1: Get viewport dimensions and current scroll positions
     final double viewportWidth = viewportDimension.width;
     final double viewportHeight = viewportDimension.height;

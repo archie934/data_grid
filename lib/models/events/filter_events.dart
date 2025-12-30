@@ -34,7 +34,7 @@ class FilterEvent extends DataGridEvent {
         ? context.dataIndexer.sortIds(
             context.state.rowsById,
             filteredIds,
-            context.state.sort.sortColumns,
+            context.state.sort.sortColumn!,
             context.state.columns,
           )
         : filteredIds;
@@ -78,7 +78,7 @@ class ClearFilterEvent extends DataGridEvent {
         ? context.dataIndexer.sortIds(
             context.state.rowsById,
             filteredIds,
-            context.state.sort.sortColumns,
+            context.state.sort.sortColumn!,
             context.state.columns,
           )
         : filteredIds;

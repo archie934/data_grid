@@ -1028,7 +1028,7 @@ abstract class _SelectionState extends SelectionState {
 
 /// @nodoc
 mixin _$SortState {
-  List<SortColumn> get sortColumns => throw _privateConstructorUsedError;
+  SortColumn? get sortColumn => throw _privateConstructorUsedError;
 
   /// Create a copy of SortState
   /// with the given fields replaced by the non-null parameter values.
@@ -1042,7 +1042,9 @@ abstract class $SortStateCopyWith<$Res> {
   factory $SortStateCopyWith(SortState value, $Res Function(SortState) then) =
       _$SortStateCopyWithImpl<$Res, SortState>;
   @useResult
-  $Res call({List<SortColumn> sortColumns});
+  $Res call({SortColumn? sortColumn});
+
+  $SortColumnCopyWith<$Res>? get sortColumn;
 }
 
 /// @nodoc
@@ -1059,16 +1061,30 @@ class _$SortStateCopyWithImpl<$Res, $Val extends SortState>
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({Object? sortColumns = null}) {
+  $Res call({Object? sortColumn = freezed}) {
     return _then(
       _value.copyWith(
-            sortColumns: null == sortColumns
-                ? _value.sortColumns
-                : sortColumns // ignore: cast_nullable_to_non_nullable
-                      as List<SortColumn>,
+            sortColumn: freezed == sortColumn
+                ? _value.sortColumn
+                : sortColumn // ignore: cast_nullable_to_non_nullable
+                      as SortColumn?,
           )
           as $Val,
     );
+  }
+
+  /// Create a copy of SortState
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @pragma('vm:prefer-inline')
+  $SortColumnCopyWith<$Res>? get sortColumn {
+    if (_value.sortColumn == null) {
+      return null;
+    }
+
+    return $SortColumnCopyWith<$Res>(_value.sortColumn!, (value) {
+      return _then(_value.copyWith(sortColumn: value) as $Val);
+    });
   }
 }
 
@@ -1081,7 +1097,10 @@ abstract class _$$SortStateImplCopyWith<$Res>
   ) = __$$SortStateImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({List<SortColumn> sortColumns});
+  $Res call({SortColumn? sortColumn});
+
+  @override
+  $SortColumnCopyWith<$Res>? get sortColumn;
 }
 
 /// @nodoc
@@ -1097,13 +1116,13 @@ class __$$SortStateImplCopyWithImpl<$Res>
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({Object? sortColumns = null}) {
+  $Res call({Object? sortColumn = freezed}) {
     return _then(
       _$SortStateImpl(
-        sortColumns: null == sortColumns
-            ? _value._sortColumns
-            : sortColumns // ignore: cast_nullable_to_non_nullable
-                  as List<SortColumn>,
+        sortColumn: freezed == sortColumn
+            ? _value.sortColumn
+            : sortColumn // ignore: cast_nullable_to_non_nullable
+                  as SortColumn?,
       ),
     );
   }
@@ -1112,21 +1131,14 @@ class __$$SortStateImplCopyWithImpl<$Res>
 /// @nodoc
 
 class _$SortStateImpl extends _SortState {
-  const _$SortStateImpl({required final List<SortColumn> sortColumns})
-    : _sortColumns = sortColumns,
-      super._();
+  const _$SortStateImpl({this.sortColumn}) : super._();
 
-  final List<SortColumn> _sortColumns;
   @override
-  List<SortColumn> get sortColumns {
-    if (_sortColumns is EqualUnmodifiableListView) return _sortColumns;
-    // ignore: implicit_dynamic_type
-    return EqualUnmodifiableListView(_sortColumns);
-  }
+  final SortColumn? sortColumn;
 
   @override
   String toString() {
-    return 'SortState(sortColumns: $sortColumns)';
+    return 'SortState(sortColumn: $sortColumn)';
   }
 
   @override
@@ -1134,17 +1146,12 @@ class _$SortStateImpl extends _SortState {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$SortStateImpl &&
-            const DeepCollectionEquality().equals(
-              other._sortColumns,
-              _sortColumns,
-            ));
+            (identical(other.sortColumn, sortColumn) ||
+                other.sortColumn == sortColumn));
   }
 
   @override
-  int get hashCode => Object.hash(
-    runtimeType,
-    const DeepCollectionEquality().hash(_sortColumns),
-  );
+  int get hashCode => Object.hash(runtimeType, sortColumn);
 
   /// Create a copy of SortState
   /// with the given fields replaced by the non-null parameter values.
@@ -1156,12 +1163,11 @@ class _$SortStateImpl extends _SortState {
 }
 
 abstract class _SortState extends SortState {
-  const factory _SortState({required final List<SortColumn> sortColumns}) =
-      _$SortStateImpl;
+  const factory _SortState({final SortColumn? sortColumn}) = _$SortStateImpl;
   const _SortState._() : super._();
 
   @override
-  List<SortColumn> get sortColumns;
+  SortColumn? get sortColumn;
 
   /// Create a copy of SortState
   /// with the given fields replaced by the non-null parameter values.
@@ -1175,7 +1181,6 @@ abstract class _SortState extends SortState {
 mixin _$SortColumn {
   int get columnId => throw _privateConstructorUsedError;
   SortDirection get direction => throw _privateConstructorUsedError;
-  int get priority => throw _privateConstructorUsedError;
 
   /// Create a copy of SortColumn
   /// with the given fields replaced by the non-null parameter values.
@@ -1191,7 +1196,7 @@ abstract class $SortColumnCopyWith<$Res> {
     $Res Function(SortColumn) then,
   ) = _$SortColumnCopyWithImpl<$Res, SortColumn>;
   @useResult
-  $Res call({int columnId, SortDirection direction, int priority});
+  $Res call({int columnId, SortDirection direction});
 }
 
 /// @nodoc
@@ -1208,11 +1213,7 @@ class _$SortColumnCopyWithImpl<$Res, $Val extends SortColumn>
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? columnId = null,
-    Object? direction = null,
-    Object? priority = null,
-  }) {
+  $Res call({Object? columnId = null, Object? direction = null}) {
     return _then(
       _value.copyWith(
             columnId: null == columnId
@@ -1223,10 +1224,6 @@ class _$SortColumnCopyWithImpl<$Res, $Val extends SortColumn>
                 ? _value.direction
                 : direction // ignore: cast_nullable_to_non_nullable
                       as SortDirection,
-            priority: null == priority
-                ? _value.priority
-                : priority // ignore: cast_nullable_to_non_nullable
-                      as int,
           )
           as $Val,
     );
@@ -1242,7 +1239,7 @@ abstract class _$$SortColumnImplCopyWith<$Res>
   ) = __$$SortColumnImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({int columnId, SortDirection direction, int priority});
+  $Res call({int columnId, SortDirection direction});
 }
 
 /// @nodoc
@@ -1258,11 +1255,7 @@ class __$$SortColumnImplCopyWithImpl<$Res>
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? columnId = null,
-    Object? direction = null,
-    Object? priority = null,
-  }) {
+  $Res call({Object? columnId = null, Object? direction = null}) {
     return _then(
       _$SortColumnImpl(
         columnId: null == columnId
@@ -1273,10 +1266,6 @@ class __$$SortColumnImplCopyWithImpl<$Res>
             ? _value.direction
             : direction // ignore: cast_nullable_to_non_nullable
                   as SortDirection,
-        priority: null == priority
-            ? _value.priority
-            : priority // ignore: cast_nullable_to_non_nullable
-                  as int,
       ),
     );
   }
@@ -1285,22 +1274,16 @@ class __$$SortColumnImplCopyWithImpl<$Res>
 /// @nodoc
 
 class _$SortColumnImpl implements _SortColumn {
-  const _$SortColumnImpl({
-    required this.columnId,
-    required this.direction,
-    required this.priority,
-  });
+  const _$SortColumnImpl({required this.columnId, required this.direction});
 
   @override
   final int columnId;
   @override
   final SortDirection direction;
-  @override
-  final int priority;
 
   @override
   String toString() {
-    return 'SortColumn(columnId: $columnId, direction: $direction, priority: $priority)';
+    return 'SortColumn(columnId: $columnId, direction: $direction)';
   }
 
   @override
@@ -1311,13 +1294,11 @@ class _$SortColumnImpl implements _SortColumn {
             (identical(other.columnId, columnId) ||
                 other.columnId == columnId) &&
             (identical(other.direction, direction) ||
-                other.direction == direction) &&
-            (identical(other.priority, priority) ||
-                other.priority == priority));
+                other.direction == direction));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, columnId, direction, priority);
+  int get hashCode => Object.hash(runtimeType, columnId, direction);
 
   /// Create a copy of SortColumn
   /// with the given fields replaced by the non-null parameter values.
@@ -1332,15 +1313,12 @@ abstract class _SortColumn implements SortColumn {
   const factory _SortColumn({
     required final int columnId,
     required final SortDirection direction,
-    required final int priority,
   }) = _$SortColumnImpl;
 
   @override
   int get columnId;
   @override
   SortDirection get direction;
-  @override
-  int get priority;
 
   /// Create a copy of SortColumn
   /// with the given fields replaced by the non-null parameter values.

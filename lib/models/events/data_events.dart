@@ -25,7 +25,7 @@ class LoadDataEvent<T> extends DataGridEvent {
         : newRowsById.keys.toList();
 
     final sortedIds = context.state.sort.hasSort
-        ? context.dataIndexer.sortIds(newRowsById, filteredIds, context.state.sort.sortColumns, context.state.columns)
+        ? context.dataIndexer.sortIds(newRowsById, filteredIds, context.state.sort.sortColumn!, context.state.columns)
         : filteredIds;
 
     return context.state.copyWith(rowsById: newRowsById, displayOrder: sortedIds, isLoading: false);
@@ -80,7 +80,7 @@ class InsertRowEvent extends DataGridEvent {
         : newDisplayOrder;
 
     final sortedIds = context.state.sort.hasSort
-        ? context.dataIndexer.sortIds(newRowsById, filteredIds, context.state.sort.sortColumns, context.state.columns)
+        ? context.dataIndexer.sortIds(newRowsById, filteredIds, context.state.sort.sortColumn!, context.state.columns)
         : filteredIds;
 
     return context.state.copyWith(rowsById: newRowsById, displayOrder: sortedIds);
@@ -117,7 +117,7 @@ class InsertRowsEvent extends DataGridEvent {
         : newDisplayOrder;
 
     final sortedIds = context.state.sort.hasSort
-        ? context.dataIndexer.sortIds(newRowsById, filteredIds, context.state.sort.sortColumns, context.state.columns)
+        ? context.dataIndexer.sortIds(newRowsById, filteredIds, context.state.sort.sortColumn!, context.state.columns)
         : filteredIds;
 
     return context.state.copyWith(rowsById: newRowsById, displayOrder: sortedIds);
@@ -210,7 +210,7 @@ class UpdateRowEvent extends DataGridEvent {
         : context.state.displayOrder;
 
     final sortedIds = context.state.sort.hasSort
-        ? context.dataIndexer.sortIds(newRowsById, filteredIds, context.state.sort.sortColumns, context.state.columns)
+        ? context.dataIndexer.sortIds(newRowsById, filteredIds, context.state.sort.sortColumn!, context.state.columns)
         : filteredIds;
 
     return context.state.copyWith(rowsById: newRowsById, displayOrder: sortedIds);

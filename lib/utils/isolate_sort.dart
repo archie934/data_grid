@@ -1,37 +1,27 @@
-import 'package:data_grid/models/state/grid_state.dart';
 import 'package:data_grid/models/enums/sort_direction.dart';
 
 /// Data structure for passing sort parameters to isolate
 class SortParameters {
-  final List<List<dynamic>> columnValues; // [columnIndex][rowIndex] = value
-  final List<SortColumn> sortColumns;
+  final List<dynamic> columnValues; // [rowIndex] = value
+  final SortDirection direction;
   final int rowCount;
 
-  SortParameters({required this.columnValues, required this.sortColumns, required this.rowCount});
+  SortParameters({required this.columnValues, required this.direction, required this.rowCount});
 }
 
 /// Top-level function that performs sorting in an isolate
 /// Must be top-level or static to work with compute()
 List<int> performSortInIsolate(SortParameters params) {
-  if (params.sortColumns.isEmpty) {
-    return List<int>.generate(params.rowCount, (i) => i);
-  }
-
   final indices = List<int>.generate(params.rowCount, (i) => i);
 
   indices.sort((aIdx, bIdx) {
-    for (var i = 0; i < params.sortColumns.length; i++) {
-      final sortCol = params.sortColumns[i];
+    final aValue = params.columnValues[aIdx];
+    final bValue = params.columnValues[bIdx];
 
-      // Get values for this sort column
-      final aValue = params.columnValues[i][aIdx];
-      final bValue = params.columnValues[i][bIdx];
+    final comparison = _compareValues(aValue, bValue);
 
-      final comparison = _compareValues(aValue, bValue);
-
-      if (comparison != 0) {
-        return sortCol.direction == SortDirection.ascending ? comparison : -comparison;
-      }
+    if (comparison != 0) {
+      return params.direction == SortDirection.ascending ? comparison : -comparison;
     }
     return 0;
   });

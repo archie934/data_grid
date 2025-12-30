@@ -30,11 +30,9 @@ class DataGridChildDelegate<T extends DataGridRow> extends TwoDimensionalChildDe
   }
 
   /// Determines if the delegate needs to rebuild children.
-  /// Returns true if columns or row count has changed.
+  /// Always returns true to ensure cached children are invalidated when data changes.
   @override
-  bool shouldRebuild(covariant DataGridChildDelegate<T> oldDelegate) {
-    return oldDelegate.columns != columns || oldDelegate.rowCount != rowCount;
-  }
+  bool shouldRebuild(covariant DataGridChildDelegate<T> oldDelegate) => true;
 }
 
 /// Represents a cell's location in the 2D grid.
