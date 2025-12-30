@@ -15,7 +15,7 @@ class LoggingInterceptor<T extends DataGridRow> extends DataGridInterceptor<T> {
   @override
   DataGridEvent? onBeforeEvent(DataGridEvent event, DataGridState<T> currentState) {
     if (logEvents && kDebugMode) {
-      print('[DataGrid] Event: ${event.runtimeType}');
+      debugPrint('[DataGrid] Event: ${event.runtimeType}');
     }
     return super.onBeforeEvent(event, currentState);
   }
@@ -23,7 +23,7 @@ class LoggingInterceptor<T extends DataGridRow> extends DataGridInterceptor<T> {
   @override
   void onAfterStateUpdate(DataGridState<T> newState, DataGridState<T> oldState, DataGridEvent? event) {
     if (logStateChanges && kDebugMode) {
-      print('[DataGrid] State updated: ${_describeStateChange(newState, oldState)}');
+      debugPrint('[DataGrid] State updated: ${_describeStateChange(newState, oldState)}');
     }
     super.onAfterStateUpdate(newState, oldState, event);
   }
@@ -31,8 +31,8 @@ class LoggingInterceptor<T extends DataGridRow> extends DataGridInterceptor<T> {
   @override
   void onError(Object error, StackTrace stackTrace, DataGridEvent? event) {
     if (logErrors && kDebugMode) {
-      print('[DataGrid] Error during ${event?.runtimeType}: $error');
-      print('[DataGrid] Stack trace: $stackTrace');
+      debugPrint('[DataGrid] Error during ${event?.runtimeType}: $error');
+      debugPrint('[DataGrid] Stack trace: $stackTrace');
     }
     super.onError(error, stackTrace, event);
   }

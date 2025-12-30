@@ -13,7 +13,7 @@ class ValidationInterceptor<T extends DataGridRow> extends DataGridInterceptor<T
   ValidationInterceptor({this.canEditCell, this.canSelectRow, this.onCellCommit});
 
   @override
-  DataGridEvent? onBeforeEvent(DataGridEvent event, DataGridState<T> state) {
+  DataGridEvent? onBeforeEvent(DataGridEvent event, DataGridState<T> currentState) {
     if (event is StartCellEditEvent && canEditCell != null) {
       if (!canEditCell!(event.rowId, event.columnId)) {
         return null;
