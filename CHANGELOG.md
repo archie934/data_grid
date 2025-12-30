@@ -1,4 +1,4 @@
-## 0.0.1
+## 0.2.0
 
 * Initial release
 * High-performance virtualized data grid with support for 100k+ rows
