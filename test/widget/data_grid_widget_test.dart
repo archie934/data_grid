@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:data_grid/data_grid.dart';
 
+Future<void> waitForAsync(WidgetTester tester) async {
+  await tester.runAsync(() => Future.delayed(const Duration(milliseconds: 50)));
+  await tester.pumpAndSettle();
+}
+
 class TestRow extends DataGridRow {
   final String name;
   final int age;
@@ -114,19 +119,20 @@ void main() {
           home: Scaffold(body: DataGrid<TestRow>(controller: controller)),
         ),
       );
-
       await tester.pumpAndSettle();
 
       expect(find.byType(DataGridLoadingOverlay), findsNothing);
 
       controller.addEvent(SetLoadingEvent(isLoading: true, message: 'Loading data...'));
-      await tester.pumpAndSettle();
+      await tester.runAsync(() => Future.delayed(const Duration(milliseconds: 50)));
+      await tester.pump();
 
       expect(find.byType(DataGridLoadingOverlay), findsOneWidget);
       expect(find.text('Loading data...'), findsOneWidget);
 
       controller.addEvent(SetLoadingEvent(isLoading: false));
-      await tester.pumpAndSettle();
+      await tester.runAsync(() => Future.delayed(const Duration(milliseconds: 50)));
+      await tester.pump();
 
       expect(find.byType(DataGridLoadingOverlay), findsNothing);
     });

@@ -37,66 +37,30 @@ class DataGridHeader<T extends DataGridRow> extends StatelessWidget {
   }
 }
 
-class _HeaderRow<T extends DataGridRow> extends StatefulWidget {
+class _HeaderRow<T extends DataGridRow> extends StatelessWidget {
   const _HeaderRow();
-
-  @override
-  State<_HeaderRow<T>> createState() => _HeaderRowState<T>();
-}
-
-class _HeaderRowState<T extends DataGridRow> extends State<_HeaderRow<T>> {
-  late List<DataGridColumn<T>> pinnedColumns;
-  late List<DataGridColumn<T>> unpinnedColumns;
-  late double pinnedWidth;
-  late double unpinnedWidth;
-  List<DataGridColumn<T>> effectiveColumns = [];
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final state = context.dataGridState<T>()!;
-    _updateColumns(state.effectiveColumns);
-  }
-
-  bool _columnsEqual(List<DataGridColumn<T>> a, List<DataGridColumn<T>> b) {
-    if (a.length != b.length) return false;
-    for (int i = 0; i < a.length; i++) {
-      if (a[i].id != b[i].id ||
-          a[i].pinned != b[i].pinned ||
-          a[i].visible != b[i].visible ||
-          a[i].width != b[i].width) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  void _updateColumns(List<DataGridColumn<T>> columns) {
-    if (_columnsEqual(effectiveColumns, columns)) return;
-    effectiveColumns = columns;
-    pinnedColumns = columns.where((col) => col.pinned && col.visible).toList();
-    unpinnedColumns = columns.where((col) => !col.pinned && col.visible).toList();
-    pinnedWidth = pinnedColumns.fold<double>(0.0, (sum, col) => sum + col.width);
-    unpinnedWidth = unpinnedColumns.fold<double>(0.0, (sum, col) => sum + col.width);
-  }
 
   @override
   Widget build(BuildContext context) {
     final state = context.dataGridState<T>()!;
     final scrollController = context.gridScrollController<T>()!;
 
-    if (pinnedColumns.isEmpty) {
-      return AnimatedBuilder(
+    return ClipRect(
+      child: AnimatedBuilder(
         animation: scrollController.horizontalController,
         builder: (context, child) {
           final horizontalOffset = scrollController.horizontalController.hasClients
               ? scrollController.horizontalController.offset
               : 0.0;
 
+          // Render unpinned columns first, then pinned columns last for correct z-ordering
+          final visibleColumns = state.effectiveColumns.where((c) => c.visible).toList();
+          final unpinnedFirst = [...visibleColumns.where((c) => !c.pinned), ...visibleColumns.where((c) => c.pinned)];
+
           return CustomMultiChildLayout(
             delegate: HeaderLayoutDelegate(columns: state.effectiveColumns, horizontalOffset: horizontalOffset),
             children: [
-              for (var column in state.effectiveColumns)
+              for (var column in unpinnedFirst)
                 LayoutId(
                   id: column.id,
                   child: _HeaderCellWrapper<T>(column: column, sortState: state.sort),
@@ -104,66 +68,7 @@ class _HeaderRowState<T extends DataGridRow> extends State<_HeaderRow<T>> {
             ],
           );
         },
-      );
-    }
-
-    return Stack(
-      children: [
-        Positioned(
-          left: pinnedWidth,
-          right: 0,
-          top: 0,
-          bottom: 0,
-          child: ScrollConfiguration(
-            behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
-            child: SingleChildScrollView(
-              controller: scrollController.horizontalController,
-              scrollDirection: Axis.horizontal,
-              child: SizedBox(
-                width: unpinnedWidth,
-                child: CustomMultiChildLayout(
-                  delegate: HeaderLayoutDelegate(columns: unpinnedColumns),
-                  children: [
-                    for (var column in unpinnedColumns)
-                      LayoutId(
-                        id: column.id,
-                        child: _HeaderCellWrapper<T>(column: column, sortState: state.sort),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-        Positioned(
-          left: 0,
-          top: 0,
-          bottom: 0,
-          width: pinnedWidth,
-          child: Builder(
-            builder: (context) {
-              final theme = DataGridTheme.of(context);
-              return Container(
-                decoration: BoxDecoration(
-                  color: theme.colors.headerColor,
-                  border: theme.borders.pinnedBorder,
-                  boxShadow: theme.borders.pinnedShadow,
-                ),
-                child: CustomMultiChildLayout(
-                  delegate: HeaderLayoutDelegate(columns: pinnedColumns),
-                  children: [
-                    for (var column in pinnedColumns)
-                      LayoutId(
-                        id: column.id,
-                        child: _HeaderCellWrapper<T>(column: column, sortState: state.sort),
-                      ),
-                  ],
-                ),
-              );
-            },
-          ),
-        ),
-      ],
+      ),
     );
   }
 }
@@ -177,22 +82,40 @@ class _HeaderCellWrapper<T extends DataGridRow> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = context.dataGridController<T>()!;
+    final theme = DataGridTheme.of(context);
 
+    Widget cell;
     if (column.id == kSelectionColumnId) {
-      return DataGridCheckboxHeaderCell<T>();
+      cell = DataGridCheckboxHeaderCell<T>();
+    } else {
+      cell = DataGridHeaderCell(
+        column: column,
+        sortState: sortState,
+        onSort: (direction) {
+          controller.addEvent(SortEvent(columnId: column.id, direction: direction));
+        },
+        onResize: (delta) {
+          final newWidth = (column.width + delta).clamp(
+            theme.dimensions.columnMinWidth,
+            theme.dimensions.columnMaxWidth,
+          );
+          controller.addEvent(ColumnResizeEvent(columnId: column.id, newWidth: newWidth));
+        },
+      );
     }
 
-    return DataGridHeaderCell(
-      column: column,
-      sortState: sortState,
-      onSort: (direction) {
-        controller.addEvent(SortEvent(columnId: column.id, direction: direction));
-      },
-      onResize: (delta) {
-        final theme = DataGridTheme.of(context);
-        final newWidth = (column.width + delta).clamp(theme.dimensions.columnMinWidth, theme.dimensions.columnMaxWidth);
-        controller.addEvent(ColumnResizeEvent(columnId: column.id, newWidth: newWidth));
-      },
-    );
+    // Add pinned column styling
+    if (column.pinned) {
+      return Container(
+        decoration: BoxDecoration(
+          color: theme.colors.headerColor,
+          border: theme.borders.pinnedBorder,
+          boxShadow: theme.borders.pinnedShadow,
+        ),
+        child: cell,
+      );
+    }
+
+    return cell;
   }
 }

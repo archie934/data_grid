@@ -6,6 +6,11 @@ import 'package:data_grid/models/enums/selection_mode.dart';
 import 'package:data_grid/models/enums/filter_operator.dart';
 import 'package:data_grid/models/enums/sort_direction.dart';
 
+Future<void> waitForAsync(WidgetTester tester) async {
+  await tester.runAsync(() => Future.delayed(const Duration(milliseconds: 50)));
+  await tester.pumpAndSettle();
+}
+
 class TestRow extends DataGridRow {
   String name;
   int value;
@@ -341,19 +346,18 @@ void main() {
           home: Scaffold(body: DataGrid<TestRow>(controller: controller)),
         ),
       );
-
       await tester.pumpAndSettle();
 
       controller.addEvent(FilterEvent(columnId: 2, operator: FilterOperator.greaterThan, value: 200));
-      await tester.pumpAndSettle();
+      await waitForAsync(tester);
 
       expect(controller.state.displayOrder.length, 3);
 
       controller.addEvent(SelectRowEvent(rowId: controller.state.displayOrder[0]));
-      await tester.pumpAndSettle();
+      await waitForAsync(tester);
 
       await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
-      await tester.pumpAndSettle();
+      await waitForAsync(tester);
 
       expect(controller.state.selection.focusedRowId, controller.state.displayOrder[1]);
     });

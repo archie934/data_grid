@@ -19,6 +19,13 @@ class FilterEvent extends DataGridEvent {
 
   @override
   Future<DataGridState<T>?> apply<T extends DataGridRow>(EventContext<T> context) async {
+    // Check if column is filterable
+    final column = context.state.columns.firstWhere(
+      (c) => c.id == columnId,
+      orElse: () => throw StateError('Column $columnId not found'),
+    );
+    if (!column.filterable) return null;
+
     final updatedFilters = Map<int, ColumnFilter>.from(context.state.filter.columnFilters);
     updatedFilters[columnId] = ColumnFilter(columnId: columnId, operator: operator, value: value);
 

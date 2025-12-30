@@ -10,6 +10,7 @@ class DataGridViewport<T extends DataGridRow> extends TwoDimensionalViewport {
   final List<DataGridColumn<T>> columns;
   final int rowCount;
   final double rowHeight;
+  final Color pinnedMaskColor;
 
   const DataGridViewport({
     super.key,
@@ -22,6 +23,7 @@ class DataGridViewport<T extends DataGridRow> extends TwoDimensionalViewport {
     required this.columns,
     required this.rowCount,
     required this.rowHeight,
+    required this.pinnedMaskColor,
     super.cacheExtent,
     super.clipBehavior,
   });
@@ -40,6 +42,7 @@ class DataGridViewport<T extends DataGridRow> extends TwoDimensionalViewport {
       columns: columns,
       rowCount: rowCount,
       rowHeight: rowHeight,
+      pinnedMaskColor: pinnedMaskColor,
       cacheExtent: cacheExtent,
       clipBehavior: clipBehavior,
     );
@@ -52,6 +55,7 @@ class DataGridViewport<T extends DataGridRow> extends TwoDimensionalViewport {
       ..delegate = delegate as DataGridChildDelegate
       ..columns = columns
       ..rowCount = rowCount
-      ..rowHeight = rowHeight;
+      ..rowHeight = rowHeight
+      ..pinnedMaskColor = pinnedMaskColor;
   }
 }

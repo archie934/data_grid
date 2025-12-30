@@ -9,7 +9,7 @@ A high-performance, reactive data grid for Flutter with comprehensive features i
 ### Core Functionality
 - ✅ **Virtualized Rendering** - Only visible rows/columns rendered for smooth 60fps scrolling
 - ✅ **Column Management** - Resize, pin, hide/show, reorder columns
-- ✅ **Multi-Column Sorting** - Sort by multiple columns with priority indicators
+- ✅ **Column Sorting** - Single-column sorting with ascending/descending/clear cycle
 - ✅ **Column Filtering** - Customizable column filtering
 - ✅ **Row Selection** - None/Single/Multiple modes with checkbox column
 - ✅ **Cell Editing** - Inline editing with validation and callbacks
@@ -50,7 +50,7 @@ This package is in active development. Core features work well, but some advance
 ### What Works Well ✅
 - **Row selection** - Fully implemented with none/single/multiple modes
 - **Virtualized rendering** - Smooth scrolling with 100k+ rows
-- **Sorting & filtering** - Multi-column support with background processing
+- **Sorting & filtering** - Single-column sorting with background processing for large datasets
 - **Column management** - Resize, pin, hide/show columns
 - **Cell editing** - Inline editing with validation (some edge cases remain)
 - **Theming** - Comprehensive customization options
@@ -58,7 +58,6 @@ This package is in active development. Core features work well, but some advance
 ### In Progress / Known Issues ⚠️
 - **Keyboard navigation** - Arrow keys work but may have issues in some scenarios
 - **Tab navigation** - Between cells needs improvement
-- **Pinned columns** - Minor rendering artifacts in some cases
 - **Cell editing** - Edge cases with rapid interactions being addressed
 
 ### Planned Features 🚀
@@ -240,7 +239,7 @@ final controller = DataGridController<Person>(
   initialRows: rows,
   rowHeight: 48.0,
   sortDebounce: Duration(milliseconds: 300),
-  filterDebounce: Duration(milliseconds: 300),
+  filterDebounce: Duration(milliseconds: 500),  // Default: 500ms
   sortIsolateThreshold: 10000,  // Use isolate for >10k rows
   filterIsolateThreshold: 10000,
 );
@@ -308,24 +307,26 @@ controller.deleteRows({id1, id2, id3});
 ### Sorting
 
 ```dart
-// Single column sort
+// Sort by column (ascending)
 controller.addEvent(SortEvent(
   columnId: 1,
   direction: SortDirection.ascending,
 ));
 
-// Multi-column sort
+// Sort by column (descending)
 controller.addEvent(SortEvent(
   columnId: 1,
-  direction: SortDirection.ascending,
-  multiSort: true,  // Add to existing sorts
+  direction: SortDirection.descending,
 ));
 
 // Clear sort
 controller.addEvent(SortEvent(
   columnId: 1,
-  direction: null,  // Remove this column's sort
+  direction: null,  // Clears the sort
 ));
+
+// Note: Sorting a different column replaces the current sort
+// Only single-column sorting is supported
 ```
 
 ### Filtering
@@ -340,10 +341,15 @@ controller.addEvent(FilterEvent(
 
 // Available operators:
 // - equals, notEquals
-// - contains, startsWith, endsWith
+// - contains, startsWith, endsWith (case-insensitive, trims whitespace)
 // - greaterThan, lessThan
 // - greaterThanOrEqual, lessThanOrEqual
 // - isEmpty, isNotEmpty
+
+// String filters are sanitized:
+// - Trimmed (leading/trailing whitespace removed)
+// - Case-insensitive matching
+// - Multiple spaces normalized to single space
 
 // Clear filter
 controller.addEvent(ClearFilterEvent(columnId: 1));  // Clear one
@@ -647,7 +653,7 @@ final controller = DataGridController<MyRow>(
 ## 🎯 Performance Tips
 
 1. **Use isolate thresholds wisely**: Default 10,000 rows works well for most cases
-2. **Set appropriate debounce**: 300ms prevents excessive operations
+2. **Set appropriate debounce**: 500ms for filters (default), 300ms for sort
 3. **Implement valueAccessor efficiently**: Avoid heavy computations
 4. **Use pinned columns sparingly**: Too many pinned columns affect performance
 5. **Dispose controllers**: Always call `controller.dispose()` in `State.dispose()`
@@ -663,7 +669,7 @@ final controller = DataGridController<MyRow>(
 ## 🧪 Testing
 
 Comprehensive test suite included:
-- Widget tests for all major features (67 passing tests)
+- Widget tests for all major features (97 passing tests)
 - State management tests
 - Selection mode tests
 - Edit workflow tests
@@ -722,6 +728,7 @@ A: This is normal virtualization behavior. Cells render as they become visible.
 
 **Q: Sorting/filtering not working in tests?**  
 A: Use `sortDebounce: Duration.zero` and `filterDebounce: Duration.zero` for tests.
+Also use `await tester.runAsync(() => Future.delayed(Duration(milliseconds: 50)))` before assertions to allow async stream operations to complete.
 
 **Q: Selection not working?**  
 A: Ensure `SelectionMode` is not set to `none`.

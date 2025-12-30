@@ -125,6 +125,10 @@ class DataIndexer<T extends DataGridRow> {
     return a.toString().compareTo(b.toString());
   }
 
+  String _sanitizeString(dynamic value) {
+    return value?.toString().toLowerCase().trim().replaceAll(RegExp(r'\s+'), ' ') ?? '';
+  }
+
   bool _matchesFilter(dynamic value, ColumnFilter filter) {
     switch (filter.operator) {
       case FilterOperator.equals:
@@ -132,11 +136,17 @@ class DataIndexer<T extends DataGridRow> {
       case FilterOperator.notEquals:
         return value != filter.value;
       case FilterOperator.contains:
-        return value?.toString().toLowerCase().contains(filter.value.toString().toLowerCase()) ?? false;
+        final sanitizedValue = _sanitizeString(value);
+        final sanitizedFilter = _sanitizeString(filter.value);
+        return sanitizedFilter.isEmpty || sanitizedValue.contains(sanitizedFilter);
       case FilterOperator.startsWith:
-        return value?.toString().toLowerCase().startsWith(filter.value.toString().toLowerCase()) ?? false;
+        final sanitizedValue = _sanitizeString(value);
+        final sanitizedFilter = _sanitizeString(filter.value);
+        return sanitizedFilter.isEmpty || sanitizedValue.startsWith(sanitizedFilter);
       case FilterOperator.endsWith:
-        return value?.toString().toLowerCase().endsWith(filter.value.toString().toLowerCase()) ?? false;
+        final sanitizedValue = _sanitizeString(value);
+        final sanitizedFilter = _sanitizeString(filter.value);
+        return sanitizedFilter.isEmpty || sanitizedValue.endsWith(sanitizedFilter);
       case FilterOperator.greaterThan:
         return _compareValues(value, filter.value) > 0;
       case FilterOperator.lessThan:
@@ -146,9 +156,9 @@ class DataIndexer<T extends DataGridRow> {
       case FilterOperator.lessThanOrEqual:
         return _compareValues(value, filter.value) <= 0;
       case FilterOperator.isEmpty:
-        return value == null || value.toString().isEmpty;
+        return value == null || value.toString().trim().isEmpty;
       case FilterOperator.isNotEmpty:
-        return value != null && value.toString().isNotEmpty;
+        return value != null && value.toString().trim().isNotEmpty;
     }
   }
 

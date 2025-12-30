@@ -10,6 +10,7 @@ class DataGridScrollView<T extends DataGridRow> extends TwoDimensionalScrollView
   final List<DataGridColumn<T>> columns;
   final int rowCount;
   final double rowHeight;
+  final Color pinnedMaskColor;
   final Widget Function(BuildContext context, int row, int column) cellBuilder;
 
   DataGridScrollView({
@@ -17,6 +18,7 @@ class DataGridScrollView<T extends DataGridRow> extends TwoDimensionalScrollView
     required this.columns,
     required this.rowCount,
     required this.rowHeight,
+    required this.pinnedMaskColor,
     required this.cellBuilder,
     super.verticalDetails = const ScrollableDetails.vertical(),
     super.horizontalDetails = const ScrollableDetails.horizontal(),
@@ -40,6 +42,7 @@ class DataGridScrollView<T extends DataGridRow> extends TwoDimensionalScrollView
       columns: columns,
       rowCount: rowCount,
       rowHeight: rowHeight,
+      pinnedMaskColor: pinnedMaskColor,
       cacheExtent: cacheExtent,
       clipBehavior: clipBehavior,
     );

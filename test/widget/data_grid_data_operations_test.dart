@@ -13,6 +13,12 @@ class TestRow extends DataGridRow {
   }
 }
 
+/// Helper to wait for async stream operations to complete
+Future<void> waitForAsync(WidgetTester tester) async {
+  await tester.runAsync(() => Future.delayed(const Duration(milliseconds: 50)));
+  await tester.pumpAndSettle();
+}
+
 void main() {
   group('DataGrid Data Operations Tests', () {
     late DataGridController<TestRow> controller;
@@ -86,14 +92,13 @@ void main() {
           home: Scaffold(body: DataGrid<TestRow>(controller: controller)),
         ),
       );
-
       await tester.pumpAndSettle();
 
       expect(controller.state.displayOrder.length, 3);
 
       final newRow = TestRow(id: 4, name: 'David', value: 400);
       controller.insertRow(newRow);
-      await tester.pumpAndSettle();
+      await waitForAsync(tester);
 
       expect(controller.state.displayOrder.length, 4);
       expect(controller.state.rowsById[4]!.name, 'David');
@@ -106,12 +111,11 @@ void main() {
           home: Scaffold(body: DataGrid<TestRow>(controller: controller)),
         ),
       );
-
       await tester.pumpAndSettle();
 
       final newRow = TestRow(id: 4, name: 'David', value: 400);
       controller.insertRow(newRow, position: 1);
-      await tester.pumpAndSettle();
+      await waitForAsync(tester);
 
       expect(controller.state.displayOrder.length, 4);
       expect(controller.state.displayOrder[1], 4);
@@ -123,7 +127,6 @@ void main() {
           home: Scaffold(body: DataGrid<TestRow>(controller: controller)),
         ),
       );
-
       await tester.pumpAndSettle();
 
       expect(controller.state.displayOrder.length, 3);
@@ -135,7 +138,7 @@ void main() {
       ];
 
       controller.insertRows(newRows);
-      await tester.pumpAndSettle();
+      await waitForAsync(tester);
 
       expect(controller.state.displayOrder.length, 6);
       expect(controller.state.rowsById[4]!.name, 'David');
@@ -190,7 +193,6 @@ void main() {
           home: Scaffold(body: DataGrid<TestRow>(controller: controller)),
         ),
       );
-
       await tester.pumpAndSettle();
 
       expect(controller.state.rowsById[1]!.name, 'Alice');
@@ -198,7 +200,7 @@ void main() {
 
       final updatedRow = TestRow(id: 1, name: 'Alice Updated', value: 150);
       controller.updateRow(1, updatedRow);
-      await tester.pumpAndSettle();
+      await waitForAsync(tester);
 
       expect(controller.state.rowsById[1]!.name, 'Alice Updated');
       expect(controller.state.rowsById[1]!.value, 150);
@@ -228,7 +230,6 @@ void main() {
           home: Scaffold(body: DataGrid<TestRow>(controller: controller)),
         ),
       );
-
       await tester.pumpAndSettle();
 
       expect(controller.state.displayOrder.length, 3);
@@ -236,7 +237,7 @@ void main() {
       final newRows = [TestRow(id: 10, name: 'New1', value: 1000), TestRow(id: 11, name: 'New2', value: 1100)];
 
       controller.setRows(newRows);
-      await tester.pumpAndSettle();
+      await waitForAsync(tester);
 
       expect(controller.state.displayOrder.length, 2);
       expect(controller.state.rowsById.containsKey(1), false);
@@ -250,17 +251,16 @@ void main() {
           home: Scaffold(body: DataGrid<TestRow>(controller: controller)),
         ),
       );
-
       await tester.pumpAndSettle();
 
       controller.addEvent(SortEvent(columnId: 1, direction: SortDirection.ascending));
-      await tester.pumpAndSettle();
+      await waitForAsync(tester);
 
       expect(controller.state.visibleRows[0].name, 'Alice');
 
       final newRow = TestRow(id: 4, name: 'Aaron', value: 400);
       controller.insertRow(newRow);
-      await tester.pumpAndSettle();
+      await waitForAsync(tester);
 
       expect(controller.state.visibleRows[0].name, 'Aaron');
     });
@@ -271,17 +271,16 @@ void main() {
           home: Scaffold(body: DataGrid<TestRow>(controller: controller)),
         ),
       );
-
       await tester.pumpAndSettle();
 
       controller.addEvent(FilterEvent(columnId: 2, operator: FilterOperator.greaterThan, value: 150));
-      await tester.pumpAndSettle();
+      await waitForAsync(tester);
 
       expect(controller.state.displayOrder.length, 2);
 
       final newRow = TestRow(id: 4, name: 'David', value: 400);
       controller.insertRow(newRow);
-      await tester.pumpAndSettle();
+      await waitForAsync(tester);
 
       expect(controller.state.displayOrder.length, 3);
       expect(controller.state.visibleRows.any((r) => r.name == 'David'), true);
@@ -293,14 +292,13 @@ void main() {
           home: Scaffold(body: DataGrid<TestRow>(controller: controller)),
         ),
       );
-
       await tester.pumpAndSettle();
 
       expect(controller.state.displayOrder.length, 3);
 
       final duplicateRow = TestRow(id: 1, name: 'Alice Duplicate', value: 999);
       controller.insertRow(duplicateRow);
-      await tester.pumpAndSettle();
+      await waitForAsync(tester);
 
       expect(controller.state.displayOrder.length, 3);
       expect(controller.state.rowsById[1]!.name, 'Alice Duplicate');
@@ -345,17 +343,16 @@ void main() {
           home: Scaffold(body: DataGrid<TestRow>(controller: controller)),
         ),
       );
-
       await tester.pumpAndSettle();
 
       controller.deleteRow(2);
-      await tester.pumpAndSettle();
+      await waitForAsync(tester);
 
       controller.insertRow(TestRow(id: 4, name: 'David', value: 400));
-      await tester.pumpAndSettle();
+      await waitForAsync(tester);
 
       controller.updateCell(1, 1, 'Alice Updated');
-      await tester.pumpAndSettle();
+      await waitForAsync(tester);
 
       expect(controller.state.displayOrder.length, 3);
       expect(controller.state.rowsById.containsKey(2), false);
@@ -394,19 +391,18 @@ void main() {
           home: Scaffold(body: DataGrid<TestRow>(controller: controller)),
         ),
       );
-
       await tester.pumpAndSettle();
 
       expect(find.text('Alice'), findsOneWidget);
       expect(find.text('David'), findsNothing);
 
       controller.insertRow(TestRow(id: 4, name: 'David', value: 400));
-      await tester.pumpAndSettle();
+      await waitForAsync(tester);
 
       expect(find.text('David'), findsOneWidget);
 
       controller.deleteRow(1);
-      await tester.pumpAndSettle();
+      await waitForAsync(tester);
 
       expect(find.text('Alice'), findsNothing);
     });
@@ -417,7 +413,6 @@ void main() {
           home: Scaffold(body: DataGrid<TestRow>(controller: controller)),
         ),
       );
-
       await tester.pumpAndSettle();
 
       expect(controller.state.displayOrder.length, 3);
@@ -425,7 +420,7 @@ void main() {
       final additionalRows = [TestRow(id: 4, name: 'David', value: 400), TestRow(id: 5, name: 'Eve', value: 500)];
 
       controller.addEvent(LoadDataEvent(rows: additionalRows, append: true));
-      await tester.pumpAndSettle();
+      await waitForAsync(tester);
 
       expect(controller.state.displayOrder.length, 5);
       expect(controller.state.rowsById.containsKey(1), true);

@@ -54,7 +54,8 @@ class _CustomHorizontalScrollbarState extends State<CustomHorizontalScrollbar> {
             }
 
             final thumbWidth = ((viewportSize / contentSize) * trackWidth).clamp(thumbMinSize, trackWidth);
-            final thumbOffset = (scrollOffset / contentSize) * trackWidth;
+            final scrollableTrackWidth = trackWidth - thumbWidth;
+            final thumbOffset = maxScrollExtent > 0 ? (scrollOffset / maxScrollExtent) * scrollableTrackWidth : 0.0;
 
             return GestureDetector(
               behavior: HitTestBehavior.opaque,
@@ -64,13 +65,14 @@ class _CustomHorizontalScrollbarState extends State<CustomHorizontalScrollbar> {
                 final tapPosition = details.localPosition.dx;
 
                 // Calculate target scroll position based on tap location
-                final targetThumbOffset = tapPosition - thumbWidth / 2;
-                final targetScrollOffset = (targetThumbOffset / trackWidth) * contentSize;
-                final clampedScrollOffset = targetScrollOffset.clamp(0.0, maxScrollExtent);
+                final targetThumbOffset = (tapPosition - thumbWidth / 2).clamp(0.0, scrollableTrackWidth);
+                final targetScrollOffset = scrollableTrackWidth > 0
+                    ? (targetThumbOffset / scrollableTrackWidth) * maxScrollExtent
+                    : 0.0;
 
                 // Animate to target position
                 widget.controller.animateTo(
-                  clampedScrollOffset,
+                  targetScrollOffset,
                   duration: const Duration(milliseconds: 200),
                   curve: Curves.easeInOut,
                 );
@@ -86,12 +88,13 @@ class _CustomHorizontalScrollbarState extends State<CustomHorizontalScrollbar> {
                 if (startOffset == null || startThumbOffset == null) return;
 
                 final delta = details.localPosition.dx - startOffset;
-                final newThumbOffset = startThumbOffset + delta;
-                final newScrollOffset = (newThumbOffset / trackWidth) * contentSize;
-                final clampedOffset = newScrollOffset.clamp(0.0, maxScrollExtent);
+                final newThumbOffset = (startThumbOffset + delta).clamp(0.0, scrollableTrackWidth);
+                final newScrollOffset = scrollableTrackWidth > 0
+                    ? (newThumbOffset / scrollableTrackWidth) * maxScrollExtent
+                    : 0.0;
 
                 // Use jumpTo for instant updates during drag (no animation = no stutter)
-                widget.controller.jumpTo(clampedOffset);
+                widget.controller.jumpTo(newScrollOffset);
               },
               onHorizontalDragEnd: (_) {
                 _dragStartOffset = null;

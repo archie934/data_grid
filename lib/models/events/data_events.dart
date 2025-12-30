@@ -60,13 +60,16 @@ class InsertRowEvent extends DataGridEvent {
   @override
   Future<DataGridState<T>?> apply<T extends DataGridRow>(EventContext<T> context) async {
     final newRowsById = Map<double, T>.from(context.state.rowsById);
+    final isNew = !newRowsById.containsKey(row.id);
     newRowsById[row.id] = row as T;
 
     final newDisplayOrder = List<double>.from(context.state.displayOrder);
-    if (position != null && position! >= 0 && position! <= newDisplayOrder.length) {
-      newDisplayOrder.insert(position!, row.id);
-    } else {
-      newDisplayOrder.add(row.id);
+    if (isNew) {
+      if (position != null && position! >= 0 && position! <= newDisplayOrder.length) {
+        newDisplayOrder.insert(position!, row.id);
+      } else {
+        newDisplayOrder.add(row.id);
+      }
     }
 
     context.dataIndexer.setData(newRowsById);

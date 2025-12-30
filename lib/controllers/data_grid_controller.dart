@@ -45,7 +45,7 @@ class DataGridController<T extends DataGridRow> {
     double rowHeight = 48.0,
     Duration sortDebounce = const Duration(milliseconds: 300),
     int sortIsolateThreshold = 10000,
-    Duration filterDebounce = const Duration(milliseconds: 300),
+    Duration filterDebounce = const Duration(milliseconds: 500),
     int filterIsolateThreshold = 10000,
     ViewportDelegate<T>? viewportDelegate,
     SortDelegate<T>? sortDelegate,

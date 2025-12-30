@@ -6,6 +6,11 @@ import 'package:data_grid/widgets/viewport/data_grid_viewport_delegate.dart';
 /// The render object that performs the actual layout of the 2D grid.
 /// This implements the lazy rendering logic that only builds visible cells.
 class RenderDataGridViewport<T extends DataGridRow> extends RenderTwoDimensionalViewport {
+  // Track children separately for layered painting
+  final List<RenderBox> _unpinnedChildren = [];
+  final List<RenderBox> _pinnedChildren = [];
+  double _pinnedWidth = 0;
+
   RenderDataGridViewport({
     required super.verticalOffset,
     required super.verticalAxisDirection,
@@ -17,11 +22,21 @@ class RenderDataGridViewport<T extends DataGridRow> extends RenderTwoDimensional
     required List<DataGridColumn<T>> columns,
     required int rowCount,
     required double rowHeight,
+    required Color pinnedMaskColor,
     super.cacheExtent,
     super.clipBehavior,
   }) : _columns = columns,
        _rowCount = rowCount,
-       _rowHeight = rowHeight;
+       _rowHeight = rowHeight,
+       _pinnedMaskColor = pinnedMaskColor;
+
+  Color _pinnedMaskColor;
+  Color get pinnedMaskColor => _pinnedMaskColor;
+  set pinnedMaskColor(Color value) {
+    if (_pinnedMaskColor == value) return;
+    _pinnedMaskColor = value;
+    markNeedsPaint();
+  }
 
   List<DataGridColumn<T>> _columns;
   List<DataGridColumn<T>> get columns => _columns;
@@ -49,6 +64,7 @@ class RenderDataGridViewport<T extends DataGridRow> extends RenderTwoDimensional
 
   /// Core layout method called by Flutter to arrange children in the viewport.
   /// This is where the lazy rendering magic happens - only visible cells are built and positioned.
+  /// Handles both pinned and unpinned columns in a single pass.
   @override
   void layoutChildSequence() {
     // Handle empty grid
@@ -64,83 +80,139 @@ class RenderDataGridViewport<T extends DataGridRow> extends RenderTwoDimensional
     final double verticalScrollOffset = verticalOffset.pixels;
     final double horizontalScrollOffset = horizontalOffset.pixels;
 
-    // STEP 2: Calculate which ROWS are currently visible in the viewport
-    // Divide scroll offset by row height to find first visible row index
+    // STEP 2: Separate columns into pinned and unpinned, preserving global indices
+    final List<int> pinnedIndices = [];
+    final List<int> unpinnedIndices = [];
+    double pinnedWidth = 0;
+    double unpinnedWidth = 0;
+
+    for (int i = 0; i < _columns.length; i++) {
+      if (_columns[i].pinned) {
+        pinnedIndices.add(i);
+        pinnedWidth += _columns[i].width;
+      } else {
+        unpinnedIndices.add(i);
+        unpinnedWidth += _columns[i].width;
+      }
+    }
+
+    // STEP 3: Calculate which ROWS are currently visible in the viewport
     final int firstVisibleRow = (verticalScrollOffset / _rowHeight).floor().clamp(0, _rowCount);
-    // Calculate how many rows fit in viewport, plus one extra for partial visibility
     final int visibleRowCount = (viewportHeight / _rowHeight).ceil() + 1;
-    // Calculate last visible row (but don't exceed total row count)
     final int lastVisibleRow = (firstVisibleRow + visibleRowCount).clamp(0, _rowCount);
 
-    // STEP 3: Calculate which COLUMNS are currently visible in the viewport
-    double accumulatedWidth = 0;
-    int firstVisibleColumn = -1; // -1 means "not found yet"
-    int lastVisibleColumn = _columns.length;
-    double firstVisibleColumnOffset = 0; // How much of the first column is scrolled off-screen
+    // Calculate starting Y offset accounting for partially scrolled rows
+    final double startingYOffset = (firstVisibleRow * _rowHeight) - verticalScrollOffset;
 
-    // Iterate through columns to find visible range
-    for (int i = 0; i < _columns.length; i++) {
-      // Found the first column that extends past the left edge of viewport
-      if (accumulatedWidth + _columns[i].width > horizontalScrollOffset && firstVisibleColumn == -1) {
-        firstVisibleColumn = i;
-        // Calculate starting offset: how far into the viewport does this column start?
-        // If part of it is scrolled off, this will be negative
-        firstVisibleColumnOffset = accumulatedWidth - horizontalScrollOffset;
+    // STEP 4: Calculate which UNPINNED columns are visible
+    // The scrollable area starts after pinned columns
+    final double scrollableViewportWidth = viewportWidth - pinnedWidth;
+
+    int firstVisibleUnpinnedIdx = -1;
+    int lastVisibleUnpinnedIdx = unpinnedIndices.length;
+    double firstUnpinnedColumnOffset = 0;
+    double accumulatedUnpinnedWidth = 0;
+
+    for (int i = 0; i < unpinnedIndices.length; i++) {
+      final colWidth = _columns[unpinnedIndices[i]].width;
+
+      if (accumulatedUnpinnedWidth + colWidth > horizontalScrollOffset && firstVisibleUnpinnedIdx == -1) {
+        firstVisibleUnpinnedIdx = i;
+        firstUnpinnedColumnOffset = accumulatedUnpinnedWidth - horizontalScrollOffset;
       }
-      accumulatedWidth += _columns[i].width;
-      // Found where columns extend past the right edge of viewport
-      if (accumulatedWidth >= horizontalScrollOffset + viewportWidth) {
-        lastVisibleColumn = (i + 1).clamp(0, _columns.length);
+      accumulatedUnpinnedWidth += colWidth;
+
+      if (accumulatedUnpinnedWidth >= horizontalScrollOffset + scrollableViewportWidth) {
+        lastVisibleUnpinnedIdx = (i + 1).clamp(0, unpinnedIndices.length);
         break;
       }
     }
 
-    // If no column was found (e.g., scrolled past all content), default to first column
-    if (firstVisibleColumn == -1) {
-      firstVisibleColumn = 0;
-      firstVisibleColumnOffset = 0;
+    if (firstVisibleUnpinnedIdx == -1) {
+      firstVisibleUnpinnedIdx = 0;
+      firstUnpinnedColumnOffset = 0;
     }
 
-    // STEP 4: Layout all visible cells
-    // Calculate starting Y offset accounting for partially scrolled rows
-    final double startingYOffset = (firstVisibleRow * _rowHeight) - verticalScrollOffset;
+    // Clear child tracking for this layout pass
+    _unpinnedChildren.clear();
+    _pinnedChildren.clear();
+    _pinnedWidth = pinnedWidth;
 
-    double yOffset = startingYOffset; // Vertical position within viewport (can be negative)
+    // STEP 5: Layout cells for each visible row
+    double yOffset = startingYOffset;
     for (int row = firstVisibleRow; row < lastVisibleRow; row++) {
-      double xOffset = firstVisibleColumnOffset; // Horizontal position within viewport (can be negative)
+      // Layout UNPINNED columns
+      double xOffset = pinnedWidth + firstUnpinnedColumnOffset;
+      for (int i = firstVisibleUnpinnedIdx; i < lastVisibleUnpinnedIdx; i++) {
+        final colIndex = unpinnedIndices[i];
+        final colWidth = _columns[colIndex].width;
 
-      for (int col = firstVisibleColumn; col < lastVisibleColumn; col++) {
-        // Create a "vicinity" (location identifier) for this cell
-        final vicinity = DataGridVicinity(row, col);
+        // Skip cells completely hidden behind pinned columns
+        if (xOffset + colWidth <= pinnedWidth) {
+          xOffset += colWidth;
+          continue;
+        }
 
-        // Ask the framework to build or retrieve the cached child widget
-        // Only widgets for visible cells are built, providing lazy rendering
+        final vicinity = DataGridVicinity(row, colIndex);
         final child = buildOrObtainChildFor(vicinity);
 
         if (child != null) {
-          // Layout the child with exact size constraints
-          child.layout(BoxConstraints.tight(Size(_columns[col].width, _rowHeight)));
-
-          // Position the child within the viewport at the calculated offset
-          // The viewport automatically handles the coordinate system
+          child.layout(BoxConstraints.tight(Size(colWidth, _rowHeight)));
           parentDataOf(child).layoutOffset = Offset(xOffset, yOffset);
+          _unpinnedChildren.add(child);
         }
-
-        // Move to next column position
-        xOffset += _columns[col].width;
+        xOffset += colWidth;
       }
-      // Move to next row position
+
+      // Layout PINNED columns at fixed positions
+      xOffset = 0;
+      for (final colIndex in pinnedIndices) {
+        final vicinity = DataGridVicinity(row, colIndex);
+        final child = buildOrObtainChildFor(vicinity);
+
+        if (child != null) {
+          child.layout(BoxConstraints.tight(Size(_columns[colIndex].width, _rowHeight)));
+          parentDataOf(child).layoutOffset = Offset(xOffset, yOffset);
+          _pinnedChildren.add(child);
+        }
+        xOffset += _columns[colIndex].width;
+      }
+
       yOffset += _rowHeight;
     }
 
-    // STEP 5: Tell the scroll controllers the total scrollable dimensions
-    // This enables the scrollbars to show correct proportions and limits
-    final totalWidth = _columns.fold<double>(0, (sum, col) => sum + col.width);
+    // STEP 6: Apply content dimensions
+    // Vertical: total height minus viewport height
     final totalHeight = _rowCount * _rowHeight;
-
-    // Apply content dimensions: min=0, max=(totalSize - viewportSize)
-    // Clamped to 0 minimum to prevent negative scroll ranges
     verticalOffset.applyContentDimensions(0, (totalHeight - viewportHeight).clamp(0, double.infinity));
-    horizontalOffset.applyContentDimensions(0, (totalWidth - viewportWidth).clamp(0, double.infinity));
+
+    // Horizontal: only unpinned width is scrollable (pinned columns are always visible)
+    final horizontalMaxScroll = (unpinnedWidth - scrollableViewportWidth).clamp(0.0, double.infinity);
+    horizontalOffset.applyContentDimensions(0, horizontalMaxScroll);
+  }
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    if (_columns.isEmpty || _rowCount == 0) return;
+
+    context.pushClipRect(needsCompositing, offset, Offset.zero & size, (context, offset) {
+      // Layer 1: Paint unpinned cells
+      for (final child in _unpinnedChildren) {
+        context.paintChild(child, offset + parentDataOf(child).layoutOffset!);
+      }
+
+      // Layer 2: Paint opaque mask over pinned column area (blocks any bleeding content)
+      if (_pinnedWidth > 0) {
+        context.canvas.drawRect(
+          Rect.fromLTWH(offset.dx, offset.dy, _pinnedWidth, size.height),
+          Paint()..color = _pinnedMaskColor,
+        );
+      }
+
+      // Layer 3: Paint pinned cells on top
+      for (final child in _pinnedChildren) {
+        context.paintChild(child, offset + parentDataOf(child).layoutOffset!);
+      }
+    });
   }
 }

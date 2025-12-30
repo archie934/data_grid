@@ -12,8 +12,6 @@ import 'package:data_grid/widgets/data_grid_inherited.dart';
 import 'package:data_grid/widgets/overlays/loading_overlay.dart';
 import 'package:data_grid/renderers/row_renderer.dart';
 import 'package:data_grid/renderers/cell_renderer.dart';
-import 'package:data_grid/renderers/default_row_renderer.dart';
-import 'package:data_grid/renderers/default_cell_renderer.dart';
 import 'package:data_grid/renderers/filter_renderer.dart';
 import 'package:data_grid/renderers/default_filter_renderer.dart';
 import 'package:data_grid/theme/data_grid_theme.dart';
@@ -72,8 +70,6 @@ class DataGrid<T extends DataGridRow> extends StatefulWidget {
 
 class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
   late GridScrollController _scrollController;
-  late RowRenderer<T> _rowRenderer;
-  late CellRenderer<T> _cellRenderer;
   late FilterRenderer _filterRenderer;
   StreamSubscription? _scrollSubscription;
   Size? _lastViewportSize;
@@ -82,8 +78,6 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
   void initState() {
     super.initState();
     _scrollController = widget.scrollController ?? GridScrollController();
-    _rowRenderer = widget.rowRenderer ?? DefaultRowRenderer<T>();
-    _cellRenderer = widget.cellRenderer ?? DefaultCellRenderer<T>();
     _filterRenderer = widget.filterRenderer ?? const DefaultFilterRenderer();
 
     _scrollSubscription = _scrollController.scrollEvent$.listen((event) {
@@ -183,13 +177,7 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
                               defaultFilterRenderer: _filterRenderer,
                               headerHeight: effectiveHeaderHeight,
                             ),
-                            Expanded(
-                              child: DataGridBody<T>(
-                                rowHeight: effectiveRowHeight,
-                                rowRenderer: _rowRenderer,
-                                cellRenderer: _cellRenderer,
-                              ),
-                            ),
+                            Expanded(child: DataGridBody<T>(rowHeight: effectiveRowHeight)),
                           ],
                         ),
                         if (state.isLoading && widget.showLoadingOverlay)

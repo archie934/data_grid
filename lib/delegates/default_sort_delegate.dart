@@ -38,6 +38,16 @@ class DefaultSortDelegate<T extends DataGridRow> extends SortDelegate<T> {
     final completer = Completer<SortResult?>();
 
     _debounceTimer = Timer(_debounce, () async {
+      // Check if column is sortable
+      final column = currentState.columns.firstWhere(
+        (c) => c.id == event.columnId,
+        orElse: () => throw StateError('Column ${event.columnId} not found'),
+      );
+      if (!column.sortable) {
+        completer.complete(null);
+        return;
+      }
+
       final updatedSortColumn = _updateSortColumn(event, currentState.sort);
       final updatedSort = currentState.sort.copyWith(sortColumn: updatedSortColumn);
 

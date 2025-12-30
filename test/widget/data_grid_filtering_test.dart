@@ -3,6 +3,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:data_grid/data_grid.dart';
 import 'package:data_grid/models/enums/filter_operator.dart';
 
+Future<void> waitForAsync(WidgetTester tester) async {
+  await tester.runAsync(() => Future.delayed(const Duration(milliseconds: 50)));
+  await tester.pumpAndSettle();
+}
+
 class TestRow extends DataGridRow {
   final String name;
   final int age;
@@ -54,13 +59,12 @@ void main() {
           home: Scaffold(body: DataGrid<TestRow>(controller: controller)),
         ),
       );
-
       await tester.pumpAndSettle();
 
       expect(controller.state.filter.hasFilters, false);
 
       controller.addEvent(FilterEvent(columnId: 3, operator: FilterOperator.equals, value: 'New York'));
-      await tester.pumpAndSettle();
+      await waitForAsync(tester);
 
       expect(controller.state.filter.columnFilters.containsKey(3), true);
       expect(controller.state.filter.columnFilters[3]?.operator, FilterOperator.equals);
@@ -73,16 +77,15 @@ void main() {
           home: Scaffold(body: DataGrid<TestRow>(controller: controller)),
         ),
       );
-
       await tester.pumpAndSettle();
 
       controller.addEvent(FilterEvent(columnId: 3, operator: FilterOperator.equals, value: 'New York'));
-      await tester.pumpAndSettle();
+      await waitForAsync(tester);
 
       expect(controller.state.filter.columnFilters.containsKey(3), true);
 
       controller.addEvent(ClearFilterEvent(columnId: 3));
-      await tester.pumpAndSettle();
+      await waitForAsync(tester);
 
       expect(controller.state.filter.columnFilters.containsKey(3), false);
       expect(controller.state.filter.hasFilters, false);
@@ -94,17 +97,17 @@ void main() {
           home: Scaffold(body: DataGrid<TestRow>(controller: controller)),
         ),
       );
-
       await tester.pumpAndSettle();
 
       controller.addEvent(FilterEvent(columnId: 3, operator: FilterOperator.equals, value: 'New York'));
+      await waitForAsync(tester);
       controller.addEvent(FilterEvent(columnId: 2, operator: FilterOperator.greaterThan, value: 30));
-      await tester.pumpAndSettle();
+      await waitForAsync(tester);
 
       expect(controller.state.filter.columnFilters.length, greaterThan(0));
 
       controller.addEvent(ClearFilterEvent());
-      await tester.pumpAndSettle();
+      await waitForAsync(tester);
 
       expect(controller.state.filter.hasFilters, false);
       expect(controller.state.filter.columnFilters.length, 0);
@@ -116,12 +119,12 @@ void main() {
           home: Scaffold(body: DataGrid<TestRow>(controller: controller)),
         ),
       );
-
       await tester.pumpAndSettle();
 
       controller.addEvent(FilterEvent(columnId: 3, operator: FilterOperator.equals, value: 'Los Angeles'));
+      await waitForAsync(tester);
       controller.addEvent(FilterEvent(columnId: 2, operator: FilterOperator.greaterThan, value: 30));
-      await tester.pumpAndSettle();
+      await waitForAsync(tester);
 
       expect(controller.state.filter.columnFilters.containsKey(3), true);
       expect(controller.state.filter.columnFilters.containsKey(2), true);
@@ -133,11 +136,10 @@ void main() {
           home: Scaffold(body: DataGrid<TestRow>(controller: controller)),
         ),
       );
-
       await tester.pumpAndSettle();
 
       controller.addEvent(FilterEvent(columnId: 1, operator: FilterOperator.contains, value: 'a'));
-      await tester.pumpAndSettle();
+      await waitForAsync(tester);
 
       final filter = controller.state.filter.columnFilters[1];
       expect(filter, isNotNull);
@@ -161,11 +163,10 @@ void main() {
           home: Scaffold(body: DataGrid<TestRow>(controller: unfilterableController)),
         ),
       );
-
       await tester.pumpAndSettle();
 
       unfilterableController.addEvent(FilterEvent(columnId: 1, operator: FilterOperator.contains, value: 'Alice'));
-      await tester.pumpAndSettle();
+      await waitForAsync(tester);
 
       expect(unfilterableController.state.displayOrder.length, rows.length);
 
@@ -178,16 +179,15 @@ void main() {
           home: Scaffold(body: DataGrid<TestRow>(controller: controller)),
         ),
       );
-
       await tester.pumpAndSettle();
 
       controller.addEvent(FilterEvent(columnId: 1, operator: FilterOperator.contains, value: 'a'));
-      await tester.pumpAndSettle();
+      await waitForAsync(tester);
 
       expect(controller.state.filter.columnFilters[1]?.value, 'a');
 
       controller.addEvent(FilterEvent(columnId: 1, operator: FilterOperator.contains, value: 'b'));
-      await tester.pumpAndSettle();
+      await waitForAsync(tester);
 
       expect(controller.state.filter.columnFilters[1]?.value, 'b');
     });

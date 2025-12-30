@@ -163,9 +163,9 @@ class _MainAppState extends State<MainApp> {
           id: columnId,
           title: 'Extra ${index + 1}',
           width: 150,
-          pinned: false,
+          pinned: index % 5 == 0,
           editable: true,
-          valueAccessor: (row) => row.extraData[columnId] ?? 'Data ${index + 1}',
+          valueAccessor: (row) => row.extraData[columnId] ?? 'Data ${row.id}',
           cellValueSetter: (row, value) {
             row.extraData[columnId] = value;
           },
