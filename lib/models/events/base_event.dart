@@ -1,7 +1,7 @@
 import 'dart:async';
-import 'package:data_grid/models/data/row.dart';
-import 'package:data_grid/models/state/grid_state.dart';
-import 'package:data_grid/models/events/event_context.dart';
+import 'package:flutter_data_grid/models/data/row.dart';
+import 'package:flutter_data_grid/models/state/grid_state.dart';
+import 'package:flutter_data_grid/models/events/event_context.dart';
 
 abstract class DataGridEvent {
   const DataGridEvent();

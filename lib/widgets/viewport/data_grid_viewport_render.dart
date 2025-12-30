@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
-import 'package:data_grid/models/data/column.dart';
-import 'package:data_grid/models/data/row.dart';
-import 'package:data_grid/widgets/viewport/data_grid_viewport_delegate.dart';
+import 'package:flutter_data_grid/models/data/column.dart';
+import 'package:flutter_data_grid/models/data/row.dart';
+import 'package:flutter_data_grid/widgets/viewport/data_grid_viewport_delegate.dart';
 
 /// The render object that performs the actual layout of the 2D grid.
 /// This implements the lazy rendering logic that only builds visible cells.

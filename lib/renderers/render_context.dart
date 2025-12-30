@@ -1,7 +1,7 @@
-import 'package:data_grid/controllers/data_grid_controller.dart';
-import 'package:data_grid/controllers/grid_scroll_controller.dart';
-import 'package:data_grid/models/data/column.dart';
-import 'package:data_grid/models/data/row.dart';
+import 'package:flutter_data_grid/controllers/data_grid_controller.dart';
+import 'package:flutter_data_grid/controllers/grid_scroll_controller.dart';
+import 'package:flutter_data_grid/models/data/column.dart';
+import 'package:flutter_data_grid/models/data/row.dart';
 
 /// Context provided to row renderers with all necessary state and callbacks.
 class RowRenderContext<T extends DataGridRow> {

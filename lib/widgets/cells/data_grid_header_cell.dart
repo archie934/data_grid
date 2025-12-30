@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:data_grid/models/data/column.dart';
-import 'package:data_grid/models/state/grid_state.dart';
-import 'package:data_grid/models/enums/sort_direction.dart';
-import 'package:data_grid/theme/data_grid_theme.dart';
+import 'package:flutter_data_grid/models/data/column.dart';
+import 'package:flutter_data_grid/models/state/grid_state.dart';
+import 'package:flutter_data_grid/models/enums/sort_direction.dart';
+import 'package:flutter_data_grid/theme/data_grid_theme.dart';
 
 /// A single header cell widget that displays column title and handles sorting/resizing.
 /// Supports:

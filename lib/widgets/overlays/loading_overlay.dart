@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:data_grid/theme/data_grid_theme.dart';
+import 'package:flutter_data_grid/theme/data_grid_theme.dart';
 
 /// Default loading overlay widget displayed during heavy operations.
 ///

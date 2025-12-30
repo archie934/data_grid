@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:data_grid/controllers/data_grid_controller.dart';
-import 'package:data_grid/models/data/row.dart';
+import 'package:flutter_data_grid/controllers/data_grid_controller.dart';
+import 'package:flutter_data_grid/models/data/row.dart';
 
 class VisibleRowTracker<T extends DataGridRow> extends StatefulWidget {
   final double rowId;

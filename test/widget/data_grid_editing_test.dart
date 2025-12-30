@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:data_grid/data_grid.dart';
+import 'package:flutter_data_grid/data_grid.dart';
 
 class TestRow extends DataGridRow {
   String name;

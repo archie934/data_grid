@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:data_grid/theme/data_grid_theme.dart';
+import 'package:flutter_data_grid/theme/data_grid_theme.dart';
 
 /// A custom vertical scrollbar widget with drag support.
 ///

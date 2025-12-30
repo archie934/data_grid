@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/widgets.dart';
 import 'package:rxdart/rxdart.dart';
-import 'package:data_grid/models/events/grid_events.dart';
+import 'package:flutter_data_grid/models/events/grid_events.dart';
 
 class GridScrollController {
   final ScrollController horizontalController;

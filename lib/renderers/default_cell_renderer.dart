@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:data_grid/models/data/row.dart';
-import 'package:data_grid/models/data/column.dart';
-import 'package:data_grid/renderers/cell_renderer.dart';
-import 'package:data_grid/renderers/render_context.dart';
-import 'package:data_grid/theme/data_grid_theme.dart';
+import 'package:flutter_data_grid/models/data/row.dart';
+import 'package:flutter_data_grid/models/data/column.dart';
+import 'package:flutter_data_grid/renderers/cell_renderer.dart';
+import 'package:flutter_data_grid/renderers/render_context.dart';
+import 'package:flutter_data_grid/theme/data_grid_theme.dart';
 
 /// Default cell renderer implementation.
 class DefaultCellRenderer<T extends DataGridRow> extends CellRenderer<T> {

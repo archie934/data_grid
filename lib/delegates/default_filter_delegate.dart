@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
-import 'package:data_grid/models/data/row.dart';
-import 'package:data_grid/models/data/column.dart';
-import 'package:data_grid/models/state/grid_state.dart';
-import 'package:data_grid/utils/data_indexer.dart';
-import 'package:data_grid/utils/isolate_filter.dart';
-import 'package:data_grid/delegates/filter_delegate.dart';
+import 'package:flutter_data_grid/models/data/row.dart';
+import 'package:flutter_data_grid/models/data/column.dart';
+import 'package:flutter_data_grid/models/state/grid_state.dart';
+import 'package:flutter_data_grid/utils/data_indexer.dart';
+import 'package:flutter_data_grid/utils/isolate_filter.dart';
+import 'package:flutter_data_grid/delegates/filter_delegate.dart';
 
 class DefaultFilterDelegate<T extends DataGridRow> extends FilterDelegate<T> {
   final DataIndexer<T> _dataIndexer;

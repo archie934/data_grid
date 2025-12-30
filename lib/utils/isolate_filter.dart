@@ -1,5 +1,5 @@
-import 'package:data_grid/models/state/grid_state.dart';
-import 'package:data_grid/models/enums/filter_operator.dart';
+import 'package:flutter_data_grid/models/state/grid_state.dart';
+import 'package:flutter_data_grid/models/enums/filter_operator.dart';
 
 class FilterParameters {
   final Map<double, Map<int, dynamic>> rowValues;

@@ -1,25 +1,25 @@
 import 'dart:async';
 import 'package:rxdart/rxdart.dart';
-import 'package:data_grid/models/data/column.dart';
-import 'package:data_grid/models/data/row.dart';
-import 'package:data_grid/models/state/grid_state.dart';
-import 'package:data_grid/models/events/grid_events.dart';
-import 'package:data_grid/models/events/event_context.dart';
-import 'package:data_grid/models/events/edit_events.dart';
-import 'package:data_grid/models/enums/selection_mode.dart';
-import 'package:data_grid/utils/data_indexer.dart';
-import 'package:data_grid/delegates/viewport_delegate.dart';
-import 'package:data_grid/delegates/default_viewport_delegate.dart';
-import 'package:data_grid/delegates/sort_delegate.dart';
-import 'package:data_grid/delegates/default_sort_delegate.dart';
-import 'package:data_grid/delegates/filter_delegate.dart';
-import 'package:data_grid/delegates/default_filter_delegate.dart';
-import 'package:data_grid/interceptors/data_grid_interceptor.dart';
+import 'package:flutter_data_grid/models/data/column.dart';
+import 'package:flutter_data_grid/models/data/row.dart';
+import 'package:flutter_data_grid/models/state/grid_state.dart';
+import 'package:flutter_data_grid/models/events/grid_events.dart';
+import 'package:flutter_data_grid/models/events/event_context.dart';
+import 'package:flutter_data_grid/models/events/edit_events.dart';
+import 'package:flutter_data_grid/models/enums/selection_mode.dart';
+import 'package:flutter_data_grid/utils/data_indexer.dart';
+import 'package:flutter_data_grid/delegates/viewport_delegate.dart';
+import 'package:flutter_data_grid/delegates/default_viewport_delegate.dart';
+import 'package:flutter_data_grid/delegates/sort_delegate.dart';
+import 'package:flutter_data_grid/delegates/default_sort_delegate.dart';
+import 'package:flutter_data_grid/delegates/filter_delegate.dart';
+import 'package:flutter_data_grid/delegates/default_filter_delegate.dart';
+import 'package:flutter_data_grid/interceptors/data_grid_interceptor.dart';
 
-export 'package:data_grid/interceptors/data_grid_interceptor.dart';
-export 'package:data_grid/delegates/viewport_delegate.dart';
-export 'package:data_grid/delegates/sort_delegate.dart';
-export 'package:data_grid/delegates/filter_delegate.dart';
+export 'package:flutter_data_grid/interceptors/data_grid_interceptor.dart';
+export 'package:flutter_data_grid/delegates/viewport_delegate.dart';
+export 'package:flutter_data_grid/delegates/sort_delegate.dart';
+export 'package:flutter_data_grid/delegates/filter_delegate.dart';
 
 class DataGridController<T extends DataGridRow> {
   final BehaviorSubject<DataGridState<T>> _stateSubject;

@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
-import 'package:data_grid/renderers/filter_renderer.dart';
-import 'package:data_grid/renderers/cell_renderer.dart';
-import 'package:data_grid/models/data/row.dart';
+import 'package:flutter_data_grid/renderers/filter_renderer.dart';
+import 'package:flutter_data_grid/renderers/cell_renderer.dart';
+import 'package:flutter_data_grid/models/data/row.dart';
 
 typedef CellEditorBuilder = Widget Function(BuildContext context, dynamic value, ValueChanged<dynamic> onChanged);
 

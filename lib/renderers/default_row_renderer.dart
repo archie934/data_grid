@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:data_grid/models/data/row.dart';
-import 'package:data_grid/models/data/column.dart';
-import 'package:data_grid/delegates/body_layout_delegate.dart';
-import 'package:data_grid/renderers/row_renderer.dart';
-import 'package:data_grid/renderers/render_context.dart';
-import 'package:data_grid/widgets/cells/data_grid_cell.dart';
-import 'package:data_grid/widgets/cells/data_grid_checkbox_cell.dart';
-import 'package:data_grid/widgets/visible_row_tracker.dart';
+import 'package:flutter_data_grid/models/data/row.dart';
+import 'package:flutter_data_grid/models/data/column.dart';
+import 'package:flutter_data_grid/delegates/body_layout_delegate.dart';
+import 'package:flutter_data_grid/renderers/row_renderer.dart';
+import 'package:flutter_data_grid/renderers/render_context.dart';
+import 'package:flutter_data_grid/widgets/cells/data_grid_cell.dart';
+import 'package:flutter_data_grid/widgets/cells/data_grid_checkbox_cell.dart';
+import 'package:flutter_data_grid/widgets/visible_row_tracker.dart';
 
 class DefaultRowRenderer<T extends DataGridRow> extends RowRenderer<T> {
   const DefaultRowRenderer();

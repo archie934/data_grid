@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:data_grid/models/data/row.dart';
-import 'package:data_grid/models/data/column.dart';
-import 'package:data_grid/models/events/selection_events.dart';
-import 'package:data_grid/models/enums/selection_mode.dart';
-import 'package:data_grid/widgets/data_grid_inherited.dart';
-import 'package:data_grid/theme/data_grid_theme.dart';
+import 'package:flutter_data_grid/models/data/row.dart';
+import 'package:flutter_data_grid/models/data/column.dart';
+import 'package:flutter_data_grid/models/events/selection_events.dart';
+import 'package:flutter_data_grid/models/enums/selection_mode.dart';
+import 'package:flutter_data_grid/widgets/data_grid_inherited.dart';
+import 'package:flutter_data_grid/theme/data_grid_theme.dart';
 
 class _CellState {
   final bool isSelected;

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:data_grid/models/data/column.dart';
-import 'package:data_grid/models/data/row.dart';
+import 'package:flutter_data_grid/models/data/column.dart';
+import 'package:flutter_data_grid/models/data/row.dart';
 
 /// Layout delegate for header and filter rows.
 /// Handles pinned columns at fixed positions and unpinned columns with scroll offset.

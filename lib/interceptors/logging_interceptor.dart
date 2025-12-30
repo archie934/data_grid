@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
-import 'package:data_grid/models/data/row.dart';
-import 'package:data_grid/models/state/grid_state.dart';
-import 'package:data_grid/models/events/grid_events.dart';
-import 'package:data_grid/interceptors/data_grid_interceptor.dart';
+import 'package:flutter_data_grid/models/data/row.dart';
+import 'package:flutter_data_grid/models/state/grid_state.dart';
+import 'package:flutter_data_grid/models/events/grid_events.dart';
+import 'package:flutter_data_grid/interceptors/data_grid_interceptor.dart';
 
 /// Example interceptor that logs all events and state changes.
 class LoggingInterceptor<T extends DataGridRow> extends DataGridInterceptor<T> {

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:data_grid/models/data/column.dart';
-import 'package:data_grid/models/data/row.dart';
-import 'package:data_grid/widgets/viewport/data_grid_viewport_delegate.dart';
-import 'package:data_grid/widgets/viewport/data_grid_viewport_render.dart';
+import 'package:flutter_data_grid/models/data/column.dart';
+import 'package:flutter_data_grid/models/data/row.dart';
+import 'package:flutter_data_grid/widgets/viewport/data_grid_viewport_delegate.dart';
+import 'package:flutter_data_grid/widgets/viewport/data_grid_viewport_render.dart';
 
 /// The viewport widget that displays a scrollable window into the 2D grid.
 /// This widget creates and manages the render object that performs layout.

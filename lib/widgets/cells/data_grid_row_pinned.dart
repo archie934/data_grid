@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:data_grid/controllers/data_grid_controller.dart';
-import 'package:data_grid/controllers/grid_scroll_controller.dart';
-import 'package:data_grid/models/data/row.dart';
-import 'package:data_grid/models/data/column.dart';
-import 'package:data_grid/models/events/grid_events.dart';
-import 'package:data_grid/models/enums/selection_mode.dart';
-import 'package:data_grid/delegates/body_layout_delegate.dart';
-import 'package:data_grid/theme/data_grid_theme.dart';
+import 'package:flutter_data_grid/controllers/data_grid_controller.dart';
+import 'package:flutter_data_grid/controllers/grid_scroll_controller.dart';
+import 'package:flutter_data_grid/models/data/row.dart';
+import 'package:flutter_data_grid/models/data/column.dart';
+import 'package:flutter_data_grid/models/events/grid_events.dart';
+import 'package:flutter_data_grid/models/enums/selection_mode.dart';
+import 'package:flutter_data_grid/delegates/body_layout_delegate.dart';
+import 'package:flutter_data_grid/theme/data_grid_theme.dart';
 
 /// A data grid row widget that supports pinned (frozen) columns.
 ///

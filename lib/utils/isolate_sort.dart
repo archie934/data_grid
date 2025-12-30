@@ -1,4 +1,4 @@
-import 'package:data_grid/models/enums/sort_direction.dart';
+import 'package:flutter_data_grid/models/enums/sort_direction.dart';
 
 /// Data structure for passing sort parameters to isolate
 class SortParameters {

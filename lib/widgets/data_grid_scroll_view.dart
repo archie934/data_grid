@@ -1,10 +1,10 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:data_grid/models/data/column.dart';
-import 'package:data_grid/models/data/row.dart';
-import 'package:data_grid/widgets/viewport/data_grid_viewport.dart';
-import 'package:data_grid/widgets/viewport/data_grid_viewport_delegate.dart';
+import 'package:flutter_data_grid/models/data/column.dart';
+import 'package:flutter_data_grid/models/data/row.dart';
+import 'package:flutter_data_grid/widgets/viewport/data_grid_viewport.dart';
+import 'package:flutter_data_grid/widgets/viewport/data_grid_viewport_delegate.dart';
 
 class DataGridScrollView<T extends DataGridRow> extends TwoDimensionalScrollView {
   final List<DataGridColumn<T>> columns;

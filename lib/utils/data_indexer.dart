@@ -1,8 +1,8 @@
-import 'package:data_grid/models/data/column.dart';
-import 'package:data_grid/models/data/row.dart';
-import 'package:data_grid/models/state/grid_state.dart';
-import 'package:data_grid/models/enums/sort_direction.dart';
-import 'package:data_grid/models/enums/filter_operator.dart';
+import 'package:flutter_data_grid/models/data/column.dart';
+import 'package:flutter_data_grid/models/data/row.dart';
+import 'package:flutter_data_grid/models/state/grid_state.dart';
+import 'package:flutter_data_grid/models/enums/sort_direction.dart';
+import 'package:flutter_data_grid/models/enums/filter_operator.dart';
 
 class DataIndexer<T extends DataGridRow> {
   Map<double, T> _data = {};

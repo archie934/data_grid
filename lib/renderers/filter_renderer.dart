@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:data_grid/models/data/column.dart';
-import 'package:data_grid/models/state/grid_state.dart';
-import 'package:data_grid/models/enums/filter_operator.dart';
+import 'package:flutter_data_grid/models/data/column.dart';
+import 'package:flutter_data_grid/models/state/grid_state.dart';
+import 'package:flutter_data_grid/models/enums/filter_operator.dart';
 
 /// Abstract base class for custom filter rendering.
 ///

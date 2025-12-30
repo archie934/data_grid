@@ -1,10 +1,10 @@
-import 'package:data_grid/models/data/row.dart';
-import 'package:data_grid/models/state/grid_state.dart';
-import 'package:data_grid/models/events/grid_events.dart';
-import 'package:data_grid/delegates/viewport_delegate.dart';
-import 'package:data_grid/delegates/sort_delegate.dart';
-import 'package:data_grid/delegates/filter_delegate.dart';
-import 'package:data_grid/utils/data_indexer.dart';
+import 'package:flutter_data_grid/models/data/row.dart';
+import 'package:flutter_data_grid/models/state/grid_state.dart';
+import 'package:flutter_data_grid/models/events/grid_events.dart';
+import 'package:flutter_data_grid/delegates/viewport_delegate.dart';
+import 'package:flutter_data_grid/delegates/sort_delegate.dart';
+import 'package:flutter_data_grid/delegates/filter_delegate.dart';
+import 'package:flutter_data_grid/utils/data_indexer.dart';
 
 /// Context provided to events for applying state transformations.
 ///

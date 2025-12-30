@@ -1,14 +1,14 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:data_grid/models/data/row.dart';
-import 'package:data_grid/models/data/column.dart';
-import 'package:data_grid/widgets/data_grid_scroll_view.dart';
-import 'package:data_grid/widgets/cells/data_grid_cell.dart';
-import 'package:data_grid/widgets/cells/data_grid_checkbox_cell.dart';
-import 'package:data_grid/widgets/data_grid_inherited.dart';
-import 'package:data_grid/widgets/scroll/scrollbar_vertical.dart';
-import 'package:data_grid/widgets/scroll/scrollbar_horizontal.dart';
-import 'package:data_grid/theme/data_grid_theme.dart';
+import 'package:flutter_data_grid/models/data/row.dart';
+import 'package:flutter_data_grid/models/data/column.dart';
+import 'package:flutter_data_grid/widgets/data_grid_scroll_view.dart';
+import 'package:flutter_data_grid/widgets/cells/data_grid_cell.dart';
+import 'package:flutter_data_grid/widgets/cells/data_grid_checkbox_cell.dart';
+import 'package:flutter_data_grid/widgets/data_grid_inherited.dart';
+import 'package:flutter_data_grid/widgets/scroll/scrollbar_vertical.dart';
+import 'package:flutter_data_grid/widgets/scroll/scrollbar_horizontal.dart';
+import 'package:flutter_data_grid/theme/data_grid_theme.dart';
 
 class _DataGridScrollBehavior extends MaterialScrollBehavior {
   const _DataGridScrollBehavior();

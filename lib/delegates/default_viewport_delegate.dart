@@ -1,8 +1,8 @@
-import 'package:data_grid/models/data/row.dart';
-import 'package:data_grid/models/state/grid_state.dart';
-import 'package:data_grid/models/events/grid_events.dart';
-import 'package:data_grid/utils/viewport_calculator.dart';
-import 'package:data_grid/delegates/viewport_delegate.dart';
+import 'package:flutter_data_grid/models/data/row.dart';
+import 'package:flutter_data_grid/models/state/grid_state.dart';
+import 'package:flutter_data_grid/models/events/grid_events.dart';
+import 'package:flutter_data_grid/utils/viewport_calculator.dart';
+import 'package:flutter_data_grid/delegates/viewport_delegate.dart';
 
 /// Default viewport delegate using standard viewport calculations.
 class DefaultViewportDelegate<T extends DataGridRow> extends ViewportDelegate<T> {

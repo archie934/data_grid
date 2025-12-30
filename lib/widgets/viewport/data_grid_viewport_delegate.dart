@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:data_grid/models/data/column.dart';
-import 'package:data_grid/models/data/row.dart';
+import 'package:flutter_data_grid/models/data/column.dart';
+import 'package:flutter_data_grid/models/data/row.dart';
 
 /// Delegate that provides children (cells) for the 2D grid viewport.
 /// This is responsible for building widgets at specific grid coordinates.

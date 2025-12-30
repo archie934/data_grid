@@ -1,11 +1,11 @@
-import 'package:data_grid/widgets/data_grid_inherited.dart';
+import 'package:flutter_data_grid/widgets/data_grid_inherited.dart';
 import 'package:flutter/material.dart';
-import 'package:data_grid/models/data/row.dart';
-import 'package:data_grid/models/data/column.dart';
-import 'package:data_grid/models/events/grid_events.dart';
-import 'package:data_grid/delegates/header_layout_delegate.dart';
-import 'package:data_grid/renderers/filter_renderer.dart';
-import 'package:data_grid/theme/data_grid_theme.dart';
+import 'package:flutter_data_grid/models/data/row.dart';
+import 'package:flutter_data_grid/models/data/column.dart';
+import 'package:flutter_data_grid/models/events/grid_events.dart';
+import 'package:flutter_data_grid/delegates/header_layout_delegate.dart';
+import 'package:flutter_data_grid/renderers/filter_renderer.dart';
+import 'package:flutter_data_grid/theme/data_grid_theme.dart';
 
 class DataGridFilterRow<T extends DataGridRow> extends StatelessWidget {
   final FilterRenderer defaultFilterRenderer;

@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:data_grid/models/data/column.dart';
-import 'package:data_grid/models/state/grid_state.dart';
-import 'package:data_grid/models/enums/filter_operator.dart';
-import 'package:data_grid/renderers/filter_renderer.dart';
-import 'package:data_grid/theme/data_grid_theme.dart';
+import 'package:flutter_data_grid/models/data/column.dart';
+import 'package:flutter_data_grid/models/state/grid_state.dart';
+import 'package:flutter_data_grid/models/enums/filter_operator.dart';
+import 'package:flutter_data_grid/renderers/filter_renderer.dart';
+import 'package:flutter_data_grid/theme/data_grid_theme.dart';
 
 /// Default filter renderer using a simple text input with "contains" operator.
 class DefaultFilterRenderer extends FilterRenderer {

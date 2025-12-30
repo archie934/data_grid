@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:data_grid/theme/data_grid_theme_data.dart';
+import 'package:flutter_data_grid/theme/data_grid_theme_data.dart';
 
 class DataGridTheme extends InheritedWidget {
   final DataGridThemeData data;

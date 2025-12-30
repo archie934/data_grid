@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:data_grid/data_grid.dart';
-import 'package:data_grid/models/enums/selection_mode.dart';
-import 'package:data_grid/models/enums/filter_operator.dart';
-import 'package:data_grid/models/enums/sort_direction.dart';
+import 'package:flutter_data_grid/data_grid.dart';
+import 'package:flutter_data_grid/models/enums/selection_mode.dart';
+import 'package:flutter_data_grid/models/enums/filter_operator.dart';
+import 'package:flutter_data_grid/models/enums/sort_direction.dart';
 
 Future<void> waitForAsync(WidgetTester tester) async {
   await tester.runAsync(() => Future.delayed(const Duration(milliseconds: 50)));

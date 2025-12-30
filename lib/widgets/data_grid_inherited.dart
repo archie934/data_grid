@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:data_grid/controllers/data_grid_controller.dart';
-import 'package:data_grid/controllers/grid_scroll_controller.dart';
-import 'package:data_grid/models/data/row.dart';
-import 'package:data_grid/models/state/grid_state.dart';
+import 'package:flutter_data_grid/controllers/data_grid_controller.dart';
+import 'package:flutter_data_grid/controllers/grid_scroll_controller.dart';
+import 'package:flutter_data_grid/models/data/row.dart';
+import 'package:flutter_data_grid/models/state/grid_state.dart';
 
 class DataGridInherited<T extends DataGridRow> extends InheritedWidget {
   final DataGridController<T> controller;

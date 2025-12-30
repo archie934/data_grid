@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:data_grid/models/data/row.dart';
-import 'package:data_grid/models/data/column.dart';
-import 'package:data_grid/renderers/render_context.dart';
+import 'package:flutter_data_grid/models/data/row.dart';
+import 'package:flutter_data_grid/models/data/column.dart';
+import 'package:flutter_data_grid/renderers/render_context.dart';
 
 /// Abstract base class for custom cell rendering.
 ///

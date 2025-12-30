@@ -1,21 +1,21 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:data_grid/controllers/data_grid_controller.dart';
-import 'package:data_grid/controllers/grid_scroll_controller.dart';
-import 'package:data_grid/models/data/row.dart';
-import 'package:data_grid/models/state/grid_state.dart';
-import 'package:data_grid/models/events/grid_events.dart';
-import 'package:data_grid/widgets/data_grid_header.dart';
-import 'package:data_grid/widgets/data_grid_body.dart';
-import 'package:data_grid/widgets/data_grid_inherited.dart';
-import 'package:data_grid/widgets/overlays/loading_overlay.dart';
-import 'package:data_grid/renderers/row_renderer.dart';
-import 'package:data_grid/renderers/cell_renderer.dart';
-import 'package:data_grid/renderers/filter_renderer.dart';
-import 'package:data_grid/renderers/default_filter_renderer.dart';
-import 'package:data_grid/theme/data_grid_theme.dart';
-import 'package:data_grid/theme/data_grid_theme_data.dart';
+import 'package:flutter_data_grid/controllers/data_grid_controller.dart';
+import 'package:flutter_data_grid/controllers/grid_scroll_controller.dart';
+import 'package:flutter_data_grid/models/data/row.dart';
+import 'package:flutter_data_grid/models/state/grid_state.dart';
+import 'package:flutter_data_grid/models/events/grid_events.dart';
+import 'package:flutter_data_grid/widgets/data_grid_header.dart';
+import 'package:flutter_data_grid/widgets/data_grid_body.dart';
+import 'package:flutter_data_grid/widgets/data_grid_inherited.dart';
+import 'package:flutter_data_grid/widgets/overlays/loading_overlay.dart';
+import 'package:flutter_data_grid/renderers/row_renderer.dart';
+import 'package:flutter_data_grid/renderers/cell_renderer.dart';
+import 'package:flutter_data_grid/renderers/filter_renderer.dart';
+import 'package:flutter_data_grid/renderers/default_filter_renderer.dart';
+import 'package:flutter_data_grid/theme/data_grid_theme.dart';
+import 'package:flutter_data_grid/theme/data_grid_theme_data.dart';
 
 class DataGrid<T extends DataGridRow> extends StatefulWidget {
   final DataGridController<T> controller;

@@ -40,7 +40,7 @@ flutter pub get
 Import the package in your Dart code:
 
 ```dart
-import 'package:data_grid/data_grid.dart';
+import 'package:flutter_data_grid/data_grid.dart';
 ```
 
 ## ⚠️ Known Issues & Roadmap

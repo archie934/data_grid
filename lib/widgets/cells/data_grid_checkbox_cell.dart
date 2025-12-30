@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:rxdart/rxdart.dart';
-import 'package:data_grid/controllers/data_grid_controller.dart';
-import 'package:data_grid/models/data/row.dart';
-import 'package:data_grid/models/events/selection_events.dart';
-import 'package:data_grid/widgets/data_grid_inherited.dart';
-import 'package:data_grid/theme/data_grid_theme.dart';
+import 'package:flutter_data_grid/controllers/data_grid_controller.dart';
+import 'package:flutter_data_grid/models/data/row.dart';
+import 'package:flutter_data_grid/models/events/selection_events.dart';
+import 'package:flutter_data_grid/widgets/data_grid_inherited.dart';
+import 'package:flutter_data_grid/theme/data_grid_theme.dart';
 
 class DataGridCheckboxCell<T extends DataGridRow> extends StatelessWidget {
   final T row;

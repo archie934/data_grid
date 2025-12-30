@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:data_grid/models/data/column.dart';
-import 'package:data_grid/models/data/row.dart';
+import 'package:flutter_data_grid/models/data/column.dart';
+import 'package:flutter_data_grid/models/data/row.dart';
 
 class BodyLayoutDelegate<T extends DataGridRow> extends MultiChildLayoutDelegate {
   final List<DataGridColumn<T>> columns;

@@ -1,9 +1,9 @@
-import 'package:data_grid/models/data/row.dart';
-import 'package:data_grid/models/state/grid_state.dart';
-import 'package:data_grid/models/events/base_event.dart';
-import 'package:data_grid/models/events/edit_events.dart';
-import 'package:data_grid/models/events/selection_events.dart';
-import 'package:data_grid/interceptors/data_grid_interceptor.dart';
+import 'package:flutter_data_grid/models/data/row.dart';
+import 'package:flutter_data_grid/models/state/grid_state.dart';
+import 'package:flutter_data_grid/models/events/base_event.dart';
+import 'package:flutter_data_grid/models/events/edit_events.dart';
+import 'package:flutter_data_grid/models/events/selection_events.dart';
+import 'package:flutter_data_grid/interceptors/data_grid_interceptor.dart';
 
 class ValidationInterceptor<T extends DataGridRow> extends DataGridInterceptor<T> {
   final bool Function(double rowId, int columnId)? canEditCell;

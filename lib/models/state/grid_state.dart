@@ -1,9 +1,9 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:data_grid/models/data/column.dart';
-import 'package:data_grid/models/data/row.dart';
-import 'package:data_grid/models/enums/selection_mode.dart';
-import 'package:data_grid/models/enums/sort_direction.dart';
-import 'package:data_grid/models/enums/filter_operator.dart';
+import 'package:flutter_data_grid/models/data/column.dart';
+import 'package:flutter_data_grid/models/data/row.dart';
+import 'package:flutter_data_grid/models/enums/selection_mode.dart';
+import 'package:flutter_data_grid/models/enums/sort_direction.dart';
+import 'package:flutter_data_grid/models/enums/filter_operator.dart';
 
 part 'grid_state.freezed.dart';
 
