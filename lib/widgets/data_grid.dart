@@ -57,7 +57,8 @@ class DataGrid<T extends DataGridRow> extends StatefulWidget {
   final bool showLoadingOverlay;
 
   /// Custom loading overlay builder. If null, uses default overlay.
-  final Widget Function(BuildContext context, String? message)? loadingOverlayBuilder;
+  final Widget Function(BuildContext context, String? message)?
+  loadingOverlayBuilder;
 
   /// Backdrop color for the loading overlay (default: black with 30% opacity)
   final Color? loadingBackdropColor;
@@ -113,7 +114,9 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
       _lastViewportSize = newSize;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
-          widget.controller.addEvent(ViewportResizeEvent(width: width, height: height));
+          widget.controller.addEvent(
+            ViewportResizeEvent(width: width, height: height),
+          );
         }
       });
     }
@@ -151,7 +154,8 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
       widget.controller.addEvent(ClearSelectionEvent());
       return KeyEventResult.handled;
     } else if (event.logicalKey == LogicalKeyboardKey.keyA &&
-        (HardwareKeyboard.instance.isControlPressed || HardwareKeyboard.instance.isMetaPressed)) {
+        (HardwareKeyboard.instance.isControlPressed ||
+            HardwareKeyboard.instance.isMetaPressed)) {
       widget.controller.addEvent(SelectAllVisibleEvent());
       return KeyEventResult.handled;
     }
@@ -162,8 +166,10 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
   @override
   Widget build(BuildContext context) {
     final themeData = widget.theme ?? DataGridThemeData.defaultTheme();
-    final effectiveHeaderHeight = widget.headerHeight ?? themeData.dimensions.headerHeight;
-    final effectiveRowHeight = widget.rowHeight ?? themeData.dimensions.rowHeight;
+    final effectiveHeaderHeight =
+        widget.headerHeight ?? themeData.dimensions.headerHeight;
+    final effectiveRowHeight =
+        widget.rowHeight ?? themeData.dimensions.rowHeight;
 
     return DataGridTheme(
       data: themeData,
@@ -187,10 +193,14 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
               onKeyEvent: (node, event) => _handleKeyEvent(event),
               child: LayoutBuilder(
                 builder: (context, constraints) {
-                  _notifyViewportResize(constraints.maxWidth, constraints.maxHeight - effectiveHeaderHeight);
+                  _notifyViewportResize(
+                    constraints.maxWidth,
+                    constraints.maxHeight - effectiveHeaderHeight,
+                  );
 
                   return Semantics(
-                    label: 'Data grid with $rowCount rows and $columnCount columns',
+                    label:
+                        'Data grid with $rowCount rows and $columnCount columns',
                     child: Stack(
                       children: [
                         Column(
@@ -199,12 +209,19 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
                               defaultFilterRenderer: _filterRenderer,
                               headerHeight: effectiveHeaderHeight,
                             ),
-                            Expanded(child: DataGridBody<T>(rowHeight: effectiveRowHeight)),
+                            Expanded(
+                              child: DataGridBody<T>(
+                                rowHeight: effectiveRowHeight,
+                              ),
+                            ),
                           ],
                         ),
                         if (state.isLoading && widget.showLoadingOverlay)
                           widget.loadingOverlayBuilder != null
-                              ? widget.loadingOverlayBuilder!(context, state.loadingMessage)
+                              ? widget.loadingOverlayBuilder!(
+                                  context,
+                                  state.loadingMessage,
+                                )
                               : DataGridLoadingOverlay(
                                   message: state.loadingMessage,
                                   backdropColor: widget.loadingBackdropColor,

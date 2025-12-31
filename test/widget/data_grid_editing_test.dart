@@ -7,7 +7,12 @@ class TestRow extends DataGridRow {
   int age;
   String email;
 
-  TestRow({required double id, required this.name, required this.age, required this.email}) {
+  TestRow({
+    required double id,
+    required this.name,
+    required this.age,
+    required this.email,
+  }) {
     this.id = id;
   }
 }
@@ -49,7 +54,10 @@ void main() {
         TestRow(id: 3, name: 'Charlie', age: 35, email: 'charlie@test.com'),
       ];
 
-      controller = DataGridController<TestRow>(initialColumns: columns, initialRows: rows);
+      controller = DataGridController<TestRow>(
+        initialColumns: columns,
+        initialRows: rows,
+      );
     });
 
     tearDown(() {
@@ -149,15 +157,21 @@ void main() {
           width: 150,
           valueAccessor: (row) => row.name,
           cellValueSetter: (row, value) => row.name = value,
-          validator: (oldValue, newValue) => newValue != null && newValue.toString().isNotEmpty,
+          validator: (oldValue, newValue) =>
+              newValue != null && newValue.toString().isNotEmpty,
         ),
       ];
 
-      final validatedController = DataGridController<TestRow>(initialColumns: validatedColumns, initialRows: rows);
+      final validatedController = DataGridController<TestRow>(
+        initialColumns: validatedColumns,
+        initialRows: rows,
+      );
 
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(body: DataGrid<TestRow>(controller: validatedController)),
+          home: Scaffold(
+            body: DataGrid<TestRow>(controller: validatedController),
+          ),
         ),
       );
 
@@ -200,7 +214,9 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(body: DataGrid<TestRow>(controller: callbackController)),
+          home: Scaffold(
+            body: DataGrid<TestRow>(controller: callbackController),
+          ),
         ),
       );
 
@@ -265,7 +281,9 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(body: DataGrid<TestRow>(controller: restrictedController)),
+          home: Scaffold(
+            body: DataGrid<TestRow>(controller: restrictedController),
+          ),
         ),
       );
 
@@ -299,11 +317,16 @@ void main() {
         ),
       ];
 
-      final nonEditableController = DataGridController<TestRow>(initialColumns: nonEditableColumns, initialRows: rows);
+      final nonEditableController = DataGridController<TestRow>(
+        initialColumns: nonEditableColumns,
+        initialRows: rows,
+      );
 
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(body: DataGrid<TestRow>(controller: nonEditableController)),
+          home: Scaffold(
+            body: DataGrid<TestRow>(controller: nonEditableController),
+          ),
         ),
       );
 
@@ -401,7 +424,9 @@ void main() {
       expect(controller.state.rowsById[1]!.age, 26);
     });
 
-    testWidgets('starting edit on different cell commits previous edit', (tester) async {
+    testWidgets('starting edit on different cell commits previous edit', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(body: DataGrid<TestRow>(controller: controller)),

@@ -11,7 +11,10 @@ class ScrollEvent extends DataGridEvent {
 
   @override
   DataGridState<T>? apply<T extends DataGridRow>(EventContext<T> context) {
-    final updatedViewport = context.viewportDelegate.handleScroll(this, context.state);
+    final updatedViewport = context.viewportDelegate.handleScroll(
+      this,
+      context.state,
+    );
     return context.state.copyWith(viewport: updatedViewport);
   }
 }
@@ -24,7 +27,10 @@ class ViewportResizeEvent extends DataGridEvent {
 
   @override
   DataGridState<T>? apply<T extends DataGridRow>(EventContext<T> context) {
-    final updatedViewport = context.viewportDelegate.handleResize(this, context.state);
+    final updatedViewport = context.viewportDelegate.handleResize(
+      this,
+      context.state,
+    );
     return context.state.copyWith(viewport: updatedViewport);
   }
 }

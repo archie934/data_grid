@@ -49,10 +49,13 @@ class DefaultSortDelegate<T extends DataGridRow> extends SortDelegate<T> {
       }
 
       final updatedSortColumn = _updateSortColumn(event, currentState.sort);
-      final updatedSort = currentState.sort.copyWith(sortColumn: updatedSortColumn);
+      final updatedSort = currentState.sort.copyWith(
+        sortColumn: updatedSortColumn,
+      );
 
       if (updatedSortColumn == null) {
-        final displayOrder = currentState.filter.hasFilters && _filterDelegate != null
+        final displayOrder =
+            currentState.filter.hasFilters && _filterDelegate != null
             ? await _filterDelegate.applyFilters(
                 rowsById: currentState.rowsById,
                 filters: currentState.filter.columnFilters.values.toList(),
@@ -60,14 +63,18 @@ class DefaultSortDelegate<T extends DataGridRow> extends SortDelegate<T> {
               )
             : currentState.rowsById.keys.toList();
 
-        final result = SortResult(sortState: updatedSort, displayOrder: displayOrder);
+        final result = SortResult(
+          sortState: updatedSort,
+          displayOrder: displayOrder,
+        );
         onComplete(result);
         completer.complete(result);
         return;
       }
 
       try {
-        final idsToSort = currentState.filter.hasFilters && _filterDelegate != null
+        final idsToSort =
+            currentState.filter.hasFilters && _filterDelegate != null
             ? await _filterDelegate.applyFilters(
                 rowsById: currentState.rowsById,
                 filters: currentState.filter.columnFilters.values.toList(),
@@ -76,10 +83,19 @@ class DefaultSortDelegate<T extends DataGridRow> extends SortDelegate<T> {
             : currentState.rowsById.keys.toList();
 
         final List<double> sortedIds;
-        final column = currentState.columns.firstWhere((c) => c.id == updatedSortColumn.columnId);
+        final column = currentState.columns.firstWhere(
+          (c) => c.id == updatedSortColumn.columnId,
+        );
 
         if (currentState.rowsById.length > _isolateThreshold) {
-          final values = idsToSort.map((id) => _dataIndexer.getCellValue(currentState.rowsById[id]!, column)).toList();
+          final values = idsToSort
+              .map(
+                (id) => _dataIndexer.getCellValue(
+                  currentState.rowsById[id]!,
+                  column,
+                ),
+              )
+              .toList();
 
           final params = SortParameters(
             columnValues: values,
@@ -90,10 +106,18 @@ class DefaultSortDelegate<T extends DataGridRow> extends SortDelegate<T> {
           final isolateResult = await compute(performSortInIsolate, params);
           sortedIds = isolateResult.map((idx) => idsToSort[idx]).toList();
         } else {
-          sortedIds = _dataIndexer.sortIds(currentState.rowsById, idsToSort, updatedSortColumn, currentState.columns);
+          sortedIds = _dataIndexer.sortIds(
+            currentState.rowsById,
+            idsToSort,
+            updatedSortColumn,
+            currentState.columns,
+          );
         }
 
-        final result = SortResult(sortState: updatedSort, displayOrder: sortedIds);
+        final result = SortResult(
+          sortState: updatedSort,
+          displayOrder: sortedIds,
+        );
         onComplete(result);
         completer.complete(result);
       } catch (e) {

@@ -4,22 +4,39 @@ class ViewportCalculator {
 
   ViewportCalculator({required this.rowHeight, this.overscanCount = 5});
 
-  VisibleRange calculateVisibleRows(double scrollOffset, double viewportHeight, int totalRows) {
+  VisibleRange calculateVisibleRows(
+    double scrollOffset,
+    double viewportHeight,
+    int totalRows,
+  ) {
     if (totalRows == 0 || viewportHeight <= 0) {
       return VisibleRange(0, 0);
     }
 
     final firstVisibleRow = (scrollOffset / rowHeight).floor();
     final visibleRowCount = (viewportHeight / rowHeight).ceil();
-    final lastVisibleRow = (firstVisibleRow + visibleRowCount).clamp(0, totalRows);
+    final lastVisibleRow = (firstVisibleRow + visibleRowCount).clamp(
+      0,
+      totalRows,
+    );
 
-    final startWithOverscan = (firstVisibleRow - overscanCount).clamp(0, totalRows);
-    final endWithOverscan = (lastVisibleRow + overscanCount).clamp(0, totalRows);
+    final startWithOverscan = (firstVisibleRow - overscanCount).clamp(
+      0,
+      totalRows,
+    );
+    final endWithOverscan = (lastVisibleRow + overscanCount).clamp(
+      0,
+      totalRows,
+    );
 
     return VisibleRange(startWithOverscan, endWithOverscan);
   }
 
-  VisibleRange calculateVisibleColumns(double scrollOffset, List<double> columnWidths, double viewportWidth) {
+  VisibleRange calculateVisibleColumns(
+    double scrollOffset,
+    List<double> columnWidths,
+    double viewportWidth,
+  ) {
     if (columnWidths.isEmpty || viewportWidth <= 0) {
       return VisibleRange(0, 0);
     }
@@ -53,8 +70,14 @@ class ViewportCalculator {
       lastVisibleColumn = columnWidths.length;
     }
 
-    final startWithOverscan = (firstVisibleColumn - overscanCount).clamp(0, columnWidths.length);
-    final endWithOverscan = (lastVisibleColumn + overscanCount).clamp(0, columnWidths.length);
+    final startWithOverscan = (firstVisibleColumn - overscanCount).clamp(
+      0,
+      columnWidths.length,
+    );
+    final endWithOverscan = (lastVisibleColumn + overscanCount).clamp(
+      0,
+      columnWidths.length,
+    );
 
     return VisibleRange(startWithOverscan, endWithOverscan);
   }
@@ -89,7 +112,10 @@ class VisibleRange {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is VisibleRange && runtimeType == other.runtimeType && start == other.start && end == other.end;
+      other is VisibleRange &&
+          runtimeType == other.runtimeType &&
+          start == other.start &&
+          end == other.end;
 
   @override
   int get hashCode => start.hashCode ^ end.hashCode;

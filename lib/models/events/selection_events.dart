@@ -20,7 +20,9 @@ class SelectRowEvent extends DataGridEvent {
       return null;
     }
 
-    final selectedRows = Set<double>.from(context.state.selection.selectedRowIds);
+    final selectedRows = Set<double>.from(
+      context.state.selection.selectedRowIds,
+    );
 
     if (multiSelect) {
       if (selectedRows.contains(rowId)) {
@@ -38,7 +40,10 @@ class SelectRowEvent extends DataGridEvent {
     }
 
     return context.state.copyWith(
-      selection: context.state.selection.copyWith(selectedRowIds: selectedRows, focusedRowId: rowId),
+      selection: context.state.selection.copyWith(
+        selectedRowIds: selectedRows,
+        focusedRowId: rowId,
+      ),
     );
   }
 }
@@ -55,7 +60,9 @@ class SelectRowsRangeEvent extends DataGridEvent {
       return null;
     }
 
-    final selectedRows = Set<double>.from(context.state.selection.selectedRowIds);
+    final selectedRows = Set<double>.from(
+      context.state.selection.selectedRowIds,
+    );
 
     final startIdx = context.state.displayOrder.indexOf(startRowId);
     final endIdx = context.state.displayOrder.indexOf(endRowId);
@@ -70,7 +77,9 @@ class SelectRowsRangeEvent extends DataGridEvent {
     final rangeIds = context.state.displayOrder.sublist(minIdx, maxIdx + 1);
     selectedRows.addAll(rangeIds);
 
-    return context.state.copyWith(selection: context.state.selection.copyWith(selectedRowIds: selectedRows));
+    return context.state.copyWith(
+      selection: context.state.selection.copyWith(selectedRowIds: selectedRows),
+    );
   }
 }
 
@@ -78,7 +87,11 @@ class ClearSelectionEvent extends DataGridEvent {
   @override
   DataGridState<T>? apply<T extends DataGridRow>(EventContext<T> context) {
     return context.state.copyWith(
-      selection: context.state.selection.copyWith(selectedRowIds: {}, selectedCellIds: {}, focusedRowId: null),
+      selection: context.state.selection.copyWith(
+        selectedRowIds: {},
+        selectedCellIds: {},
+        focusedRowId: null,
+      ),
     );
   }
 }
@@ -110,7 +123,11 @@ class SelectAllRowsEvent extends DataGridEvent {
       }
     }
 
-    return context.state.copyWith(selection: context.state.selection.copyWith(selectedRowIds: visibleRowIds));
+    return context.state.copyWith(
+      selection: context.state.selection.copyWith(
+        selectedRowIds: visibleRowIds,
+      ),
+    );
   }
 }
 

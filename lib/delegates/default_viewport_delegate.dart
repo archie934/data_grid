@@ -5,10 +5,12 @@ import 'package:flutter_data_grid/utils/viewport_calculator.dart';
 import 'package:flutter_data_grid/delegates/viewport_delegate.dart';
 
 /// Default viewport delegate using standard viewport calculations.
-class DefaultViewportDelegate<T extends DataGridRow> extends ViewportDelegate<T> {
+class DefaultViewportDelegate<T extends DataGridRow>
+    extends ViewportDelegate<T> {
   final ViewportCalculator _calculator;
 
-  DefaultViewportDelegate({required double rowHeight}) : _calculator = ViewportCalculator(rowHeight: rowHeight);
+  DefaultViewportDelegate({required double rowHeight})
+    : _calculator = ViewportCalculator(rowHeight: rowHeight);
 
   @override
   ViewportState handleScroll(ScrollEvent event, DataGridState<T> currentState) {
@@ -35,7 +37,10 @@ class DefaultViewportDelegate<T extends DataGridRow> extends ViewportDelegate<T>
   }
 
   @override
-  ViewportState handleResize(ViewportResizeEvent event, DataGridState<T> currentState) {
+  ViewportState handleResize(
+    ViewportResizeEvent event,
+    DataGridState<T> currentState,
+  ) {
     final visibleRange = _calculator.calculateVisibleRows(
       currentState.viewport.scrollOffsetY,
       event.height,

@@ -13,7 +13,12 @@ class TestRow extends DataGridRow {
   final int age;
   final double salary;
 
-  TestRow({required double id, required this.name, required this.age, required this.salary}) {
+  TestRow({
+    required double id,
+    required this.name,
+    required this.age,
+    required this.salary,
+  }) {
     this.id = id;
   }
 }
@@ -26,9 +31,24 @@ void main() {
 
     setUp(() {
       columns = [
-        DataGridColumn<TestRow>(id: 1, title: 'Name', width: 150, valueAccessor: (row) => row.name),
-        DataGridColumn<TestRow>(id: 2, title: 'Age', width: 100, valueAccessor: (row) => row.age),
-        DataGridColumn<TestRow>(id: 3, title: 'Salary', width: 120, valueAccessor: (row) => row.salary),
+        DataGridColumn<TestRow>(
+          id: 1,
+          title: 'Name',
+          width: 150,
+          valueAccessor: (row) => row.name,
+        ),
+        DataGridColumn<TestRow>(
+          id: 2,
+          title: 'Age',
+          width: 100,
+          valueAccessor: (row) => row.age,
+        ),
+        DataGridColumn<TestRow>(
+          id: 3,
+          title: 'Salary',
+          width: 120,
+          valueAccessor: (row) => row.salary,
+        ),
       ];
 
       rows = [
@@ -60,16 +80,23 @@ void main() {
 
       expect(controller.state.sort.hasSort, false);
 
-      controller.addEvent(SortEvent(columnId: 1, direction: SortDirection.ascending));
+      controller.addEvent(
+        SortEvent(columnId: 1, direction: SortDirection.ascending),
+      );
       await waitForAsync(tester);
 
       expect(controller.state.sort.hasSort, true);
       expect(controller.state.sort.sortColumn, isNotNull);
       expect(controller.state.sort.sortColumn!.columnId, 1);
-      expect(controller.state.sort.sortColumn!.direction, SortDirection.ascending);
+      expect(
+        controller.state.sort.sortColumn!.direction,
+        SortDirection.ascending,
+      );
     });
 
-    testWidgets('sort direction changes on subsequent sort events', (tester) async {
+    testWidgets('sort direction changes on subsequent sort events', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(body: DataGrid<TestRow>(controller: controller)),
@@ -77,15 +104,25 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      controller.addEvent(SortEvent(columnId: 1, direction: SortDirection.ascending));
+      controller.addEvent(
+        SortEvent(columnId: 1, direction: SortDirection.ascending),
+      );
       await waitForAsync(tester);
 
-      expect(controller.state.sort.sortColumn!.direction, SortDirection.ascending);
+      expect(
+        controller.state.sort.sortColumn!.direction,
+        SortDirection.ascending,
+      );
 
-      controller.addEvent(SortEvent(columnId: 1, direction: SortDirection.descending));
+      controller.addEvent(
+        SortEvent(columnId: 1, direction: SortDirection.descending),
+      );
       await waitForAsync(tester);
 
-      expect(controller.state.sort.sortColumn!.direction, SortDirection.descending);
+      expect(
+        controller.state.sort.sortColumn!.direction,
+        SortDirection.descending,
+      );
     });
 
     testWidgets('clear sort removes sort state', (tester) async {
@@ -96,7 +133,9 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      controller.addEvent(SortEvent(columnId: 1, direction: SortDirection.ascending));
+      controller.addEvent(
+        SortEvent(columnId: 1, direction: SortDirection.ascending),
+      );
       await waitForAsync(tester);
 
       expect(controller.state.sort.hasSort, true);
@@ -108,7 +147,9 @@ void main() {
       expect(controller.state.sort.sortColumn, isNull);
     });
 
-    testWidgets('sorting a different column replaces the current sort', (tester) async {
+    testWidgets('sorting a different column replaces the current sort', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(body: DataGrid<TestRow>(controller: controller)),
@@ -116,21 +157,34 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      controller.addEvent(SortEvent(columnId: 1, direction: SortDirection.ascending));
+      controller.addEvent(
+        SortEvent(columnId: 1, direction: SortDirection.ascending),
+      );
       await waitForAsync(tester);
 
       expect(controller.state.sort.sortColumn!.columnId, 1);
 
-      controller.addEvent(SortEvent(columnId: 2, direction: SortDirection.descending));
+      controller.addEvent(
+        SortEvent(columnId: 2, direction: SortDirection.descending),
+      );
       await waitForAsync(tester);
 
       expect(controller.state.sort.sortColumn!.columnId, 2);
-      expect(controller.state.sort.sortColumn!.direction, SortDirection.descending);
+      expect(
+        controller.state.sort.sortColumn!.direction,
+        SortDirection.descending,
+      );
     });
 
     testWidgets('unsortable columns do not sort', (tester) async {
       final unsortableColumns = [
-        DataGridColumn<TestRow>(id: 1, title: 'Name', width: 150, valueAccessor: (row) => row.name, sortable: false),
+        DataGridColumn<TestRow>(
+          id: 1,
+          title: 'Name',
+          width: 150,
+          valueAccessor: (row) => row.name,
+          sortable: false,
+        ),
       ];
 
       final unsortableController = DataGridController<TestRow>(
@@ -141,12 +195,16 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(body: DataGrid<TestRow>(controller: unsortableController)),
+          home: Scaffold(
+            body: DataGrid<TestRow>(controller: unsortableController),
+          ),
         ),
       );
       await tester.pumpAndSettle();
 
-      unsortableController.addEvent(SortEvent(columnId: 1, direction: SortDirection.ascending));
+      unsortableController.addEvent(
+        SortEvent(columnId: 1, direction: SortDirection.ascending),
+      );
       await waitForAsync(tester);
 
       expect(unsortableController.state.sort.hasSort, false);
@@ -164,7 +222,9 @@ void main() {
 
       expect(find.byIcon(Icons.arrow_upward), findsNothing);
 
-      controller.addEvent(SortEvent(columnId: 1, direction: SortDirection.ascending));
+      controller.addEvent(
+        SortEvent(columnId: 1, direction: SortDirection.ascending),
+      );
       await waitForAsync(tester);
 
       expect(controller.state.sort.hasSort, true);
@@ -178,7 +238,10 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      final nameHeader = find.ancestor(of: find.text('Name'), matching: find.byType(DataGridHeaderCell));
+      final nameHeader = find.ancestor(
+        of: find.text('Name'),
+        matching: find.byType(DataGridHeaderCell),
+      );
 
       await tester.tap(nameHeader);
       await waitForAsync(tester);
@@ -194,17 +257,26 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      final nameHeader = find.ancestor(of: find.text('Name'), matching: find.byType(DataGridHeaderCell));
+      final nameHeader = find.ancestor(
+        of: find.text('Name'),
+        matching: find.byType(DataGridHeaderCell),
+      );
 
       // First click: ascending
       await tester.tap(nameHeader);
       await waitForAsync(tester);
-      expect(controller.state.sort.sortColumn!.direction, SortDirection.ascending);
+      expect(
+        controller.state.sort.sortColumn!.direction,
+        SortDirection.ascending,
+      );
 
       // Second click: descending
       await tester.tap(nameHeader);
       await waitForAsync(tester);
-      expect(controller.state.sort.sortColumn!.direction, SortDirection.descending);
+      expect(
+        controller.state.sort.sortColumn!.direction,
+        SortDirection.descending,
+      );
 
       // Third click: no sort
       await tester.tap(nameHeader);

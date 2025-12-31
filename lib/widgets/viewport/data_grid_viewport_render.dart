@@ -5,7 +5,8 @@ import 'package:flutter_data_grid/widgets/viewport/data_grid_viewport_delegate.d
 
 /// The render object that performs the actual layout of the 2D grid.
 /// This implements the lazy rendering logic that only builds visible cells.
-class RenderDataGridViewport<T extends DataGridRow> extends RenderTwoDimensionalViewport {
+class RenderDataGridViewport<T extends DataGridRow>
+    extends RenderTwoDimensionalViewport {
   // Track children separately for layered painting
   final List<RenderBox> _unpinnedChildren = [];
   final List<RenderBox> _pinnedChildren = [];
@@ -97,12 +98,18 @@ class RenderDataGridViewport<T extends DataGridRow> extends RenderTwoDimensional
     }
 
     // STEP 3: Calculate which ROWS are currently visible in the viewport
-    final int firstVisibleRow = (verticalScrollOffset / _rowHeight).floor().clamp(0, _rowCount);
+    final int firstVisibleRow = (verticalScrollOffset / _rowHeight)
+        .floor()
+        .clamp(0, _rowCount);
     final int visibleRowCount = (viewportHeight / _rowHeight).ceil() + 1;
-    final int lastVisibleRow = (firstVisibleRow + visibleRowCount).clamp(0, _rowCount);
+    final int lastVisibleRow = (firstVisibleRow + visibleRowCount).clamp(
+      0,
+      _rowCount,
+    );
 
     // Calculate starting Y offset accounting for partially scrolled rows
-    final double startingYOffset = (firstVisibleRow * _rowHeight) - verticalScrollOffset;
+    final double startingYOffset =
+        (firstVisibleRow * _rowHeight) - verticalScrollOffset;
 
     // STEP 4: Calculate which UNPINNED columns are visible
     // The scrollable area starts after pinned columns
@@ -116,13 +123,16 @@ class RenderDataGridViewport<T extends DataGridRow> extends RenderTwoDimensional
     for (int i = 0; i < unpinnedIndices.length; i++) {
       final colWidth = _columns[unpinnedIndices[i]].width;
 
-      if (accumulatedUnpinnedWidth + colWidth > horizontalScrollOffset && firstVisibleUnpinnedIdx == -1) {
+      if (accumulatedUnpinnedWidth + colWidth > horizontalScrollOffset &&
+          firstVisibleUnpinnedIdx == -1) {
         firstVisibleUnpinnedIdx = i;
-        firstUnpinnedColumnOffset = accumulatedUnpinnedWidth - horizontalScrollOffset;
+        firstUnpinnedColumnOffset =
+            accumulatedUnpinnedWidth - horizontalScrollOffset;
       }
       accumulatedUnpinnedWidth += colWidth;
 
-      if (accumulatedUnpinnedWidth >= horizontalScrollOffset + scrollableViewportWidth) {
+      if (accumulatedUnpinnedWidth >=
+          horizontalScrollOffset + scrollableViewportWidth) {
         lastVisibleUnpinnedIdx = (i + 1).clamp(0, unpinnedIndices.length);
         break;
       }
@@ -171,7 +181,9 @@ class RenderDataGridViewport<T extends DataGridRow> extends RenderTwoDimensional
         final child = buildOrObtainChildFor(vicinity);
 
         if (child != null) {
-          child.layout(BoxConstraints.tight(Size(_columns[colIndex].width, _rowHeight)));
+          child.layout(
+            BoxConstraints.tight(Size(_columns[colIndex].width, _rowHeight)),
+          );
           parentDataOf(child).layoutOffset = Offset(xOffset, yOffset);
           _pinnedChildren.add(child);
         }
@@ -184,10 +196,16 @@ class RenderDataGridViewport<T extends DataGridRow> extends RenderTwoDimensional
     // STEP 6: Apply content dimensions
     // Vertical: total height minus viewport height
     final totalHeight = _rowCount * _rowHeight;
-    verticalOffset.applyContentDimensions(0, (totalHeight - viewportHeight).clamp(0, double.infinity));
+    verticalOffset.applyContentDimensions(
+      0,
+      (totalHeight - viewportHeight).clamp(0, double.infinity),
+    );
 
     // Horizontal: only unpinned width is scrollable (pinned columns are always visible)
-    final horizontalMaxScroll = (unpinnedWidth - scrollableViewportWidth).clamp(0.0, double.infinity);
+    final horizontalMaxScroll = (unpinnedWidth - scrollableViewportWidth).clamp(
+      0.0,
+      double.infinity,
+    );
     horizontalOffset.applyContentDimensions(0, horizontalMaxScroll);
   }
 
@@ -195,7 +213,10 @@ class RenderDataGridViewport<T extends DataGridRow> extends RenderTwoDimensional
   void paint(PaintingContext context, Offset offset) {
     if (_columns.isEmpty || _rowCount == 0) return;
 
-    context.pushClipRect(needsCompositing, offset, Offset.zero & size, (context, offset) {
+    context.pushClipRect(needsCompositing, offset, Offset.zero & size, (
+      context,
+      offset,
+    ) {
       // Layer 1: Paint unpinned cells
       for (final child in _unpinnedChildren) {
         context.paintChild(child, offset + parentDataOf(child).layoutOffset!);

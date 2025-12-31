@@ -90,7 +90,9 @@ class _DataGridCellState<T extends DataGridRow> extends State<DataGridCell<T>> {
     final controller = context.dataGridController<T>()!;
 
     return StreamBuilder<bool>(
-      stream: controller.selection$.map((s) => s.isRowSelected(widget.rowId)).distinct(),
+      stream: controller.selection$
+          .map((s) => s.isRowSelected(widget.rowId))
+          .distinct(),
       initialData: controller.state.selection.isRowSelected(widget.rowId),
       builder: (context, selectionSnapshot) {
         final isSelected = selectionSnapshot.data ?? false;
@@ -130,16 +132,25 @@ class _DataGridCellState<T extends DataGridRow> extends State<DataGridCell<T>> {
             }
 
             return Semantics(
-              label: 'Cell row ${widget.rowIndex + 1} column ${widget.column.title}',
+              label:
+                  'Cell row ${widget.rowIndex + 1} column ${widget.column.title}',
               value: isEditing ? 'Editing' : null,
               selected: isSelected,
               button: true,
               onTap: isEditing
                   ? null
                   : () {
-                      if (controller.state.selection.mode != SelectionMode.none) {
-                        final isMultiSelectMode = controller.state.selection.mode == SelectionMode.multiple;
-                        controller.addEvent(SelectRowEvent(rowId: widget.rowId, multiSelect: isMultiSelectMode));
+                      if (controller.state.selection.mode !=
+                          SelectionMode.none) {
+                        final isMultiSelectMode =
+                            controller.state.selection.mode ==
+                            SelectionMode.multiple;
+                        controller.addEvent(
+                          SelectRowEvent(
+                            rowId: widget.rowId,
+                            multiSelect: isMultiSelectMode,
+                          ),
+                        );
                       }
                     },
               child: GestureDetector(
@@ -152,22 +163,39 @@ class _DataGridCellState<T extends DataGridRow> extends State<DataGridCell<T>> {
                   if (isEditing) return;
 
                   if (controller.state.selection.mode != SelectionMode.none) {
-                    final isMultiSelectMode = controller.state.selection.mode == SelectionMode.multiple;
-                    controller.addEvent(SelectRowEvent(rowId: widget.rowId, multiSelect: isMultiSelectMode));
+                    final isMultiSelectMode =
+                        controller.state.selection.mode ==
+                        SelectionMode.multiple;
+                    controller.addEvent(
+                      SelectRowEvent(
+                        rowId: widget.rowId,
+                        multiSelect: isMultiSelectMode,
+                      ),
+                    );
                   }
                 },
                 child: Container(
                   decoration: BoxDecoration(
                     color: isSelected
                         ? theme.colors.selectionColor
-                        : (widget.rowIndex % 2 == 0 ? theme.colors.evenRowColor : theme.colors.oddRowColor),
+                        : (widget.rowIndex % 2 == 0
+                              ? theme.colors.evenRowColor
+                              : theme.colors.oddRowColor),
                     border: isEditing
                         ? theme.borders.editingBorder
-                        : (widget.isPinned ? theme.borders.pinnedBorder : theme.borders.cellBorder),
-                    boxShadow: widget.isPinned ? theme.borders.pinnedShadow : null,
+                        : (widget.isPinned
+                              ? theme.borders.pinnedBorder
+                              : theme.borders.cellBorder),
+                    boxShadow: widget.isPinned
+                        ? theme.borders.pinnedShadow
+                        : null,
                   ),
-                  padding: isEditing ? EdgeInsets.zero : theme.padding.cellPadding,
-                  alignment: isEditing ? Alignment.center : Alignment.centerLeft,
+                  padding: isEditing
+                      ? EdgeInsets.zero
+                      : theme.padding.cellPadding,
+                  alignment: isEditing
+                      ? Alignment.center
+                      : Alignment.centerLeft,
                   child: cellContent,
                 ),
               ),
@@ -217,7 +245,10 @@ class _CellEditorState<T extends DataGridRow> extends State<_CellEditor<T>> {
   void _initializeController() {
     if (_initialized) return;
     widget.editController.text = widget.value?.toString() ?? '';
-    widget.editController.selection = TextSelection(baseOffset: 0, extentOffset: widget.editController.text.length);
+    widget.editController.selection = TextSelection(
+      baseOffset: 0,
+      extentOffset: widget.editController.text.length,
+    );
     _initialized = true;
   }
 

@@ -17,7 +17,9 @@ class DataGridInherited<T extends DataGridRow> extends InheritedWidget {
     required super.child,
   });
 
-  static DataGridInherited<T>? maybeOf<T extends DataGridRow>(BuildContext context) {
+  static DataGridInherited<T>? maybeOf<T extends DataGridRow>(
+    BuildContext context,
+  ) {
     return context.dependOnInheritedWidgetOfExactType<DataGridInherited<T>>();
   }
 

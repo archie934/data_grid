@@ -12,7 +12,12 @@ class DefaultRowRenderer<T extends DataGridRow> extends RowRenderer<T> {
   const DefaultRowRenderer();
 
   @override
-  Widget buildRow(BuildContext context, T row, int index, RowRenderContext<T> renderContext) {
+  Widget buildRow(
+    BuildContext context,
+    T row,
+    int index,
+    RowRenderContext<T> renderContext,
+  ) {
     return VisibleRowTracker<T>(
       rowId: row.id,
       rowIndex: index,
@@ -22,9 +27,17 @@ class DefaultRowRenderer<T extends DataGridRow> extends RowRenderer<T> {
         height: renderContext.rowHeight,
         child: Stack(
           children: [
-            _UnpinnedCells<T>(row: row, index: index, renderContext: renderContext),
+            _UnpinnedCells<T>(
+              row: row,
+              index: index,
+              renderContext: renderContext,
+            ),
             if (renderContext.pinnedColumns.isNotEmpty)
-              _PinnedCells<T>(row: row, index: index, renderContext: renderContext),
+              _PinnedCells<T>(
+                row: row,
+                index: index,
+                renderContext: renderContext,
+              ),
           ],
         ),
       ),
@@ -37,7 +50,11 @@ class _UnpinnedCells<T extends DataGridRow> extends StatelessWidget {
   final int index;
   final RowRenderContext<T> renderContext;
 
-  const _UnpinnedCells({required this.row, required this.index, required this.renderContext});
+  const _UnpinnedCells({
+    required this.row,
+    required this.index,
+    required this.renderContext,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -53,12 +70,19 @@ class _UnpinnedCells<T extends DataGridRow> extends StatelessWidget {
             width: renderContext.unpinnedWidth,
             height: renderContext.rowHeight,
             child: CustomMultiChildLayout(
-              delegate: BodyLayoutDelegate<T>(columns: renderContext.unpinnedColumns),
+              delegate: BodyLayoutDelegate<T>(
+                columns: renderContext.unpinnedColumns,
+              ),
               children: [
                 for (var column in renderContext.unpinnedColumns)
                   LayoutId(
                     id: column.id,
-                    child: _RendererCell<T>(row: row, column: column, index: index, isPinned: false),
+                    child: _RendererCell<T>(
+                      row: row,
+                      column: column,
+                      index: index,
+                      isPinned: false,
+                    ),
                   ),
               ],
             ),
@@ -74,7 +98,11 @@ class _PinnedCells<T extends DataGridRow> extends StatelessWidget {
   final int index;
   final RowRenderContext<T> renderContext;
 
-  const _PinnedCells({required this.row, required this.index, required this.renderContext});
+  const _PinnedCells({
+    required this.row,
+    required this.index,
+    required this.renderContext,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -89,7 +117,12 @@ class _PinnedCells<T extends DataGridRow> extends StatelessWidget {
           for (var column in renderContext.pinnedColumns)
             LayoutId(
               id: column.id,
-              child: _RendererCell<T>(row: row, column: column, index: index, isPinned: true),
+              child: _RendererCell<T>(
+                row: row,
+                column: column,
+                index: index,
+                isPinned: true,
+              ),
             ),
         ],
       ),
@@ -103,7 +136,12 @@ class _RendererCell<T extends DataGridRow> extends StatelessWidget {
   final int index;
   final bool isPinned;
 
-  const _RendererCell({required this.row, required this.column, required this.index, required this.isPinned});
+  const _RendererCell({
+    required this.row,
+    required this.column,
+    required this.index,
+    required this.isPinned,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -111,6 +149,12 @@ class _RendererCell<T extends DataGridRow> extends StatelessWidget {
       return DataGridCheckboxCell<T>(row: row, rowId: row.id, rowIndex: index);
     }
 
-    return DataGridCell<T>(row: row, rowId: row.id, column: column, rowIndex: index, isPinned: isPinned);
+    return DataGridCell<T>(
+      row: row,
+      rowId: row.id,
+      column: column,
+      rowIndex: index,
+      isPinned: isPinned,
+    );
   }
 }

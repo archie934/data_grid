@@ -11,7 +11,12 @@ class DataGridCheckboxCell<T extends DataGridRow> extends StatelessWidget {
   final double rowId;
   final int rowIndex;
 
-  const DataGridCheckboxCell({super.key, required this.row, required this.rowId, required this.rowIndex});
+  const DataGridCheckboxCell({
+    super.key,
+    required this.row,
+    required this.rowId,
+    required this.rowIndex,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +24,9 @@ class DataGridCheckboxCell<T extends DataGridRow> extends StatelessWidget {
     final controller = context.dataGridController<T>()!;
 
     return StreamBuilder<bool>(
-      stream: controller.selection$.map((s) => s.isRowSelected(rowId)).distinct(),
+      stream: controller.selection$
+          .map((s) => s.isRowSelected(rowId))
+          .distinct(),
       initialData: controller.state.selection.isRowSelected(rowId),
       builder: (context, snapshot) {
         final isSelected = snapshot.data ?? false;
@@ -28,15 +35,21 @@ class DataGridCheckboxCell<T extends DataGridRow> extends StatelessWidget {
           label: 'Select row ${rowIndex + 1}',
           checked: isSelected,
           onTap: () {
-            controller.addEvent(SelectRowEvent(rowId: rowId, multiSelect: true));
+            controller.addEvent(
+              SelectRowEvent(rowId: rowId, multiSelect: true),
+            );
           },
           child: GestureDetector(
             onTap: () {
-              controller.addEvent(SelectRowEvent(rowId: rowId, multiSelect: true));
+              controller.addEvent(
+                SelectRowEvent(rowId: rowId, multiSelect: true),
+              );
             },
             child: Container(
               decoration: BoxDecoration(
-                color: rowIndex % 2 == 0 ? theme.colors.evenRowColor : theme.colors.oddRowColor,
+                color: rowIndex % 2 == 0
+                    ? theme.colors.evenRowColor
+                    : theme.colors.oddRowColor,
                 border: theme.borders.checkboxCellBorder,
               ),
               padding: theme.padding.checkboxPadding,
@@ -44,7 +57,9 @@ class DataGridCheckboxCell<T extends DataGridRow> extends StatelessWidget {
               child: Checkbox(
                 value: isSelected,
                 onChanged: (value) {
-                  controller.addEvent(SelectRowEvent(rowId: rowId, multiSelect: true));
+                  controller.addEvent(
+                    SelectRowEvent(rowId: rowId, multiSelect: true),
+                  );
                 },
               ),
             ),
@@ -59,27 +74,35 @@ class DataGridCheckboxHeaderCell<T extends DataGridRow> extends StatefulWidget {
   const DataGridCheckboxHeaderCell({super.key});
 
   @override
-  State<DataGridCheckboxHeaderCell<T>> createState() => _DataGridCheckboxHeaderCellState<T>();
+  State<DataGridCheckboxHeaderCell<T>> createState() =>
+      _DataGridCheckboxHeaderCellState<T>();
 }
 
-class _DataGridCheckboxHeaderCellState<T extends DataGridRow> extends State<DataGridCheckboxHeaderCell<T>> {
+class _DataGridCheckboxHeaderCellState<T extends DataGridRow>
+    extends State<DataGridCheckboxHeaderCell<T>> {
   @override
   Widget build(BuildContext context) {
     final theme = DataGridTheme.of(context);
     final controller = context.dataGridController<T>()!;
 
     return StreamBuilder<_CheckboxHeaderState>(
-      stream: Rx.combineLatest2(controller.renderedRowIds$, controller.selection$, (
-        Set<double> renderedRowIds,
-        selection,
-      ) {
-        final allVisibleSelected =
-            renderedRowIds.isNotEmpty && renderedRowIds.every((id) => selection.isRowSelected(id));
-        final anySelected = selection.selectedRowIds.isNotEmpty;
-        final someSelected = anySelected && !allVisibleSelected;
+      stream: Rx.combineLatest2(
+        controller.renderedRowIds$,
+        controller.selection$,
+        (Set<double> renderedRowIds, selection) {
+          final allVisibleSelected =
+              renderedRowIds.isNotEmpty &&
+              renderedRowIds.every((id) => selection.isRowSelected(id));
+          final anySelected = selection.selectedRowIds.isNotEmpty;
+          final someSelected = anySelected && !allVisibleSelected;
 
-        return _CheckboxHeaderState(allVisibleSelected, someSelected, renderedRowIds);
-      }).distinct(),
+          return _CheckboxHeaderState(
+            allVisibleSelected,
+            someSelected,
+            renderedRowIds,
+          );
+        },
+      ).distinct(),
       initialData: _computeInitialState(controller),
       builder: (context, snapshot) {
         final headerState = snapshot.data!;
@@ -96,23 +119,37 @@ class _DataGridCheckboxHeaderCellState<T extends DataGridRow> extends State<Data
               controller.addEvent(ClearSelectionEvent());
             } else {
               controller.addEvent(
-                SelectAllRowsEvent(rowIds: headerState.visibleRowIds.isEmpty ? null : headerState.visibleRowIds),
+                SelectAllRowsEvent(
+                  rowIds: headerState.visibleRowIds.isEmpty
+                      ? null
+                      : headerState.visibleRowIds,
+                ),
               );
             }
           },
           child: Container(
-            decoration: BoxDecoration(color: theme.colors.headerColor, border: theme.borders.headerBorder),
+            decoration: BoxDecoration(
+              color: theme.colors.headerColor,
+              border: theme.borders.headerBorder,
+            ),
             padding: theme.padding.checkboxPadding,
             alignment: Alignment.center,
             child: Checkbox(
-              value: headerState.someSelected ? null : headerState.allVisibleSelected,
+              value: headerState.someSelected
+                  ? null
+                  : headerState.allVisibleSelected,
               tristate: true,
               onChanged: (value) {
-                if (headerState.allVisibleSelected || headerState.someSelected) {
+                if (headerState.allVisibleSelected ||
+                    headerState.someSelected) {
                   controller.addEvent(ClearSelectionEvent());
                 } else {
                   controller.addEvent(
-                    SelectAllRowsEvent(rowIds: headerState.visibleRowIds.isEmpty ? null : headerState.visibleRowIds),
+                    SelectAllRowsEvent(
+                      rowIds: headerState.visibleRowIds.isEmpty
+                          ? null
+                          : headerState.visibleRowIds,
+                    ),
                   );
                 }
               },
@@ -128,11 +165,16 @@ class _DataGridCheckboxHeaderCellState<T extends DataGridRow> extends State<Data
     final renderedRowIds = controller.renderedRowIds;
 
     final allVisibleSelected =
-        renderedRowIds.isNotEmpty && renderedRowIds.every((id) => state.selection.isRowSelected(id));
+        renderedRowIds.isNotEmpty &&
+        renderedRowIds.every((id) => state.selection.isRowSelected(id));
     final anySelected = state.selection.selectedRowIds.isNotEmpty;
     final someSelected = anySelected && !allVisibleSelected;
 
-    return _CheckboxHeaderState(allVisibleSelected, someSelected, renderedRowIds);
+    return _CheckboxHeaderState(
+      allVisibleSelected,
+      someSelected,
+      renderedRowIds,
+    );
   }
 }
 
@@ -141,7 +183,11 @@ class _CheckboxHeaderState {
   final bool someSelected;
   final Set<double> visibleRowIds;
 
-  _CheckboxHeaderState(this.allVisibleSelected, this.someSelected, this.visibleRowIds);
+  _CheckboxHeaderState(
+    this.allVisibleSelected,
+    this.someSelected,
+    this.visibleRowIds,
+  );
 
   @override
   bool operator ==(Object other) =>
@@ -153,5 +199,9 @@ class _CheckboxHeaderState {
           visibleRowIds.every((id) => other.visibleRowIds.contains(id));
 
   @override
-  int get hashCode => Object.hash(allVisibleSelected, someSelected, Object.hashAll(visibleRowIds));
+  int get hashCode => Object.hash(
+    allVisibleSelected,
+    someSelected,
+    Object.hashAll(visibleRowIds),
+  );
 }

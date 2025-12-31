@@ -56,7 +56,10 @@ class DefaultFilterDelegate<T extends DataGridRow> extends FilterDelegate<T> {
             rowValues[rowId] = values;
           }
 
-          final params = FilterParameters(rowValues: rowValues, filters: filters);
+          final params = FilterParameters(
+            rowValues: rowValues,
+            filters: filters,
+          );
 
           filteredIds = await compute(performFilterInIsolate, params);
         } else {

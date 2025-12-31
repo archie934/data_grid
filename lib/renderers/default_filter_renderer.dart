@@ -10,7 +10,9 @@ import 'package:flutter_data_grid/theme/data_grid_theme.dart';
 class DefaultFilterRenderer extends FilterRenderer {
   final Duration debounce;
 
-  const DefaultFilterRenderer({this.debounce = const Duration(milliseconds: 300)});
+  const DefaultFilterRenderer({
+    this.debounce = const Duration(milliseconds: 300),
+  });
 
   @override
   Widget buildFilter(
@@ -56,7 +58,9 @@ class _FilterTextFieldState extends State<_FilterTextField> {
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController(text: widget.currentFilter?.value?.toString() ?? '');
+    _controller = TextEditingController(
+      text: widget.currentFilter?.value?.toString() ?? '',
+    );
   }
 
   @override
@@ -94,14 +98,19 @@ class _FilterTextFieldState extends State<_FilterTextField> {
     final hasFilter = widget.currentFilter != null;
 
     return Container(
-      decoration: BoxDecoration(color: colorScheme.surface, border: gridTheme.borders.filterBorder),
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        border: gridTheme.borders.filterBorder,
+      ),
       padding: gridTheme.padding.filterPadding,
       child: TextField(
         controller: _controller,
         onChanged: _onTextChanged,
         decoration: InputDecoration(
           hintText: 'Filter ${widget.column.title}...',
-          hintStyle: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
+          hintStyle: textTheme.bodySmall?.copyWith(
+            color: colorScheme.onSurfaceVariant,
+          ),
           isDense: true,
           contentPadding: gridTheme.padding.filterInputPadding,
           border: OutlineInputBorder(
@@ -117,7 +126,13 @@ class _FilterTextFieldState extends State<_FilterTextField> {
             borderSide: BorderSide(color: colorScheme.primary, width: 2),
           ),
           suffixIcon: IconButton(
-            icon: Icon(Icons.clear, size: 16, color: hasFilter ? colorScheme.onSurfaceVariant : Colors.transparent),
+            icon: Icon(
+              Icons.clear,
+              size: 16,
+              color: hasFilter
+                  ? colorScheme.onSurfaceVariant
+                  : Colors.transparent,
+            ),
             onPressed: hasFilter
                 ? () {
                     _controller.clear();
@@ -128,7 +143,10 @@ class _FilterTextFieldState extends State<_FilterTextField> {
             constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
             iconSize: 16,
           ),
-          suffixIconConstraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+          suffixIconConstraints: const BoxConstraints(
+            minWidth: 32,
+            minHeight: 32,
+          ),
         ),
         style: textTheme.bodySmall,
       ),

@@ -62,7 +62,10 @@ void main() {
     });
 
     testWidgets('setRows loads initial data', (tester) async {
-      final emptyController = DataGridController<TestRow>(initialColumns: columns, initialRows: []);
+      final emptyController = DataGridController<TestRow>(
+        initialColumns: columns,
+        initialRows: [],
+      );
 
       await tester.pumpWidget(
         MaterialApp(
@@ -105,7 +108,9 @@ void main() {
       expect(controller.state.displayOrder.contains(4), true);
     });
 
-    testWidgets('insertRow with position adds row at specific index', (tester) async {
+    testWidgets('insertRow with position adds row at specific index', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(body: DataGrid<TestRow>(controller: controller)),
@@ -234,7 +239,10 @@ void main() {
 
       expect(controller.state.displayOrder.length, 3);
 
-      final newRows = [TestRow(id: 10, name: 'New1', value: 1000), TestRow(id: 11, name: 'New2', value: 1100)];
+      final newRows = [
+        TestRow(id: 10, name: 'New1', value: 1000),
+        TestRow(id: 11, name: 'New2', value: 1100),
+      ];
 
       controller.setRows(newRows);
       await waitForAsync(tester);
@@ -253,7 +261,9 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      controller.addEvent(SortEvent(columnId: 1, direction: SortDirection.ascending));
+      controller.addEvent(
+        SortEvent(columnId: 1, direction: SortDirection.ascending),
+      );
       await waitForAsync(tester);
 
       expect(controller.state.visibleRows[0].name, 'Alice');
@@ -273,7 +283,13 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      controller.addEvent(FilterEvent(columnId: 2, operator: FilterOperator.greaterThan, value: 150));
+      controller.addEvent(
+        FilterEvent(
+          columnId: 2,
+          operator: FilterOperator.greaterThan,
+          value: 150,
+        ),
+      );
       await waitForAsync(tester);
 
       expect(controller.state.displayOrder.length, 2);
@@ -372,9 +388,24 @@ void main() {
       expect(controller.state.columns.length, 2);
 
       final newColumns = [
-        DataGridColumn<TestRow>(id: 1, title: 'Name Updated', width: 200, valueAccessor: (row) => row.name),
-        DataGridColumn<TestRow>(id: 2, title: 'Value Updated', width: 150, valueAccessor: (row) => row.value),
-        DataGridColumn<TestRow>(id: 3, title: 'New Column', width: 100, valueAccessor: (row) => 'New'),
+        DataGridColumn<TestRow>(
+          id: 1,
+          title: 'Name Updated',
+          width: 200,
+          valueAccessor: (row) => row.name,
+        ),
+        DataGridColumn<TestRow>(
+          id: 2,
+          title: 'Value Updated',
+          width: 150,
+          valueAccessor: (row) => row.value,
+        ),
+        DataGridColumn<TestRow>(
+          id: 3,
+          title: 'New Column',
+          width: 100,
+          valueAccessor: (row) => 'New',
+        ),
       ];
 
       controller.setColumns(newColumns);
@@ -407,7 +438,9 @@ void main() {
       expect(find.text('Alice'), findsNothing);
     });
 
-    testWidgets('LoadDataEvent with append flag adds to existing data', (tester) async {
+    testWidgets('LoadDataEvent with append flag adds to existing data', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(body: DataGrid<TestRow>(controller: controller)),
@@ -417,7 +450,10 @@ void main() {
 
       expect(controller.state.displayOrder.length, 3);
 
-      final additionalRows = [TestRow(id: 4, name: 'David', value: 400), TestRow(id: 5, name: 'Eve', value: 500)];
+      final additionalRows = [
+        TestRow(id: 4, name: 'David', value: 400),
+        TestRow(id: 5, name: 'Eve', value: 500),
+      ];
 
       controller.addEvent(LoadDataEvent(rows: additionalRows, append: true));
       await waitForAsync(tester);

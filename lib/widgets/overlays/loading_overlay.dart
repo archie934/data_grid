@@ -10,7 +10,12 @@ class DataGridLoadingOverlay extends StatelessWidget {
   final Color? backdropColor;
   final Color? indicatorColor;
 
-  const DataGridLoadingOverlay({super.key, this.message, this.backdropColor, this.indicatorColor});
+  const DataGridLoadingOverlay({
+    super.key,
+    this.message,
+    this.backdropColor,
+    this.indicatorColor,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +53,9 @@ class DataGridLoadingOverlay extends StatelessWidget {
                 SizedBox(height: overlayTheme.indicatorTextSpacing),
                 Text(
                   message ?? overlayTheme.defaultMessage,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w500),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ],
             ),

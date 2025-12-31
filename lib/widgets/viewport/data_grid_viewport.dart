@@ -50,7 +50,10 @@ class DataGridViewport<T extends DataGridRow> extends TwoDimensionalViewport {
 
   /// Updates the render object when widget properties change.
   @override
-  void updateRenderObject(BuildContext context, covariant RenderDataGridViewport renderObject) {
+  void updateRenderObject(
+    BuildContext context,
+    covariant RenderDataGridViewport renderObject,
+  ) {
     renderObject
       ..delegate = delegate as DataGridChildDelegate
       ..columns = columns

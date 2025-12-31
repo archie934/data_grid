@@ -6,7 +6,11 @@ class SortParameters {
   final SortDirection direction;
   final int rowCount;
 
-  SortParameters({required this.columnValues, required this.direction, required this.rowCount});
+  SortParameters({
+    required this.columnValues,
+    required this.direction,
+    required this.rowCount,
+  });
 }
 
 /// Top-level function that performs sorting in an isolate
@@ -21,7 +25,9 @@ List<int> performSortInIsolate(SortParameters params) {
     final comparison = _compareValues(aValue, bValue);
 
     if (comparison != 0) {
-      return params.direction == SortDirection.ascending ? comparison : -comparison;
+      return params.direction == SortDirection.ascending
+          ? comparison
+          : -comparison;
     }
     return 0;
   });

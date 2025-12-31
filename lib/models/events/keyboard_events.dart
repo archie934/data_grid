@@ -19,7 +19,10 @@ class NavigateUpEvent extends DataGridEvent {
 
     final newRowId = context.state.displayOrder[currentIndex - 1];
     return context.state.copyWith(
-      selection: context.state.selection.copyWith(focusedRowId: newRowId, selectedRowIds: {newRowId}),
+      selection: context.state.selection.copyWith(
+        focusedRowId: newRowId,
+        selectedRowIds: {newRowId},
+      ),
     );
   }
 }
@@ -36,7 +39,10 @@ class NavigateDownEvent extends DataGridEvent {
       if (context.state.displayOrder.isEmpty) return null;
       final firstRowId = context.state.displayOrder.first;
       return context.state.copyWith(
-        selection: context.state.selection.copyWith(focusedRowId: firstRowId, selectedRowIds: {firstRowId}),
+        selection: context.state.selection.copyWith(
+          focusedRowId: firstRowId,
+          selectedRowIds: {firstRowId},
+        ),
       );
     }
 
@@ -45,7 +51,10 @@ class NavigateDownEvent extends DataGridEvent {
 
     final newRowId = context.state.displayOrder[currentIndex + 1];
     return context.state.copyWith(
-      selection: context.state.selection.copyWith(focusedRowId: newRowId, selectedRowIds: {newRowId}),
+      selection: context.state.selection.copyWith(
+        focusedRowId: newRowId,
+        selectedRowIds: {newRowId},
+      ),
     );
   }
 }
@@ -74,10 +83,18 @@ class SelectAllVisibleEvent extends DataGridEvent {
     final viewport = context.state.viewport;
     final visibleRowIds = <double>{};
 
-    for (int i = viewport.firstVisibleRow; i <= viewport.lastVisibleRow && i < context.state.displayOrder.length; i++) {
+    for (
+      int i = viewport.firstVisibleRow;
+      i <= viewport.lastVisibleRow && i < context.state.displayOrder.length;
+      i++
+    ) {
       visibleRowIds.add(context.state.displayOrder[i]);
     }
 
-    return context.state.copyWith(selection: context.state.selection.copyWith(selectedRowIds: visibleRowIds));
+    return context.state.copyWith(
+      selection: context.state.selection.copyWith(
+        selectedRowIds: visibleRowIds,
+      ),
+    );
   }
 }

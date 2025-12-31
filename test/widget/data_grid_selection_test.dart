@@ -20,8 +20,18 @@ void main() {
 
     setUp(() {
       columns = [
-        DataGridColumn<TestRow>(id: 1, title: 'Name', width: 150, valueAccessor: (row) => row.name),
-        DataGridColumn<TestRow>(id: 2, title: 'Value', width: 100, valueAccessor: (row) => row.value),
+        DataGridColumn<TestRow>(
+          id: 1,
+          title: 'Name',
+          width: 150,
+          valueAccessor: (row) => row.name,
+        ),
+        DataGridColumn<TestRow>(
+          id: 2,
+          title: 'Value',
+          width: 100,
+          valueAccessor: (row) => row.value,
+        ),
       ];
 
       rows = [
@@ -32,7 +42,10 @@ void main() {
         TestRow(id: 5, name: 'Eve', value: 500),
       ];
 
-      controller = DataGridController<TestRow>(initialColumns: columns, initialRows: rows);
+      controller = DataGridController<TestRow>(
+        initialColumns: columns,
+        initialRows: rows,
+      );
     });
 
     tearDown(() {
@@ -59,7 +72,9 @@ void main() {
       expect(controller.state.selection.selectedRowIds.length, 0);
     });
 
-    testWidgets('SelectionMode.single allows one row selection', (tester) async {
+    testWidgets('SelectionMode.single allows one row selection', (
+      tester,
+    ) async {
       controller.setSelectionMode(SelectionMode.single);
 
       await tester.pumpWidget(
@@ -86,7 +101,9 @@ void main() {
       expect(controller.state.selection.isRowSelected(2), true);
     });
 
-    testWidgets('SelectionMode.multiple allows multi-row selection', (tester) async {
+    testWidgets('SelectionMode.multiple allows multi-row selection', (
+      tester,
+    ) async {
       controller.setSelectionMode(SelectionMode.multiple);
 
       await tester.pumpWidget(
@@ -312,7 +329,9 @@ void main() {
       expect(controller.state.selection.mode, SelectionMode.none);
     });
 
-    testWidgets('changing selection mode clears existing selections', (tester) async {
+    testWidgets('changing selection mode clears existing selections', (
+      tester,
+    ) async {
       controller.setSelectionMode(SelectionMode.multiple);
 
       await tester.pumpWidget(
@@ -344,7 +363,9 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(body: DataGrid<TestRow>(controller: restrictedController)),
+          home: Scaffold(
+            body: DataGrid<TestRow>(controller: restrictedController),
+          ),
         ),
       );
 
@@ -380,14 +401,19 @@ void main() {
 
       expect(controller.state.selection.selectedRowIds.length, 2);
 
-      controller.updateRow(1, TestRow(id: 1, name: 'Alice Updated', value: 150));
+      controller.updateRow(
+        1,
+        TestRow(id: 1, name: 'Alice Updated', value: 150),
+      );
       await tester.pumpAndSettle();
 
       expect(controller.state.selection.selectedRowIds.length, 2);
       expect(controller.state.selection.isRowSelected(1), true);
     });
 
-    testWidgets('deleting selected row removes it from selection', (tester) async {
+    testWidgets('deleting selected row removes it from selection', (
+      tester,
+    ) async {
       controller.setSelectionMode(SelectionMode.multiple);
 
       await tester.pumpWidget(

@@ -5,15 +5,29 @@ import 'package:flutter_data_grid/models/events/edit_events.dart';
 import 'package:flutter_data_grid/models/events/selection_events.dart';
 import 'package:flutter_data_grid/interceptors/data_grid_interceptor.dart';
 
-class ValidationInterceptor<T extends DataGridRow> extends DataGridInterceptor<T> {
+class ValidationInterceptor<T extends DataGridRow>
+    extends DataGridInterceptor<T> {
   final bool Function(double rowId, int columnId)? canEditCell;
   final bool Function(double rowId)? canSelectRow;
-  final Future<bool> Function(double rowId, int columnId, dynamic oldValue, dynamic newValue)? onCellCommit;
+  final Future<bool> Function(
+    double rowId,
+    int columnId,
+    dynamic oldValue,
+    dynamic newValue,
+  )?
+  onCellCommit;
 
-  ValidationInterceptor({this.canEditCell, this.canSelectRow, this.onCellCommit});
+  ValidationInterceptor({
+    this.canEditCell,
+    this.canSelectRow,
+    this.onCellCommit,
+  });
 
   @override
-  DataGridEvent? onBeforeEvent(DataGridEvent event, DataGridState<T> currentState) {
+  DataGridEvent? onBeforeEvent(
+    DataGridEvent event,
+    DataGridState<T> currentState,
+  ) {
     if (event is StartCellEditEvent && canEditCell != null) {
       if (!canEditCell!(event.rowId, event.columnId)) {
         return null;
@@ -30,8 +44,14 @@ class ValidationInterceptor<T extends DataGridRow> extends DataGridInterceptor<T
   }
 
   @override
-  DataGridState<T>? onBeforeStateUpdate(DataGridState<T> newState, DataGridState<T> oldState, DataGridEvent? event) {
-    if (event is CommitCellEditEvent && onCellCommit != null && oldState.edit.isEditing) {
+  DataGridState<T>? onBeforeStateUpdate(
+    DataGridState<T> newState,
+    DataGridState<T> oldState,
+    DataGridEvent? event,
+  ) {
+    if (event is CommitCellEditEvent &&
+        onCellCommit != null &&
+        oldState.edit.isEditing) {
       final cellId = oldState.edit.editingCellId!;
       final parts = cellId.split('_');
       final rowId = double.parse(parts[0]);

@@ -10,9 +10,13 @@ class LoadDataEvent<T> extends DataGridEvent {
   LoadDataEvent({required this.rows, this.append = false});
 
   @override
-  Future<DataGridState<TRow>?> apply<TRow extends DataGridRow>(EventContext<TRow> context) async {
+  Future<DataGridState<TRow>?> apply<TRow extends DataGridRow>(
+    EventContext<TRow> context,
+  ) async {
     final rowsMap = {for (var row in rows) (row as TRow).id: row as TRow};
-    final newRowsById = append ? {...context.state.rowsById, ...rowsMap} : rowsMap;
+    final newRowsById = append
+        ? {...context.state.rowsById, ...rowsMap}
+        : rowsMap;
 
     context.dataIndexer.setData(newRowsById);
 
@@ -25,10 +29,19 @@ class LoadDataEvent<T> extends DataGridEvent {
         : newRowsById.keys.toList();
 
     final sortedIds = context.state.sort.hasSort
-        ? context.dataIndexer.sortIds(newRowsById, filteredIds, context.state.sort.sortColumn!, context.state.columns)
+        ? context.dataIndexer.sortIds(
+            newRowsById,
+            filteredIds,
+            context.state.sort.sortColumn!,
+            context.state.columns,
+          )
         : filteredIds;
 
-    return context.state.copyWith(rowsById: newRowsById, displayOrder: sortedIds, isLoading: false);
+    return context.state.copyWith(
+      rowsById: newRowsById,
+      displayOrder: sortedIds,
+      isLoading: false,
+    );
   }
 }
 
@@ -47,7 +60,10 @@ class SetLoadingEvent extends DataGridEvent {
 
   @override
   DataGridState<T>? apply<T extends DataGridRow>(EventContext<T> context) {
-    return context.state.copyWith(isLoading: isLoading, loadingMessage: message);
+    return context.state.copyWith(
+      isLoading: isLoading,
+      loadingMessage: message,
+    );
   }
 }
 
@@ -58,14 +74,18 @@ class InsertRowEvent extends DataGridEvent {
   InsertRowEvent({required this.row, this.position});
 
   @override
-  Future<DataGridState<T>?> apply<T extends DataGridRow>(EventContext<T> context) async {
+  Future<DataGridState<T>?> apply<T extends DataGridRow>(
+    EventContext<T> context,
+  ) async {
     final newRowsById = Map<double, T>.from(context.state.rowsById);
     final isNew = !newRowsById.containsKey(row.id);
     newRowsById[row.id] = row as T;
 
     final newDisplayOrder = List<double>.from(context.state.displayOrder);
     if (isNew) {
-      if (position != null && position! >= 0 && position! <= newDisplayOrder.length) {
+      if (position != null &&
+          position! >= 0 &&
+          position! <= newDisplayOrder.length) {
         newDisplayOrder.insert(position!, row.id);
       } else {
         newDisplayOrder.add(row.id);
@@ -83,10 +103,18 @@ class InsertRowEvent extends DataGridEvent {
         : newDisplayOrder;
 
     final sortedIds = context.state.sort.hasSort
-        ? context.dataIndexer.sortIds(newRowsById, filteredIds, context.state.sort.sortColumn!, context.state.columns)
+        ? context.dataIndexer.sortIds(
+            newRowsById,
+            filteredIds,
+            context.state.sort.sortColumn!,
+            context.state.columns,
+          )
         : filteredIds;
 
-    return context.state.copyWith(rowsById: newRowsById, displayOrder: sortedIds);
+    return context.state.copyWith(
+      rowsById: newRowsById,
+      displayOrder: sortedIds,
+    );
   }
 }
 
@@ -96,7 +124,9 @@ class InsertRowsEvent extends DataGridEvent {
   InsertRowsEvent({required this.rows});
 
   @override
-  Future<DataGridState<T>?> apply<T extends DataGridRow>(EventContext<T> context) async {
+  Future<DataGridState<T>?> apply<T extends DataGridRow>(
+    EventContext<T> context,
+  ) async {
     final newRowsById = Map<double, T>.from(context.state.rowsById);
     for (final row in rows) {
       newRowsById[row.id] = row as T;
@@ -120,10 +150,18 @@ class InsertRowsEvent extends DataGridEvent {
         : newDisplayOrder;
 
     final sortedIds = context.state.sort.hasSort
-        ? context.dataIndexer.sortIds(newRowsById, filteredIds, context.state.sort.sortColumn!, context.state.columns)
+        ? context.dataIndexer.sortIds(
+            newRowsById,
+            filteredIds,
+            context.state.sort.sortColumn!,
+            context.state.columns,
+          )
         : filteredIds;
 
-    return context.state.copyWith(rowsById: newRowsById, displayOrder: sortedIds);
+    return context.state.copyWith(
+      rowsById: newRowsById,
+      displayOrder: sortedIds,
+    );
   }
 }
 
@@ -137,11 +175,15 @@ class DeleteRowEvent extends DataGridEvent {
     final newRowsById = Map<double, T>.from(context.state.rowsById);
     newRowsById.remove(rowId);
 
-    final newDisplayOrder = context.state.displayOrder.where((id) => id != rowId).toList();
+    final newDisplayOrder = context.state.displayOrder
+        .where((id) => id != rowId)
+        .toList();
 
     context.dataIndexer.setData(newRowsById);
 
-    final selectedRows = Set<double>.from(context.state.selection.selectedRowIds);
+    final selectedRows = Set<double>.from(
+      context.state.selection.selectedRowIds,
+    );
     selectedRows.remove(rowId);
 
     return context.state.copyWith(
@@ -149,7 +191,9 @@ class DeleteRowEvent extends DataGridEvent {
       displayOrder: newDisplayOrder,
       selection: context.state.selection.copyWith(
         selectedRowIds: selectedRows,
-        focusedRowId: context.state.selection.focusedRowId == rowId ? null : context.state.selection.focusedRowId,
+        focusedRowId: context.state.selection.focusedRowId == rowId
+            ? null
+            : context.state.selection.focusedRowId,
       ),
     );
   }
@@ -167,11 +211,15 @@ class DeleteRowsEvent extends DataGridEvent {
       newRowsById.remove(id);
     }
 
-    final newDisplayOrder = context.state.displayOrder.where((id) => !rowIds.contains(id)).toList();
+    final newDisplayOrder = context.state.displayOrder
+        .where((id) => !rowIds.contains(id))
+        .toList();
 
     context.dataIndexer.setData(newRowsById);
 
-    final selectedRows = Set<double>.from(context.state.selection.selectedRowIds);
+    final selectedRows = Set<double>.from(
+      context.state.selection.selectedRowIds,
+    );
     selectedRows.removeAll(rowIds);
 
     return context.state.copyWith(
@@ -194,7 +242,9 @@ class UpdateRowEvent extends DataGridEvent {
   UpdateRowEvent({required this.rowId, required this.newRow});
 
   @override
-  Future<DataGridState<T>?> apply<T extends DataGridRow>(EventContext<T> context) async {
+  Future<DataGridState<T>?> apply<T extends DataGridRow>(
+    EventContext<T> context,
+  ) async {
     if (!context.state.rowsById.containsKey(rowId)) {
       return null;
     }
@@ -213,10 +263,18 @@ class UpdateRowEvent extends DataGridEvent {
         : context.state.displayOrder;
 
     final sortedIds = context.state.sort.hasSort
-        ? context.dataIndexer.sortIds(newRowsById, filteredIds, context.state.sort.sortColumn!, context.state.columns)
+        ? context.dataIndexer.sortIds(
+            newRowsById,
+            filteredIds,
+            context.state.sort.sortColumn!,
+            context.state.columns,
+          )
         : filteredIds;
 
-    return context.state.copyWith(rowsById: newRowsById, displayOrder: sortedIds);
+    return context.state.copyWith(
+      rowsById: newRowsById,
+      displayOrder: sortedIds,
+    );
   }
 }
 
@@ -225,7 +283,11 @@ class UpdateCellEvent extends DataGridEvent {
   final int columnId;
   final dynamic value;
 
-  UpdateCellEvent({required this.rowId, required this.columnId, required this.value});
+  UpdateCellEvent({
+    required this.rowId,
+    required this.columnId,
+    required this.value,
+  });
 
   @override
   DataGridState<T>? apply<T extends DataGridRow>(EventContext<T> context) {

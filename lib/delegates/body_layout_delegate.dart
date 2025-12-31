@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_data_grid/models/data/column.dart';
 import 'package:flutter_data_grid/models/data/row.dart';
 
-class BodyLayoutDelegate<T extends DataGridRow> extends MultiChildLayoutDelegate {
+class BodyLayoutDelegate<T extends DataGridRow>
+    extends MultiChildLayoutDelegate {
   final List<DataGridColumn<T>> columns;
 
   BodyLayoutDelegate({required this.columns});
@@ -15,7 +16,10 @@ class BodyLayoutDelegate<T extends DataGridRow> extends MultiChildLayoutDelegate
       if (!column.visible) continue;
 
       if (hasChild(column.id)) {
-        layoutChild(column.id, BoxConstraints.tightFor(width: column.width, height: size.height));
+        layoutChild(
+          column.id,
+          BoxConstraints.tightFor(width: column.width, height: size.height),
+        );
 
         // Position columns sequentially - Transform.translate handles scrolling
         positionChild(column.id, Offset(offsetX, 0));

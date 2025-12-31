@@ -14,7 +14,8 @@ import 'package:flutter_data_grid/theme/data_grid_theme.dart';
 /// - Pinned columns remain fixed on the left side
 /// - Unpinned columns scroll horizontally
 /// - Both sections share the same row selection state
-class DataGridRowWithPinnedCells<T extends DataGridRow> extends StatelessWidget {
+class DataGridRowWithPinnedCells<T extends DataGridRow>
+    extends StatelessWidget {
   final T row;
   final int index;
   final List<DataGridColumn<T>> pinnedColumns;
@@ -47,7 +48,9 @@ class DataGridRowWithPinnedCells<T extends DataGridRow> extends StatelessWidget 
     final theme = DataGridTheme.of(context);
 
     return StreamBuilder<bool>(
-      stream: controller.selection$.map((s) => s.isRowSelected(row.id)).distinct(),
+      stream: controller.selection$
+          .map((s) => s.isRowSelected(row.id))
+          .distinct(),
       initialData: controller.state.selection.isRowSelected(row.id),
       builder: (context, snapshot) {
         final isSelected = snapshot.data ?? false;
@@ -55,8 +58,11 @@ class DataGridRowWithPinnedCells<T extends DataGridRow> extends StatelessWidget 
         return GestureDetector(
           onTap: () {
             if (controller.state.selection.mode != SelectionMode.none) {
-              final isMultiSelectMode = controller.state.selection.mode == SelectionMode.multiple;
-              controller.addEvent(SelectRowEvent(rowId: row.id, multiSelect: isMultiSelectMode));
+              final isMultiSelectMode =
+                  controller.state.selection.mode == SelectionMode.multiple;
+              controller.addEvent(
+                SelectRowEvent(rowId: row.id, multiSelect: isMultiSelectMode),
+              );
             }
           },
           child: Container(
@@ -64,7 +70,9 @@ class DataGridRowWithPinnedCells<T extends DataGridRow> extends StatelessWidget 
             decoration: BoxDecoration(
               color: isSelected
                   ? theme.colors.selectionColor
-                  : (index % 2 == 0 ? theme.colors.evenRowColor : theme.colors.oddRowColor),
+                  : (index % 2 == 0
+                        ? theme.colors.evenRowColor
+                        : theme.colors.oddRowColor),
               border: theme.borders.rowBorder,
             ),
             child: Stack(
@@ -82,12 +90,18 @@ class DataGridRowWithPinnedCells<T extends DataGridRow> extends StatelessWidget 
                         width: unpinnedWidth,
                         height: rowHeight,
                         child: CustomMultiChildLayout(
-                          delegate: BodyLayoutDelegate(columns: unpinnedColumns),
+                          delegate: BodyLayoutDelegate(
+                            columns: unpinnedColumns,
+                          ),
                           children: [
                             for (var column in unpinnedColumns)
                               LayoutId(
                                 id: column.id,
-                                child: _RowCell<T>(row: row, column: column, cellBuilder: cellBuilder),
+                                child: _RowCell<T>(
+                                  row: row,
+                                  column: column,
+                                  cellBuilder: cellBuilder,
+                                ),
                               ),
                           ],
                         ),
@@ -112,7 +126,11 @@ class DataGridRowWithPinnedCells<T extends DataGridRow> extends StatelessWidget 
                         for (var column in pinnedColumns)
                           LayoutId(
                             id: column.id,
-                            child: _RowCell<T>(row: row, column: column, cellBuilder: cellBuilder),
+                            child: _RowCell<T>(
+                              row: row,
+                              column: column,
+                              cellBuilder: cellBuilder,
+                            ),
                           ),
                       ],
                     ),
@@ -145,7 +163,10 @@ class _RowCell<T extends DataGridRow> extends StatelessWidget {
     return Container(
       padding: theme.padding.cellPadding,
       alignment: Alignment.centerLeft,
-      child: Text('Row ${row.id}, Col ${column.id}', overflow: TextOverflow.ellipsis),
+      child: Text(
+        'Row ${row.id}, Col ${column.id}',
+        overflow: TextOverflow.ellipsis,
+      ),
     );
   }
 }

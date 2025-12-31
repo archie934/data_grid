@@ -11,7 +11,8 @@ class CustomHorizontalScrollbar extends StatefulWidget {
   const CustomHorizontalScrollbar({super.key, required this.controller});
 
   @override
-  State<CustomHorizontalScrollbar> createState() => _CustomHorizontalScrollbarState();
+  State<CustomHorizontalScrollbar> createState() =>
+      _CustomHorizontalScrollbarState();
 }
 
 class _CustomHorizontalScrollbarState extends State<CustomHorizontalScrollbar> {
@@ -41,7 +42,10 @@ class _CustomHorizontalScrollbarState extends State<CustomHorizontalScrollbar> {
 
             final position = widget.controller.position;
             final viewportSize = position.viewportDimension;
-            final scrollOffset = position.pixels.clamp(0.0, position.maxScrollExtent);
+            final scrollOffset = position.pixels.clamp(
+              0.0,
+              position.maxScrollExtent,
+            );
             final maxScrollExtent = position.maxScrollExtent;
 
             if (viewportSize == 0 || maxScrollExtent <= 0) {
@@ -53,9 +57,12 @@ class _CustomHorizontalScrollbarState extends State<CustomHorizontalScrollbar> {
               return Container(height: height, color: trackColor);
             }
 
-            final thumbWidth = ((viewportSize / contentSize) * trackWidth).clamp(thumbMinSize, trackWidth);
+            final thumbWidth = ((viewportSize / contentSize) * trackWidth)
+                .clamp(thumbMinSize, trackWidth);
             final scrollableTrackWidth = trackWidth - thumbWidth;
-            final thumbOffset = maxScrollExtent > 0 ? (scrollOffset / maxScrollExtent) * scrollableTrackWidth : 0.0;
+            final thumbOffset = maxScrollExtent > 0
+                ? (scrollOffset / maxScrollExtent) * scrollableTrackWidth
+                : 0.0;
 
             return GestureDetector(
               behavior: HitTestBehavior.opaque,
@@ -65,9 +72,13 @@ class _CustomHorizontalScrollbarState extends State<CustomHorizontalScrollbar> {
                 final tapPosition = details.localPosition.dx;
 
                 // Calculate target scroll position based on tap location
-                final targetThumbOffset = (tapPosition - thumbWidth / 2).clamp(0.0, scrollableTrackWidth);
+                final targetThumbOffset = (tapPosition - thumbWidth / 2).clamp(
+                  0.0,
+                  scrollableTrackWidth,
+                );
                 final targetScrollOffset = scrollableTrackWidth > 0
-                    ? (targetThumbOffset / scrollableTrackWidth) * maxScrollExtent
+                    ? (targetThumbOffset / scrollableTrackWidth) *
+                          maxScrollExtent
                     : 0.0;
 
                 // Animate to target position
@@ -88,7 +99,10 @@ class _CustomHorizontalScrollbarState extends State<CustomHorizontalScrollbar> {
                 if (startOffset == null || startThumbOffset == null) return;
 
                 final delta = details.localPosition.dx - startOffset;
-                final newThumbOffset = (startThumbOffset + delta).clamp(0.0, scrollableTrackWidth);
+                final newThumbOffset = (startThumbOffset + delta).clamp(
+                  0.0,
+                  scrollableTrackWidth,
+                );
                 final newScrollOffset = scrollableTrackWidth > 0
                     ? (newThumbOffset / scrollableTrackWidth) * maxScrollExtent
                     : 0.0;
@@ -114,7 +128,9 @@ class _CustomHorizontalScrollbarState extends State<CustomHorizontalScrollbar> {
                 child: Stack(
                   children: [
                     AnimatedPositioned(
-                      duration: _isDragging ? Duration.zero : const Duration(milliseconds: 100),
+                      duration: _isDragging
+                          ? Duration.zero
+                          : const Duration(milliseconds: 100),
                       curve: Curves.easeOutCubic,
                       left: thumbOffset,
                       top: thumbInset,
@@ -123,7 +139,9 @@ class _CustomHorizontalScrollbarState extends State<CustomHorizontalScrollbar> {
                         width: thumbWidth,
                         decoration: BoxDecoration(
                           color: thumbColor,
-                          borderRadius: BorderRadius.circular((height - thumbInset * 2) / 2),
+                          borderRadius: BorderRadius.circular(
+                            (height - thumbInset * 2) / 2,
+                          ),
                         ),
                       ),
                     ),

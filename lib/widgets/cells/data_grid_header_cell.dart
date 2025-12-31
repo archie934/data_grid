@@ -35,7 +35,8 @@ class _DataGridHeaderCellState extends State<DataGridHeaderCell> {
   Widget build(BuildContext context) {
     final theme = DataGridTheme.of(context);
     final sortColumn = widget.sortState.sortColumn;
-    final isSorted = sortColumn != null && sortColumn.columnId == widget.column.id;
+    final isSorted =
+        sortColumn != null && sortColumn.columnId == widget.column.id;
 
     final sortLabel = !isSorted
         ? 'Sort by ${widget.column.title}'
@@ -56,7 +57,10 @@ class _DataGridHeaderCellState extends State<DataGridHeaderCell> {
         }
       },
       child: Container(
-        decoration: BoxDecoration(color: theme.colors.headerColor, border: theme.borders.headerBorder),
+        decoration: BoxDecoration(
+          color: theme.colors.headerColor,
+          border: theme.borders.headerBorder,
+        ),
         child: Stack(
           children: [
             InkWell(
@@ -76,14 +80,19 @@ class _DataGridHeaderCellState extends State<DataGridHeaderCell> {
                     Expanded(
                       child: Text(
                         widget.column.title,
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     if (isSorted) ...[
                       SizedBox(width: theme.padding.iconSpacing),
                       Icon(
-                        sortColumn.direction == SortDirection.ascending ? Icons.arrow_upward : Icons.arrow_downward,
+                        sortColumn.direction == SortDirection.ascending
+                            ? Icons.arrow_upward
+                            : Icons.arrow_downward,
                         size: 16,
                       ),
                     ],
@@ -116,7 +125,9 @@ class _DataGridHeaderCellState extends State<DataGridHeaderCell> {
                   cursor: SystemMouseCursors.resizeColumn,
                   child: Container(
                     width: theme.dimensions.resizeHandleWidth,
-                    color: _isResizing ? theme.colors.resizeHandleActiveColor : Colors.transparent,
+                    color: _isResizing
+                        ? theme.colors.resizeHandleActiveColor
+                        : Colors.transparent,
                   ),
                 ),
               ),

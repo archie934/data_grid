@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 /// Widget that tracks scroll controller changes and rebuilds its child.
-/// 
+///
 /// This is used to synchronize scrollbars with scroll position changes.
 /// It listens to the scroll controller and triggers rebuilds when scrolling occurs.
 class ScrollbarTracker extends StatefulWidget {
@@ -53,4 +53,3 @@ class _ScrollbarTrackerState extends State<ScrollbarTracker> {
     return widget.child;
   }
 }
-

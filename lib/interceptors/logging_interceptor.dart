@@ -10,10 +10,17 @@ class LoggingInterceptor<T extends DataGridRow> extends DataGridInterceptor<T> {
   final bool logStateChanges;
   final bool logErrors;
 
-  const LoggingInterceptor({this.logEvents = true, this.logStateChanges = true, this.logErrors = true});
+  const LoggingInterceptor({
+    this.logEvents = true,
+    this.logStateChanges = true,
+    this.logErrors = true,
+  });
 
   @override
-  DataGridEvent? onBeforeEvent(DataGridEvent event, DataGridState<T> currentState) {
+  DataGridEvent? onBeforeEvent(
+    DataGridEvent event,
+    DataGridState<T> currentState,
+  ) {
     if (logEvents && kDebugMode) {
       debugPrint('[DataGrid] Event: ${event.runtimeType}');
     }
@@ -21,9 +28,15 @@ class LoggingInterceptor<T extends DataGridRow> extends DataGridInterceptor<T> {
   }
 
   @override
-  void onAfterStateUpdate(DataGridState<T> newState, DataGridState<T> oldState, DataGridEvent? event) {
+  void onAfterStateUpdate(
+    DataGridState<T> newState,
+    DataGridState<T> oldState,
+    DataGridEvent? event,
+  ) {
     if (logStateChanges && kDebugMode) {
-      debugPrint('[DataGrid] State updated: ${_describeStateChange(newState, oldState)}');
+      debugPrint(
+        '[DataGrid] State updated: ${_describeStateChange(newState, oldState)}',
+      );
     }
     super.onAfterStateUpdate(newState, oldState, event);
   }
@@ -37,15 +50,22 @@ class LoggingInterceptor<T extends DataGridRow> extends DataGridInterceptor<T> {
     super.onError(error, stackTrace, event);
   }
 
-  String _describeStateChange(DataGridState<T> newState, DataGridState<T> oldState) {
+  String _describeStateChange(
+    DataGridState<T> newState,
+    DataGridState<T> oldState,
+  ) {
     final changes = <String>[];
 
     if (newState.rowsById.length != oldState.rowsById.length) {
-      changes.add('rows: ${oldState.rowsById.length} → ${newState.rowsById.length}');
+      changes.add(
+        'rows: ${oldState.rowsById.length} → ${newState.rowsById.length}',
+      );
     }
 
     if (newState.columns.length != oldState.columns.length) {
-      changes.add('columns: ${oldState.columns.length} → ${newState.columns.length}');
+      changes.add(
+        'columns: ${oldState.columns.length} → ${newState.columns.length}',
+      );
     }
 
     if (newState.selection != oldState.selection) {

@@ -28,8 +28,18 @@ void main() {
 
     setUp(() {
       columns = [
-        DataGridColumn<TestRow>(id: 1, title: 'Name', width: 150, valueAccessor: (row) => row.name),
-        DataGridColumn<TestRow>(id: 2, title: 'Value', width: 100, valueAccessor: (row) => row.value),
+        DataGridColumn<TestRow>(
+          id: 1,
+          title: 'Name',
+          width: 150,
+          valueAccessor: (row) => row.name,
+        ),
+        DataGridColumn<TestRow>(
+          id: 2,
+          title: 'Value',
+          width: 100,
+          valueAccessor: (row) => row.value,
+        ),
       ];
 
       rows = [
@@ -94,7 +104,9 @@ void main() {
       expect(controller.state.selection.isRowSelected(2), true);
     });
 
-    testWidgets('arrow down from no selection selects first row', (tester) async {
+    testWidgets('arrow down from no selection selects first row', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(body: DataGrid<TestRow>(controller: controller)),
@@ -189,7 +201,9 @@ void main() {
       expect(controller.state.selection.selectedRowIds.length, greaterThan(0));
     });
 
-    testWidgets('keyboard navigation works with SelectionMode.none disabled', (tester) async {
+    testWidgets('keyboard navigation works with SelectionMode.none disabled', (
+      tester,
+    ) async {
       controller.setSelectionMode(SelectionMode.none);
 
       await tester.pumpWidget(
@@ -239,11 +253,16 @@ void main() {
         ),
       ];
 
-      final editableController = DataGridController<TestRow>(initialColumns: editableColumns, initialRows: rows);
+      final editableController = DataGridController<TestRow>(
+        initialColumns: editableColumns,
+        initialRows: rows,
+      );
 
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(body: DataGrid<TestRow>(controller: editableController)),
+          home: Scaffold(
+            body: DataGrid<TestRow>(controller: editableController),
+          ),
         ),
       );
 
@@ -267,7 +286,9 @@ void main() {
       editableController.dispose();
     });
 
-    testWidgets('multiple arrow down presses navigate through rows', (tester) async {
+    testWidgets('multiple arrow down presses navigate through rows', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(body: DataGrid<TestRow>(controller: controller)),
@@ -292,7 +313,9 @@ void main() {
       expect(controller.state.selection.focusedRowId, 4);
     });
 
-    testWidgets('multiple arrow up presses navigate through rows', (tester) async {
+    testWidgets('multiple arrow up presses navigate through rows', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(body: DataGrid<TestRow>(controller: controller)),
@@ -317,7 +340,9 @@ void main() {
       expect(controller.state.selection.focusedRowId, 2);
     });
 
-    testWidgets('keyboard navigation updates selection in single mode', (tester) async {
+    testWidgets('keyboard navigation updates selection in single mode', (
+      tester,
+    ) async {
       controller.setSelectionMode(SelectionMode.single);
 
       await tester.pumpWidget(
@@ -348,18 +373,29 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      controller.addEvent(FilterEvent(columnId: 2, operator: FilterOperator.greaterThan, value: 200));
+      controller.addEvent(
+        FilterEvent(
+          columnId: 2,
+          operator: FilterOperator.greaterThan,
+          value: 200,
+        ),
+      );
       await waitForAsync(tester);
 
       expect(controller.state.displayOrder.length, 3);
 
-      controller.addEvent(SelectRowEvent(rowId: controller.state.displayOrder[0]));
+      controller.addEvent(
+        SelectRowEvent(rowId: controller.state.displayOrder[0]),
+      );
       await waitForAsync(tester);
 
       await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
       await waitForAsync(tester);
 
-      expect(controller.state.selection.focusedRowId, controller.state.displayOrder[1]);
+      expect(
+        controller.state.selection.focusedRowId,
+        controller.state.displayOrder[1],
+      );
     });
 
     testWidgets('keyboard navigation works with sorted data', (tester) async {
@@ -371,10 +407,14 @@ void main() {
 
       await tester.pumpAndSettle();
 
-      controller.addEvent(SortEvent(columnId: 1, direction: SortDirection.descending));
+      controller.addEvent(
+        SortEvent(columnId: 1, direction: SortDirection.descending),
+      );
       await tester.pumpAndSettle();
 
-      controller.addEvent(SelectRowEvent(rowId: controller.state.displayOrder[0]));
+      controller.addEvent(
+        SelectRowEvent(rowId: controller.state.displayOrder[0]),
+      );
       await tester.pumpAndSettle();
 
       final firstRowId = controller.state.selection.focusedRowId;
@@ -382,7 +422,10 @@ void main() {
       await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
       await tester.pumpAndSettle();
 
-      expect(controller.state.selection.focusedRowId, controller.state.displayOrder[1]);
+      expect(
+        controller.state.selection.focusedRowId,
+        controller.state.displayOrder[1],
+      );
       expect(controller.state.selection.focusedRowId, isNot(firstRowId));
     });
 

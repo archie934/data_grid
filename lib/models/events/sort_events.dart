@@ -19,7 +19,10 @@ class SortEvent extends DataGridEvent {
   @override
   DataGridState<T>? apply<T extends DataGridRow>(EventContext<T> context) {
     context.sortDelegate.handleSort(this, context.state, (result) {
-      final newState = context.state.copyWith(sort: result.sortState, displayOrder: result.displayOrder);
+      final newState = context.state.copyWith(
+        sort: result.sortState,
+        displayOrder: result.displayOrder,
+      );
       context.dispatchEvent(SortCompleteEvent(newState: newState));
     });
     return null;

@@ -22,7 +22,10 @@ abstract class DataGridInterceptor<T extends DataGridRow> {
   /// - The same event to continue processing
   /// - A modified event to change behavior
   /// - null to cancel the event (it won't be processed)
-  DataGridEvent? onBeforeEvent(DataGridEvent event, DataGridState<T> currentState) => event;
+  DataGridEvent? onBeforeEvent(
+    DataGridEvent event,
+    DataGridState<T> currentState,
+  ) => event;
 
   /// Called after event is processed but before state is updated.
   ///
@@ -30,13 +33,20 @@ abstract class DataGridInterceptor<T extends DataGridRow> {
   /// - The same state to continue with the update
   /// - A modified state to change what gets applied
   /// - null to cancel the state update
-  DataGridState<T>? onBeforeStateUpdate(DataGridState<T> newState, DataGridState<T> oldState, DataGridEvent? event) =>
-      newState;
+  DataGridState<T>? onBeforeStateUpdate(
+    DataGridState<T> newState,
+    DataGridState<T> oldState,
+    DataGridEvent? event,
+  ) => newState;
 
   /// Called after state has been updated.
   ///
   /// Use this for side effects like logging, analytics, or triggering other actions.
-  void onAfterStateUpdate(DataGridState<T> newState, DataGridState<T> oldState, DataGridEvent? event) {}
+  void onAfterStateUpdate(
+    DataGridState<T> newState,
+    DataGridState<T> oldState,
+    DataGridEvent? event,
+  ) {}
 
   /// Called when an error occurs during event processing.
   void onError(Object error, StackTrace stackTrace, DataGridEvent? event) {}

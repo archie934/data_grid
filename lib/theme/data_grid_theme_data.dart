@@ -133,7 +133,8 @@ class DataGridDimensions {
       selectionColumnWidth: selectionColumnWidth ?? this.selectionColumnWidth,
       columnMinWidth: columnMinWidth ?? this.columnMinWidth,
       columnMaxWidth: columnMaxWidth ?? this.columnMaxWidth,
-      scrollbarThumbMinSize: scrollbarThumbMinSize ?? this.scrollbarThumbMinSize,
+      scrollbarThumbMinSize:
+          scrollbarThumbMinSize ?? this.scrollbarThumbMinSize,
       resizeHandleWidth: resizeHandleWidth ?? this.resizeHandleWidth,
     );
   }
@@ -174,12 +175,22 @@ class DataGridPadding {
     EdgeInsets? filterInputPadding,
     double? iconSpacing,
     double? scrollbarThumbInset,
-  }) : cellPadding = cellPadding ?? const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-       editorPadding = editorPadding ?? const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+  }) : cellPadding =
+           cellPadding ??
+           const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+       editorPadding =
+           editorPadding ??
+           const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
        checkboxPadding = checkboxPadding ?? const EdgeInsets.all(8),
-       headerPadding = headerPadding ?? const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-       filterPadding = filterPadding ?? const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-       filterInputPadding = filterInputPadding ?? const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+       headerPadding =
+           headerPadding ??
+           const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+       filterPadding =
+           filterPadding ??
+           const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+       filterInputPadding =
+           filterInputPadding ??
+           const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
        iconSpacing = iconSpacing ?? 4.0,
        scrollbarThumbInset = scrollbarThumbInset ?? 2.0;
 
@@ -255,9 +266,13 @@ class DataGridColors {
        headerColor = headerColor ?? Colors.grey[200]!,
        filterBackgroundColor = filterBackgroundColor ?? Colors.grey[100]!,
        editIndicatorColor = editIndicatorColor ?? Colors.blue,
-       resizeHandleActiveColor = resizeHandleActiveColor ?? Colors.blue.withValues(alpha: 0.3),
-       scrollbarTrackColor = scrollbarTrackColor ?? Colors.grey.withValues(alpha: 0.1),
-       scrollbarThumbColor = scrollbarThumbColor ?? const Color(0xFF757575).withValues(alpha: 0.7);
+       resizeHandleActiveColor =
+           resizeHandleActiveColor ?? Colors.blue.withValues(alpha: 0.3),
+       scrollbarTrackColor =
+           scrollbarTrackColor ?? Colors.grey.withValues(alpha: 0.1),
+       scrollbarThumbColor =
+           scrollbarThumbColor ??
+           const Color(0xFF757575).withValues(alpha: 0.7);
 
   factory DataGridColors.defaults() {
     return DataGridColors();
@@ -279,9 +294,11 @@ class DataGridColors {
       evenRowColor: evenRowColor ?? this.evenRowColor,
       oddRowColor: oddRowColor ?? this.oddRowColor,
       headerColor: headerColor ?? this.headerColor,
-      filterBackgroundColor: filterBackgroundColor ?? this.filterBackgroundColor,
+      filterBackgroundColor:
+          filterBackgroundColor ?? this.filterBackgroundColor,
       editIndicatorColor: editIndicatorColor ?? this.editIndicatorColor,
-      resizeHandleActiveColor: resizeHandleActiveColor ?? this.resizeHandleActiveColor,
+      resizeHandleActiveColor:
+          resizeHandleActiveColor ?? this.resizeHandleActiveColor,
       scrollbarTrackColor: scrollbarTrackColor ?? this.scrollbarTrackColor,
       scrollbarThumbColor: scrollbarThumbColor ?? this.scrollbarThumbColor,
     );
@@ -351,9 +368,18 @@ class DataGridBorders {
              bottom: BorderSide(color: Color(0xFFBDBDBD), width: 1.0),
              right: BorderSide(color: Color(0xFFBDBDBD), width: 1.0),
            ),
-       rowBorder = rowBorder ?? const Border(bottom: BorderSide(color: Color(0xFFE0E0E0), width: 1.0)),
-       pinnedBorder = pinnedBorder ?? const Border(right: BorderSide(color: Color(0xFFBDBDBD), width: 2.0)),
-       editingBorder = editingBorder ?? Border.all(color: Colors.blue, width: 2.0),
+       rowBorder =
+           rowBorder ??
+           const Border(
+             bottom: BorderSide(color: Color(0xFFE0E0E0), width: 1.0),
+           ),
+       pinnedBorder =
+           pinnedBorder ??
+           const Border(
+             right: BorderSide(color: Color(0xFFBDBDBD), width: 2.0),
+           ),
+       editingBorder =
+           editingBorder ?? Border.all(color: Colors.blue, width: 2.0),
        scrollbarBorder =
            scrollbarBorder ??
            const Border(
@@ -362,7 +388,13 @@ class DataGridBorders {
            ),
        pinnedShadow =
            pinnedShadow ??
-           [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 4.0, offset: const Offset(2, 0))];
+           [
+             BoxShadow(
+               color: Colors.black.withValues(alpha: 0.1),
+               blurRadius: 4.0,
+               offset: const Offset(2, 0),
+             ),
+           ];
 
   factory DataGridBorders.defaults() {
     return DataGridBorders();

@@ -19,7 +19,11 @@ abstract class SortDelegate<T extends DataGridRow> {
   /// - Calling onComplete with the result
   ///
   /// Returns a Future that completes when the operation finishes.
-  Future<SortResult?> handleSort(SortEvent event, DataGridState<T> currentState, void Function(SortResult) onComplete);
+  Future<SortResult?> handleSort(
+    SortEvent event,
+    DataGridState<T> currentState,
+    void Function(SortResult) onComplete,
+  );
 
   /// Dispose any resources (timers, subscriptions, etc.)
   void dispose();

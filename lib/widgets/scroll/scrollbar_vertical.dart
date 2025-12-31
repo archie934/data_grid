@@ -11,7 +11,8 @@ class CustomVerticalScrollbar extends StatefulWidget {
   const CustomVerticalScrollbar({super.key, required this.controller});
 
   @override
-  State<CustomVerticalScrollbar> createState() => _CustomVerticalScrollbarState();
+  State<CustomVerticalScrollbar> createState() =>
+      _CustomVerticalScrollbarState();
 }
 
 class _CustomVerticalScrollbarState extends State<CustomVerticalScrollbar> {
@@ -41,7 +42,10 @@ class _CustomVerticalScrollbarState extends State<CustomVerticalScrollbar> {
 
             final position = widget.controller.position;
             final viewportSize = position.viewportDimension;
-            final scrollOffset = position.pixels.clamp(0.0, position.maxScrollExtent);
+            final scrollOffset = position.pixels.clamp(
+              0.0,
+              position.maxScrollExtent,
+            );
             final maxScrollExtent = position.maxScrollExtent;
 
             if (viewportSize == 0 || maxScrollExtent <= 0) {
@@ -53,9 +57,12 @@ class _CustomVerticalScrollbarState extends State<CustomVerticalScrollbar> {
               return Container(width: width, color: trackColor);
             }
 
-            final thumbHeight = ((viewportSize / contentSize) * trackHeight).clamp(thumbMinSize, trackHeight);
+            final thumbHeight = ((viewportSize / contentSize) * trackHeight)
+                .clamp(thumbMinSize, trackHeight);
             final scrollableTrackHeight = trackHeight - thumbHeight;
-            final thumbOffset = maxScrollExtent > 0 ? (scrollOffset / maxScrollExtent) * scrollableTrackHeight : 0.0;
+            final thumbOffset = maxScrollExtent > 0
+                ? (scrollOffset / maxScrollExtent) * scrollableTrackHeight
+                : 0.0;
 
             return GestureDetector(
               behavior: HitTestBehavior.opaque,
@@ -65,9 +72,13 @@ class _CustomVerticalScrollbarState extends State<CustomVerticalScrollbar> {
                 final tapPosition = details.localPosition.dy;
 
                 // Calculate target scroll position based on tap location
-                final targetThumbOffset = (tapPosition - thumbHeight / 2).clamp(0.0, scrollableTrackHeight);
+                final targetThumbOffset = (tapPosition - thumbHeight / 2).clamp(
+                  0.0,
+                  scrollableTrackHeight,
+                );
                 final targetScrollOffset = scrollableTrackHeight > 0
-                    ? (targetThumbOffset / scrollableTrackHeight) * maxScrollExtent
+                    ? (targetThumbOffset / scrollableTrackHeight) *
+                          maxScrollExtent
                     : 0.0;
 
                 // Animate to target position
@@ -88,7 +99,10 @@ class _CustomVerticalScrollbarState extends State<CustomVerticalScrollbar> {
                 if (startOffset == null || startThumbOffset == null) return;
 
                 final delta = details.localPosition.dy - startOffset;
-                final newThumbOffset = (startThumbOffset + delta).clamp(0.0, scrollableTrackHeight);
+                final newThumbOffset = (startThumbOffset + delta).clamp(
+                  0.0,
+                  scrollableTrackHeight,
+                );
                 final newScrollOffset = scrollableTrackHeight > 0
                     ? (newThumbOffset / scrollableTrackHeight) * maxScrollExtent
                     : 0.0;
@@ -114,7 +128,9 @@ class _CustomVerticalScrollbarState extends State<CustomVerticalScrollbar> {
                 child: Stack(
                   children: [
                     AnimatedPositioned(
-                      duration: _isDragging ? Duration.zero : const Duration(milliseconds: 100),
+                      duration: _isDragging
+                          ? Duration.zero
+                          : const Duration(milliseconds: 100),
                       curve: Curves.easeOutCubic,
                       top: thumbOffset,
                       left: thumbInset,
@@ -123,7 +139,9 @@ class _CustomVerticalScrollbarState extends State<CustomVerticalScrollbar> {
                         height: thumbHeight,
                         decoration: BoxDecoration(
                           color: thumbColor,
-                          borderRadius: BorderRadius.circular((width - thumbInset * 2) / 2),
+                          borderRadius: BorderRadius.circular(
+                            (width - thumbInset * 2) / 2,
+                          ),
                         ),
                       ),
                     ),

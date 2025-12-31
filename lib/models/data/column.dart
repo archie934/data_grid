@@ -4,10 +4,16 @@ import 'package:flutter_data_grid/renderers/cell_renderer.dart';
 import 'package:flutter_data_grid/models/data/row.dart';
 
 /// Builder function for custom cell editor widgets.
-typedef CellEditorBuilder = Widget Function(BuildContext context, dynamic value, ValueChanged<dynamic> onChanged);
+typedef CellEditorBuilder =
+    Widget Function(
+      BuildContext context,
+      dynamic value,
+      ValueChanged<dynamic> onChanged,
+    );
 
 /// Formatter function to convert cell values to display strings.
-typedef CellFormatter<T extends DataGridRow> = String Function(T row, DataGridColumn column);
+typedef CellFormatter<T extends DataGridRow> =
+    String Function(T row, DataGridColumn column);
 
 /// Column ID used for the selection checkbox column.
 const int kSelectionColumnId = -1;

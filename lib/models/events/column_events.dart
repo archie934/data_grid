@@ -31,7 +31,10 @@ class ColumnReorderEvent extends DataGridEvent {
   DataGridState<T>? apply<T extends DataGridRow>(EventContext<T> context) {
     final updatedColumns = List.of(context.state.columns);
 
-    if (oldIndex < 0 || oldIndex >= updatedColumns.length || newIndex < 0 || newIndex >= updatedColumns.length) {
+    if (oldIndex < 0 ||
+        oldIndex >= updatedColumns.length ||
+        newIndex < 0 ||
+        newIndex >= updatedColumns.length) {
       return null;
     }
 

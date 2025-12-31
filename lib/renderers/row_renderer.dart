@@ -14,7 +14,12 @@ abstract class RowRenderer<T extends DataGridRow> {
   /// [row] - The data row to render
   /// [index] - Row index in the visible list
   /// [renderContext] - Additional rendering context (selection, controller, etc.)
-  Widget buildRow(BuildContext context, T row, int index, RowRenderContext<T> renderContext);
+  Widget buildRow(
+    BuildContext context,
+    T row,
+    int index,
+    RowRenderContext<T> renderContext,
+  );
 
   /// Optional: Calculate row height dynamically.
   /// Return null to use default height.

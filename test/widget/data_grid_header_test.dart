@@ -14,13 +14,23 @@ class TestRow extends DataGridRow {
 void main() {
   group('DataGridHeaderCell', () {
     testWidgets('renders column title', (tester) async {
-      final column = DataGridColumn<TestRow>(id: 1, title: 'Test Column', width: 150, valueAccessor: (row) => row.name);
+      final column = DataGridColumn<TestRow>(
+        id: 1,
+        title: 'Test Column',
+        width: 150,
+        valueAccessor: (row) => row.name,
+      );
       final sortState = SortState.initial();
 
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: DataGridHeaderCell(column: column, sortState: sortState, onSort: (_) {}, onResize: (_) {}),
+            body: DataGridHeaderCell(
+              column: column,
+              sortState: sortState,
+              onSort: (_) {},
+              onResize: (_) {},
+            ),
           ),
         ),
       );
@@ -28,14 +38,28 @@ void main() {
       expect(find.text('Test Column'), findsOneWidget);
     });
 
-    testWidgets('shows ascending sort icon when sorted ascending', (tester) async {
-      final column = DataGridColumn<TestRow>(id: 1, title: 'Test Column', width: 150, valueAccessor: (row) => row.name);
-      final sortState = SortState(sortColumn: SortColumn(columnId: 1, direction: SortDirection.ascending));
+    testWidgets('shows ascending sort icon when sorted ascending', (
+      tester,
+    ) async {
+      final column = DataGridColumn<TestRow>(
+        id: 1,
+        title: 'Test Column',
+        width: 150,
+        valueAccessor: (row) => row.name,
+      );
+      final sortState = SortState(
+        sortColumn: SortColumn(columnId: 1, direction: SortDirection.ascending),
+      );
 
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: DataGridHeaderCell(column: column, sortState: sortState, onSort: (_) {}, onResize: (_) {}),
+            body: DataGridHeaderCell(
+              column: column,
+              sortState: sortState,
+              onSort: (_) {},
+              onResize: (_) {},
+            ),
           ),
         ),
       );
@@ -43,14 +67,31 @@ void main() {
       expect(find.byIcon(Icons.arrow_upward), findsOneWidget);
     });
 
-    testWidgets('shows descending sort icon when sorted descending', (tester) async {
-      final column = DataGridColumn<TestRow>(id: 1, title: 'Test Column', width: 150, valueAccessor: (row) => row.name);
-      final sortState = SortState(sortColumn: SortColumn(columnId: 1, direction: SortDirection.descending));
+    testWidgets('shows descending sort icon when sorted descending', (
+      tester,
+    ) async {
+      final column = DataGridColumn<TestRow>(
+        id: 1,
+        title: 'Test Column',
+        width: 150,
+        valueAccessor: (row) => row.name,
+      );
+      final sortState = SortState(
+        sortColumn: SortColumn(
+          columnId: 1,
+          direction: SortDirection.descending,
+        ),
+      );
 
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: DataGridHeaderCell(column: column, sortState: sortState, onSort: (_) {}, onResize: (_) {}),
+            body: DataGridHeaderCell(
+              column: column,
+              sortState: sortState,
+              onSort: (_) {},
+              onResize: (_) {},
+            ),
           ),
         ),
       );
@@ -59,7 +100,12 @@ void main() {
     });
 
     testWidgets('cycles through sort states on tap', (tester) async {
-      final column = DataGridColumn<TestRow>(id: 1, title: 'Test Column', width: 150, valueAccessor: (row) => row.name);
+      final column = DataGridColumn<TestRow>(
+        id: 1,
+        title: 'Test Column',
+        width: 150,
+        valueAccessor: (row) => row.name,
+      );
       SortDirection? lastDirection;
 
       await tester.pumpWidget(
@@ -86,7 +132,12 @@ void main() {
           home: Scaffold(
             body: DataGridHeaderCell(
               column: column,
-              sortState: SortState(sortColumn: SortColumn(columnId: 1, direction: SortDirection.ascending)),
+              sortState: SortState(
+                sortColumn: SortColumn(
+                  columnId: 1,
+                  direction: SortDirection.ascending,
+                ),
+              ),
               onSort: (direction) {
                 lastDirection = direction;
               },
@@ -105,7 +156,12 @@ void main() {
           home: Scaffold(
             body: DataGridHeaderCell(
               column: column,
-              sortState: SortState(sortColumn: SortColumn(columnId: 1, direction: SortDirection.descending)),
+              sortState: SortState(
+                sortColumn: SortColumn(
+                  columnId: 1,
+                  direction: SortDirection.descending,
+                ),
+              ),
               onSort: (direction) {
                 lastDirection = direction;
               },
@@ -121,13 +177,25 @@ void main() {
     });
 
     testWidgets('does not show sort icon for different column', (tester) async {
-      final column = DataGridColumn<TestRow>(id: 1, title: 'Test Column', width: 150, valueAccessor: (row) => row.name);
-      final sortState = SortState(sortColumn: SortColumn(columnId: 2, direction: SortDirection.ascending));
+      final column = DataGridColumn<TestRow>(
+        id: 1,
+        title: 'Test Column',
+        width: 150,
+        valueAccessor: (row) => row.name,
+      );
+      final sortState = SortState(
+        sortColumn: SortColumn(columnId: 2, direction: SortDirection.ascending),
+      );
 
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: DataGridHeaderCell(column: column, sortState: sortState, onSort: (_) {}, onResize: (_) {}),
+            body: DataGridHeaderCell(
+              column: column,
+              sortState: sortState,
+              onSort: (_) {},
+              onResize: (_) {},
+            ),
           ),
         ),
       );
@@ -137,7 +205,12 @@ void main() {
     });
 
     testWidgets('triggers resize on drag', (tester) async {
-      final column = DataGridColumn<TestRow>(id: 1, title: 'Test Column', width: 150, valueAccessor: (row) => row.name);
+      final column = DataGridColumn<TestRow>(
+        id: 1,
+        title: 'Test Column',
+        width: 150,
+        valueAccessor: (row) => row.name,
+      );
       double? resizeDelta;
 
       await tester.pumpWidget(
@@ -155,7 +228,10 @@ void main() {
         ),
       );
 
-      final resizeHandle = find.descendant(of: find.byType(GestureDetector), matching: find.byType(MouseRegion));
+      final resizeHandle = find.descendant(
+        of: find.byType(GestureDetector),
+        matching: find.byType(MouseRegion),
+      );
 
       expect(resizeHandle, findsOneWidget);
 
@@ -166,18 +242,31 @@ void main() {
     });
 
     testWidgets('shows resize cursor on hover', (tester) async {
-      final column = DataGridColumn<TestRow>(id: 1, title: 'Test Column', width: 150, valueAccessor: (row) => row.name);
+      final column = DataGridColumn<TestRow>(
+        id: 1,
+        title: 'Test Column',
+        width: 150,
+        valueAccessor: (row) => row.name,
+      );
 
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: DataGridHeaderCell(column: column, sortState: SortState.initial(), onSort: (_) {}, onResize: (_) {}),
+            body: DataGridHeaderCell(
+              column: column,
+              sortState: SortState.initial(),
+              onSort: (_) {},
+              onResize: (_) {},
+            ),
           ),
         ),
       );
 
       final mouseRegion = tester.widget<MouseRegion>(
-        find.descendant(of: find.byType(GestureDetector), matching: find.byType(MouseRegion)),
+        find.descendant(
+          of: find.byType(GestureDetector),
+          matching: find.byType(MouseRegion),
+        ),
       );
 
       expect(mouseRegion.cursor, SystemMouseCursors.resizeColumn);

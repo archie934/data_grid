@@ -43,7 +43,9 @@ abstract class DataGridState<T extends DataGridRow> with _$DataGridState<T> {
   List<DataGridColumn<T>> get effectiveColumns {
     if (selection.mode == SelectionMode.multiple) {
       final hasPinnedColumns = columns.any((col) => col.pinned);
-      final selectionColumn = DataGridColumn<T>.selection(pinned: hasPinnedColumns);
+      final selectionColumn = DataGridColumn<T>.selection(
+        pinned: hasPinnedColumns,
+      );
       return [selectionColumn, ...columns];
     }
     return columns;
@@ -88,8 +90,11 @@ abstract class SelectionState with _$SelectionState {
 
   const SelectionState._();
 
-  factory SelectionState.initial() =>
-      const SelectionState(selectedRowIds: {}, selectedCellIds: {}, mode: SelectionMode.single);
+  factory SelectionState.initial() => const SelectionState(
+    selectedRowIds: {},
+    selectedCellIds: {},
+    mode: SelectionMode.single,
+  );
 
   bool isRowSelected(double rowId) => selectedRowIds.contains(rowId);
   bool isCellSelected(String cellId) => selectedCellIds.contains(cellId);
@@ -108,12 +113,16 @@ abstract class SortState with _$SortState {
 
 @freezed
 abstract class SortColumn with _$SortColumn {
-  const factory SortColumn({required int columnId, required SortDirection direction}) = _SortColumn;
+  const factory SortColumn({
+    required int columnId,
+    required SortDirection direction,
+  }) = _SortColumn;
 }
 
 @freezed
 abstract class FilterState with _$FilterState {
-  const factory FilterState({required Map<int, ColumnFilter> columnFilters}) = _FilterState;
+  const factory FilterState({required Map<int, ColumnFilter> columnFilters}) =
+      _FilterState;
 
   const FilterState._();
 
@@ -124,18 +133,24 @@ abstract class FilterState with _$FilterState {
 
 @freezed
 abstract class ColumnFilter with _$ColumnFilter {
-  const factory ColumnFilter({required int columnId, required FilterOperator operator, required dynamic value}) =
-      _ColumnFilter;
+  const factory ColumnFilter({
+    required int columnId,
+    required FilterOperator operator,
+    required dynamic value,
+  }) = _ColumnFilter;
 }
 
 @freezed
 abstract class GroupState with _$GroupState {
-  const factory GroupState({required List<int> groupedColumnIds, required Map<String, bool> expandedGroups}) =
-      _GroupState;
+  const factory GroupState({
+    required List<int> groupedColumnIds,
+    required Map<String, bool> expandedGroups,
+  }) = _GroupState;
 
   const GroupState._();
 
-  factory GroupState.initial() => const GroupState(groupedColumnIds: [], expandedGroups: {});
+  factory GroupState.initial() =>
+      const GroupState(groupedColumnIds: [], expandedGroups: {});
 
   bool get hasGroups => groupedColumnIds.isNotEmpty;
   bool isGroupExpanded(String groupKey) => expandedGroups[groupKey] ?? true;
@@ -143,7 +158,8 @@ abstract class GroupState with _$GroupState {
 
 @freezed
 abstract class EditState with _$EditState {
-  const factory EditState({String? editingCellId, dynamic editingValue}) = _EditState;
+  const factory EditState({String? editingCellId, dynamic editingValue}) =
+      _EditState;
 
   const EditState._();
 

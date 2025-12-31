@@ -44,12 +44,21 @@ class StartCellEditEvent extends DataGridEvent {
         final currentColumnId = int.parse(parts[1]);
         final editValue = context.state.edit.editingValue;
 
-        context.dispatchEvent(UpdateCellEvent(rowId: currentRowId, columnId: currentColumnId, value: editValue));
+        context.dispatchEvent(
+          UpdateCellEvent(
+            rowId: currentRowId,
+            columnId: currentColumnId,
+            value: editValue,
+          ),
+        );
       }
     }
 
     return newState.copyWith(
-      edit: newState.edit.copyWith(editingCellId: cellId, editingValue: currentValue),
+      edit: newState.edit.copyWith(
+        editingCellId: cellId,
+        editingValue: currentValue,
+      ),
     );
   }
 }
@@ -65,7 +74,9 @@ class UpdateCellEditValueEvent extends DataGridEvent {
       return null;
     }
 
-    return context.state.copyWith(edit: context.state.edit.copyWith(editingValue: value));
+    return context.state.copyWith(
+      edit: context.state.edit.copyWith(editingValue: value),
+    );
   }
 }
 
@@ -84,7 +95,9 @@ class CommitCellEditEvent extends DataGridEvent {
     final columnId = int.parse(parts[1]);
     final newValue = context.state.edit.editingValue;
 
-    context.dispatchEvent(UpdateCellEvent(rowId: rowId, columnId: columnId, value: newValue));
+    context.dispatchEvent(
+      UpdateCellEvent(rowId: rowId, columnId: columnId, value: newValue),
+    );
 
     return context.state.copyWith(edit: EditState.initial());
   }

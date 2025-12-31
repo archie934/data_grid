@@ -9,7 +9,11 @@ class FilterEvent extends DataGridEvent {
   final FilterOperator operator;
   final dynamic value;
 
-  FilterEvent({required this.columnId, required this.operator, required this.value});
+  FilterEvent({
+    required this.columnId,
+    required this.operator,
+    required this.value,
+  });
 
   @override
   bool shouldShowLoading(DataGridState state) => state.rowsById.length > 10000;
@@ -18,7 +22,9 @@ class FilterEvent extends DataGridEvent {
   String? loadingMessage() => 'Filtering data...';
 
   @override
-  Future<DataGridState<T>?> apply<T extends DataGridRow>(EventContext<T> context) async {
+  Future<DataGridState<T>?> apply<T extends DataGridRow>(
+    EventContext<T> context,
+  ) async {
     // Check if column is filterable
     final column = context.state.columns.firstWhere(
       (c) => c.id == columnId,
@@ -26,10 +32,18 @@ class FilterEvent extends DataGridEvent {
     );
     if (!column.filterable) return null;
 
-    final updatedFilters = Map<int, ColumnFilter>.from(context.state.filter.columnFilters);
-    updatedFilters[columnId] = ColumnFilter(columnId: columnId, operator: operator, value: value);
+    final updatedFilters = Map<int, ColumnFilter>.from(
+      context.state.filter.columnFilters,
+    );
+    updatedFilters[columnId] = ColumnFilter(
+      columnId: columnId,
+      operator: operator,
+      value: value,
+    );
 
-    final updatedFilter = context.state.filter.copyWith(columnFilters: updatedFilters);
+    final updatedFilter = context.state.filter.copyWith(
+      columnFilters: updatedFilters,
+    );
 
     final filteredIds = await context.filterDelegate.applyFilters(
       rowsById: context.state.rowsById,
@@ -46,7 +60,10 @@ class FilterEvent extends DataGridEvent {
           )
         : filteredIds;
 
-    return context.state.copyWith(filter: updatedFilter, displayOrder: sortedIds);
+    return context.state.copyWith(
+      filter: updatedFilter,
+      displayOrder: sortedIds,
+    );
   }
 }
 
@@ -62,8 +79,12 @@ class ClearFilterEvent extends DataGridEvent {
   String? loadingMessage() => 'Clearing filters...';
 
   @override
-  Future<DataGridState<T>?> apply<T extends DataGridRow>(EventContext<T> context) async {
-    final updatedFilters = Map<int, ColumnFilter>.from(context.state.filter.columnFilters);
+  Future<DataGridState<T>?> apply<T extends DataGridRow>(
+    EventContext<T> context,
+  ) async {
+    final updatedFilters = Map<int, ColumnFilter>.from(
+      context.state.filter.columnFilters,
+    );
 
     if (columnId != null) {
       updatedFilters.remove(columnId);
@@ -71,7 +92,9 @@ class ClearFilterEvent extends DataGridEvent {
       updatedFilters.clear();
     }
 
-    final updatedFilter = context.state.filter.copyWith(columnFilters: updatedFilters);
+    final updatedFilter = context.state.filter.copyWith(
+      columnFilters: updatedFilters,
+    );
 
     final filteredIds = updatedFilters.isEmpty
         ? context.state.rowsById.keys.toList()
@@ -90,6 +113,9 @@ class ClearFilterEvent extends DataGridEvent {
           )
         : filteredIds;
 
-    return context.state.copyWith(filter: updatedFilter, displayOrder: sortedIds);
+    return context.state.copyWith(
+      filter: updatedFilter,
+      displayOrder: sortedIds,
+    );
   }
 }

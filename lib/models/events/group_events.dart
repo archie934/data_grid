@@ -16,7 +16,9 @@ class GroupByColumnEvent extends DataGridEvent {
       groupedColumns.add(columnId);
     }
 
-    return context.state.copyWith(group: context.state.group.copyWith(groupedColumnIds: groupedColumns));
+    return context.state.copyWith(
+      group: context.state.group.copyWith(groupedColumnIds: groupedColumns),
+    );
   }
 }
 
@@ -30,7 +32,9 @@ class UngroupColumnEvent extends DataGridEvent {
     final groupedColumns = List<int>.from(context.state.group.groupedColumnIds);
     groupedColumns.remove(columnId);
 
-    return context.state.copyWith(group: context.state.group.copyWith(groupedColumnIds: groupedColumns));
+    return context.state.copyWith(
+      group: context.state.group.copyWith(groupedColumnIds: groupedColumns),
+    );
   }
 }
 
@@ -41,7 +45,9 @@ class ToggleGroupExpansionEvent extends DataGridEvent {
 
   @override
   DataGridState<T>? apply<T extends DataGridRow>(EventContext<T> context) {
-    final expandedGroups = Map<String, bool>.from(context.state.group.expandedGroups);
+    final expandedGroups = Map<String, bool>.from(
+      context.state.group.expandedGroups,
+    );
 
     if (expandedGroups.containsKey(groupKey)) {
       expandedGroups[groupKey] = !expandedGroups[groupKey]!;
@@ -49,6 +55,8 @@ class ToggleGroupExpansionEvent extends DataGridEvent {
       expandedGroups[groupKey] = true;
     }
 
-    return context.state.copyWith(group: context.state.group.copyWith(expandedGroups: expandedGroups));
+    return context.state.copyWith(
+      group: context.state.group.copyWith(expandedGroups: expandedGroups),
+    );
   }
 }

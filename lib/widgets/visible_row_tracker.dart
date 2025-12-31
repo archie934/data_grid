@@ -23,7 +23,8 @@ class VisibleRowTracker<T extends DataGridRow> extends StatefulWidget {
   State<VisibleRowTracker<T>> createState() => _VisibleRowTrackerState<T>();
 }
 
-class _VisibleRowTrackerState<T extends DataGridRow> extends State<VisibleRowTracker<T>> {
+class _VisibleRowTrackerState<T extends DataGridRow>
+    extends State<VisibleRowTracker<T>> {
   StreamSubscription? _viewportSubscription;
   bool _isVisible = false;
 

@@ -36,7 +36,11 @@ List<double> performFilterInIsolate(FilterParameters params) {
 }
 
 String _sanitizeString(dynamic value) {
-  return value?.toString().toLowerCase().trim().replaceAll(RegExp(r'\s+'), ' ') ?? '';
+  return value?.toString().toLowerCase().trim().replaceAll(
+        RegExp(r'\s+'),
+        ' ',
+      ) ??
+      '';
 }
 
 bool _matchesFilter(dynamic value, ColumnFilter filter) {
@@ -48,15 +52,18 @@ bool _matchesFilter(dynamic value, ColumnFilter filter) {
     case FilterOperator.contains:
       final sanitizedValue = _sanitizeString(value);
       final sanitizedFilter = _sanitizeString(filter.value);
-      return sanitizedFilter.isEmpty || sanitizedValue.contains(sanitizedFilter);
+      return sanitizedFilter.isEmpty ||
+          sanitizedValue.contains(sanitizedFilter);
     case FilterOperator.startsWith:
       final sanitizedValue = _sanitizeString(value);
       final sanitizedFilter = _sanitizeString(filter.value);
-      return sanitizedFilter.isEmpty || sanitizedValue.startsWith(sanitizedFilter);
+      return sanitizedFilter.isEmpty ||
+          sanitizedValue.startsWith(sanitizedFilter);
     case FilterOperator.endsWith:
       final sanitizedValue = _sanitizeString(value);
       final sanitizedFilter = _sanitizeString(filter.value);
-      return sanitizedFilter.isEmpty || sanitizedValue.endsWith(sanitizedFilter);
+      return sanitizedFilter.isEmpty ||
+          sanitizedValue.endsWith(sanitizedFilter);
     case FilterOperator.greaterThan:
       return _compareValues(value, filter.value) > 0;
     case FilterOperator.lessThan:

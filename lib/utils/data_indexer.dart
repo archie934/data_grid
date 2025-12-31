@@ -15,7 +15,11 @@ class DataIndexer<T extends DataGridRow> {
 
   T? getRow(double rowId) => _data[rowId];
 
-  List<double> sort(Map<double, T> rowsById, SortColumn? sortColumn, List<DataGridColumn<T>> columns) {
+  List<double> sort(
+    Map<double, T> rowsById,
+    SortColumn? sortColumn,
+    List<DataGridColumn<T>> columns,
+  ) {
     if (sortColumn == null) {
       return rowsById.keys.toList();
     }
@@ -30,7 +34,9 @@ class DataIndexer<T extends DataGridRow> {
       final comparison = _compareValues(aValue, bValue);
 
       if (comparison != 0) {
-        return sortColumn.direction == SortDirection.ascending ? comparison : -comparison;
+        return sortColumn.direction == SortDirection.ascending
+            ? comparison
+            : -comparison;
       }
       return 0;
     });
@@ -54,7 +60,9 @@ class DataIndexer<T extends DataGridRow> {
       final comparison = _compareValues(aValue, bValue);
 
       if (comparison != 0) {
-        return sortColumn.direction == SortDirection.ascending ? comparison : -comparison;
+        return sortColumn.direction == SortDirection.ascending
+            ? comparison
+            : -comparison;
       }
       return 0;
     });
@@ -62,7 +70,11 @@ class DataIndexer<T extends DataGridRow> {
     return sortedIds;
   }
 
-  List<double> filter(Map<double, T> rowsById, List<ColumnFilter> filters, List<DataGridColumn<T>> columns) {
+  List<double> filter(
+    Map<double, T> rowsById,
+    List<ColumnFilter> filters,
+    List<DataGridColumn<T>> columns,
+  ) {
     if (filters.isEmpty) {
       return rowsById.keys.toList();
     }
@@ -99,7 +111,8 @@ class DataIndexer<T extends DataGridRow> {
     return null;
   }
 
-  dynamic _getCellValue(T row, DataGridColumn<T> column) => getCellValue(row, column);
+  dynamic _getCellValue(T row, DataGridColumn<T> column) =>
+      getCellValue(row, column);
 
   int _compareValues(dynamic a, dynamic b) {
     if (a == null && b == null) return 0;
@@ -126,7 +139,11 @@ class DataIndexer<T extends DataGridRow> {
   }
 
   String _sanitizeString(dynamic value) {
-    return value?.toString().toLowerCase().trim().replaceAll(RegExp(r'\s+'), ' ') ?? '';
+    return value?.toString().toLowerCase().trim().replaceAll(
+          RegExp(r'\s+'),
+          ' ',
+        ) ??
+        '';
   }
 
   bool _matchesFilter(dynamic value, ColumnFilter filter) {
@@ -138,15 +155,18 @@ class DataIndexer<T extends DataGridRow> {
       case FilterOperator.contains:
         final sanitizedValue = _sanitizeString(value);
         final sanitizedFilter = _sanitizeString(filter.value);
-        return sanitizedFilter.isEmpty || sanitizedValue.contains(sanitizedFilter);
+        return sanitizedFilter.isEmpty ||
+            sanitizedValue.contains(sanitizedFilter);
       case FilterOperator.startsWith:
         final sanitizedValue = _sanitizeString(value);
         final sanitizedFilter = _sanitizeString(filter.value);
-        return sanitizedFilter.isEmpty || sanitizedValue.startsWith(sanitizedFilter);
+        return sanitizedFilter.isEmpty ||
+            sanitizedValue.startsWith(sanitizedFilter);
       case FilterOperator.endsWith:
         final sanitizedValue = _sanitizeString(value);
         final sanitizedFilter = _sanitizeString(filter.value);
-        return sanitizedFilter.isEmpty || sanitizedValue.endsWith(sanitizedFilter);
+        return sanitizedFilter.isEmpty ||
+            sanitizedValue.endsWith(sanitizedFilter);
       case FilterOperator.greaterThan:
         return _compareValues(value, filter.value) > 0;
       case FilterOperator.lessThan:

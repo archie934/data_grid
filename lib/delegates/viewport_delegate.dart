@@ -13,7 +13,10 @@ abstract class ViewportDelegate<T extends DataGridRow> {
   ViewportState handleScroll(ScrollEvent event, DataGridState<T> currentState);
 
   /// Handle viewport resize event and calculate updated viewport state.
-  ViewportState handleResize(ViewportResizeEvent event, DataGridState<T> currentState);
+  ViewportState handleResize(
+    ViewportResizeEvent event,
+    DataGridState<T> currentState,
+  );
 
   /// Dispose any resources (caches, subscriptions, etc.)
   void dispose() {}
