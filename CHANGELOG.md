@@ -1,3 +1,11 @@
+## 0.0.2
+
+* Updated dependencies to latest versions
+* Added dartdoc documentation to public API
+* Added topics for pub.dev discoverability
+* Fixed example directory structure
+* Migrated to freezed v3
+
 ## 0.0.1
 
 * Initial release
