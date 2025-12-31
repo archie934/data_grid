@@ -1,0 +1,19 @@
+name: flutter_data_grid_example
+description: Example app for flutter_data_grid package
+publish_to: 'none'
+
+environment:
+  sdk: '>=3.10.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_data_grid:
+    path: ../
+
+dev_dependencies:
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+

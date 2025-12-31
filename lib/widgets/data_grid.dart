@@ -17,10 +17,31 @@ import 'package:flutter_data_grid/renderers/default_filter_renderer.dart';
 import 'package:flutter_data_grid/theme/data_grid_theme.dart';
 import 'package:flutter_data_grid/theme/data_grid_theme_data.dart';
 
+/// A high-performance, virtualized data grid widget for displaying tabular data.
+///
+/// The [DataGrid] supports sorting, filtering, cell editing, row selection,
+/// column pinning, and keyboard navigation. It uses virtualization to render
+/// only visible rows for smooth scrolling with large datasets.
+///
+/// Example:
+/// ```dart
+/// DataGrid<MyRow>(
+///   controller: controller,
+///   headerHeight: 48.0,
+///   rowHeight: 48.0,
+/// )
+/// ```
 class DataGrid<T extends DataGridRow> extends StatefulWidget {
+  /// The controller that manages the grid's state and data.
   final DataGridController<T> controller;
+
+  /// Optional scroll controller for external scroll synchronization.
   final GridScrollController? scrollController;
+
+  /// Height of the header row. Defaults to theme value if not specified.
   final double? headerHeight;
+
+  /// Height of each data row. Defaults to theme value if not specified.
   final double? rowHeight;
 
   /// Custom row renderer for advanced row customization.
@@ -48,6 +69,7 @@ class DataGrid<T extends DataGridRow> extends StatefulWidget {
   /// If not provided, uses the default theme.
   final DataGridThemeData? theme;
 
+  /// Creates a [DataGrid] widget.
   const DataGrid({
     super.key,
     required this.controller,

@@ -8,7 +8,7 @@ import 'package:flutter_data_grid/models/enums/filter_operator.dart';
 part 'grid_state.freezed.dart';
 
 @freezed
-class DataGridState<T extends DataGridRow> with _$DataGridState<T> {
+abstract class DataGridState<T extends DataGridRow> with _$DataGridState<T> {
   const factory DataGridState({
     required List<DataGridColumn<T>> columns,
     required Map<double, T> rowsById,
@@ -53,7 +53,7 @@ class DataGridState<T extends DataGridRow> with _$DataGridState<T> {
 }
 
 @freezed
-class ViewportState with _$ViewportState {
+abstract class ViewportState with _$ViewportState {
   const factory ViewportState({
     required double scrollOffsetX,
     required double scrollOffsetY,
@@ -78,7 +78,7 @@ class ViewportState with _$ViewportState {
 }
 
 @freezed
-class SelectionState with _$SelectionState {
+abstract class SelectionState with _$SelectionState {
   const factory SelectionState({
     required Set<double> selectedRowIds,
     double? focusedRowId,
@@ -96,7 +96,7 @@ class SelectionState with _$SelectionState {
 }
 
 @freezed
-class SortState with _$SortState {
+abstract class SortState with _$SortState {
   const factory SortState({SortColumn? sortColumn}) = _SortState;
 
   const SortState._();
@@ -107,12 +107,12 @@ class SortState with _$SortState {
 }
 
 @freezed
-class SortColumn with _$SortColumn {
+abstract class SortColumn with _$SortColumn {
   const factory SortColumn({required int columnId, required SortDirection direction}) = _SortColumn;
 }
 
 @freezed
-class FilterState with _$FilterState {
+abstract class FilterState with _$FilterState {
   const factory FilterState({required Map<int, ColumnFilter> columnFilters}) = _FilterState;
 
   const FilterState._();
@@ -123,13 +123,13 @@ class FilterState with _$FilterState {
 }
 
 @freezed
-class ColumnFilter with _$ColumnFilter {
+abstract class ColumnFilter with _$ColumnFilter {
   const factory ColumnFilter({required int columnId, required FilterOperator operator, required dynamic value}) =
       _ColumnFilter;
 }
 
 @freezed
-class GroupState with _$GroupState {
+abstract class GroupState with _$GroupState {
   const factory GroupState({required List<int> groupedColumnIds, required Map<String, bool> expandedGroups}) =
       _GroupState;
 
@@ -142,7 +142,7 @@ class GroupState with _$GroupState {
 }
 
 @freezed
-class EditState with _$EditState {
+abstract class EditState with _$EditState {
   const factory EditState({String? editingCellId, dynamic editingValue}) = _EditState;
 
   const EditState._();

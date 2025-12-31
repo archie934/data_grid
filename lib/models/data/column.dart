@@ -3,31 +3,72 @@ import 'package:flutter_data_grid/renderers/filter_renderer.dart';
 import 'package:flutter_data_grid/renderers/cell_renderer.dart';
 import 'package:flutter_data_grid/models/data/row.dart';
 
+/// Builder function for custom cell editor widgets.
 typedef CellEditorBuilder = Widget Function(BuildContext context, dynamic value, ValueChanged<dynamic> onChanged);
 
+/// Formatter function to convert cell values to display strings.
 typedef CellFormatter<T extends DataGridRow> = String Function(T row, DataGridColumn column);
 
+/// Column ID used for the selection checkbox column.
 const int kSelectionColumnId = -1;
+
+/// Default width for the selection checkbox column.
 const double kSelectionColumnWidth = 50.0;
 
+/// Configuration for a column in the [DataGrid].
+///
+/// Each column defines its appearance, behavior, and how data is accessed
+/// and modified for cells in that column.
 class DataGridColumn<T extends DataGridRow> {
+  /// Unique identifier for this column.
   final int id;
+
+  /// Display title shown in the header.
   final String title;
+
+  /// Current width of the column in pixels.
   final double width;
+
+  /// Whether this column is pinned to the left.
   final bool pinned;
+
+  /// Whether this column is visible.
   final bool visible;
+
+  /// Whether users can resize this column.
   final bool resizable;
+
+  /// Whether this column can be sorted.
   final bool sortable;
+
+  /// Whether this column can be filtered.
   final bool filterable;
+
+  /// Whether cells in this column can be edited.
   final bool editable;
+
+  /// Custom filter widget renderer for this column.
   final FilterRenderer? filterRenderer;
+
+  /// Custom editor builder for cell editing.
   final CellEditorBuilder? cellEditorBuilder;
+
+  /// Custom cell renderer for this column.
   final CellRenderer? cellRenderer;
+
+  /// Formatter function to format cell display values.
   final Function? cellFormatter;
+
+  /// Function to extract the cell value from a row.
   final dynamic Function(T)? valueAccessor;
+
+  /// Function to set the cell value on a row.
   final void Function(T row, dynamic value)? cellValueSetter;
+
+  /// Validator function for cell edits. Return true to accept the edit.
   final bool Function(dynamic oldValue, dynamic newValue)? validator;
 
+  /// Creates a [DataGridColumn] with the specified configuration.
   DataGridColumn({
     required this.id,
     required this.title,
@@ -117,6 +158,7 @@ class DataGridColumn<T extends DataGridRow> {
     );
   }
 
+  /// Creates a selection checkbox column.
   factory DataGridColumn.selection({required bool pinned}) {
     return DataGridColumn<T>(
       id: kSelectionColumnId,

@@ -21,6 +21,19 @@ export 'package:flutter_data_grid/delegates/viewport_delegate.dart';
 export 'package:flutter_data_grid/delegates/sort_delegate.dart';
 export 'package:flutter_data_grid/delegates/filter_delegate.dart';
 
+/// Controller for managing [DataGrid] state, data, and events.
+///
+/// The controller handles all data operations including sorting, filtering,
+/// selection, and cell editing. It uses RxDart streams for reactive state updates.
+///
+/// Example:
+/// ```dart
+/// final controller = DataGridController<MyRow>(
+///   initialColumns: columns,
+///   initialRows: rows,
+///   rowHeight: 48.0,
+/// );
+/// ```
 class DataGridController<T extends DataGridRow> {
   final BehaviorSubject<DataGridState<T>> _stateSubject;
   final PublishSubject<DataGridEvent> _eventSubject = PublishSubject();
@@ -35,10 +48,16 @@ class DataGridController<T extends DataGridRow> {
 
   final List<DataGridInterceptor<T>> _interceptors = [];
 
+  /// Callback to determine if a cell can be edited.
   final bool Function(double rowId, int columnId)? canEditCell;
+
+  /// Callback to determine if a row can be selected.
   final bool Function(double rowId)? canSelectRow;
+
+  /// Callback invoked when a cell edit is committed. Return false to reject.
   final Future<bool> Function(double rowId, int columnId, dynamic oldValue, dynamic newValue)? onCellCommit;
 
+  /// Creates a [DataGridController] with optional initial data and configuration.
   DataGridController({
     List<DataGridColumn<T>>? initialColumns,
     List<T>? initialRows,
@@ -81,16 +100,31 @@ class DataGridController<T extends DataGridRow> {
     _setupEventHandlers();
   }
 
+  /// Stream of the complete grid state for reactive updates.
   Stream<DataGridState<T>> get state$ => _stateSubject.stream;
+
+  /// Current snapshot of the grid state.
   DataGridState<T> get state => _stateSubject.value;
 
+  /// Stream of viewport state changes.
   Stream<ViewportState> get viewport$ => _stateSubject.stream.map((s) => s.viewport).distinct();
+
+  /// Stream of selection state changes.
   Stream<SelectionState> get selection$ => _stateSubject.stream.map((s) => s.selection).distinct();
+
+  /// Stream of sort state changes.
   Stream<SortState> get sort$ => _stateSubject.stream.map((s) => s.sort).distinct();
+
+  /// Stream of filter state changes.
   Stream<FilterState> get filter$ => _stateSubject.stream.map((s) => s.filter).distinct();
+
+  /// Stream of group state changes.
   Stream<GroupState> get group$ => _stateSubject.stream.map((s) => s.group).distinct();
 
+  /// Stream of currently rendered row IDs.
   Stream<Set<double>> get renderedRowIds$ => _renderedRowIds.stream;
+
+  /// Current set of rendered row IDs.
   Set<double> get renderedRowIds => _renderedRowIds.value;
 
   void _initialize(List<DataGridColumn<T>> columns, List<T> rows) {
@@ -173,16 +207,20 @@ class DataGridController<T extends DataGridRow> {
     );
   }
 
+  /// Dispatches an event to be processed by the controller.
   void addEvent(DataGridEvent event) => _eventSubject.add(event);
 
+  /// Adds an interceptor for event and state change hooks.
   void addInterceptor(DataGridInterceptor<T> interceptor) {
     _interceptors.add(interceptor);
   }
 
+  /// Removes a previously added interceptor.
   void removeInterceptor(DataGridInterceptor<T> interceptor) {
     _interceptors.remove(interceptor);
   }
 
+  /// Removes all interceptors.
   void clearInterceptors() {
     _interceptors.clear();
   }

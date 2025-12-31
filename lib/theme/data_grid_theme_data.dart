@@ -1,12 +1,25 @@
 import 'package:flutter/material.dart';
 
+/// Theme configuration for customizing the appearance of a [DataGrid].
+///
+/// Provides control over dimensions, padding, colors, borders, and overlays.
 class DataGridThemeData {
+  /// Dimension settings (row height, column widths, scrollbar sizes).
   final DataGridDimensions dimensions;
+
+  /// Padding settings for cells, headers, and other elements.
   final DataGridPadding padding;
+
+  /// Color settings for rows, headers, selection, and other elements.
   final DataGridColors colors;
+
+  /// Border settings for cells, headers, and pinned columns.
   final DataGridBorders borders;
+
+  /// Theme settings for loading overlays.
   final DataGridOverlayTheme overlay;
 
+  /// Creates a [DataGridThemeData] with optional custom configurations.
   DataGridThemeData({
     DataGridDimensions? dimensions,
     DataGridPadding? padding,
@@ -19,6 +32,7 @@ class DataGridThemeData {
        borders = borders ?? DataGridBorders.defaults(),
        overlay = overlay ?? DataGridOverlayTheme.defaults();
 
+  /// Creates a default theme with standard settings.
   factory DataGridThemeData.defaultTheme() {
     return DataGridThemeData();
   }
@@ -40,16 +54,36 @@ class DataGridThemeData {
   }
 }
 
+/// Dimension settings for [DataGrid] layout.
 class DataGridDimensions {
+  /// Width of the vertical scrollbar.
   final double scrollbarWidth;
+
+  /// Height of the horizontal scrollbar.
   final double scrollbarHeight;
+
+  /// Height of the header row.
   final double headerHeight;
+
+  /// Height of each data row.
   final double rowHeight;
+
+  /// Height of the filter row.
   final double filterRowHeight;
+
+  /// Width of the selection checkbox column.
   final double selectionColumnWidth;
+
+  /// Minimum width when resizing columns.
   final double columnMinWidth;
+
+  /// Maximum width when resizing columns.
   final double columnMaxWidth;
+
+  /// Minimum size of the scrollbar thumb.
   final double scrollbarThumbMinSize;
+
+  /// Width of the column resize handle.
   final double resizeHandleWidth;
 
   DataGridDimensions({
@@ -105,14 +139,30 @@ class DataGridDimensions {
   }
 }
 
+/// Padding settings for [DataGrid] elements.
 class DataGridPadding {
+  /// Padding inside data cells.
   final EdgeInsets cellPadding;
+
+  /// Padding inside cell editors.
   final EdgeInsets editorPadding;
+
+  /// Padding around checkbox cells.
   final EdgeInsets checkboxPadding;
+
+  /// Padding inside header cells.
   final EdgeInsets headerPadding;
+
+  /// Padding around filter cells.
   final EdgeInsets filterPadding;
+
+  /// Padding inside filter input fields.
   final EdgeInsets filterInputPadding;
+
+  /// Spacing between icons.
   final double iconSpacing;
+
+  /// Inset of the scrollbar thumb from the track.
   final double scrollbarThumbInset;
 
   DataGridPadding({
@@ -160,15 +210,33 @@ class DataGridPadding {
   }
 }
 
+/// Color settings for [DataGrid] elements.
 class DataGridColors {
+  /// Background color for selected rows.
   final Color selectionColor;
+
+  /// Background color for even rows.
   final Color evenRowColor;
+
+  /// Background color for odd rows.
   final Color oddRowColor;
+
+  /// Background color for the header row.
   final Color headerColor;
+
+  /// Background color for the filter row.
   final Color filterBackgroundColor;
+
+  /// Color of the editing indicator.
   final Color editIndicatorColor;
+
+  /// Color of the resize handle when active.
   final Color resizeHandleActiveColor;
+
+  /// Background color of the scrollbar track.
   final Color scrollbarTrackColor;
+
+  /// Color of the scrollbar thumb.
   final Color scrollbarThumbColor;
 
   DataGridColors({
@@ -220,15 +288,33 @@ class DataGridColors {
   }
 }
 
+/// Border settings for [DataGrid] elements.
 class DataGridBorders {
+  /// Border for data cells.
   final Border cellBorder;
+
+  /// Border for header cells.
   final Border headerBorder;
+
+  /// Border for checkbox cells.
   final Border checkboxCellBorder;
+
+  /// Border for filter cells.
   final Border filterBorder;
+
+  /// Border for rows.
   final Border rowBorder;
+
+  /// Border for pinned columns.
   final Border pinnedBorder;
+
+  /// Border shown around cells being edited.
   final Border editingBorder;
+
+  /// Border for scrollbar elements.
   final Border scrollbarBorder;
+
+  /// Shadow applied to pinned columns.
   final List<BoxShadow> pinnedShadow;
 
   DataGridBorders({
@@ -307,17 +393,39 @@ class DataGridBorders {
   }
 }
 
+/// Theme settings for loading overlays in [DataGrid].
 class DataGridOverlayTheme {
+  /// Color of the backdrop behind the overlay.
   final Color backdropColor;
+
+  /// Background color of the overlay card.
   final Color cardBackgroundColor;
+
+  /// Shadow color for the overlay card.
   final Color shadowColor;
+
+  /// Padding inside the overlay card.
   final EdgeInsets cardPadding;
+
+  /// Border radius of the overlay card.
   final double borderRadius;
+
+  /// Blur radius of the overlay shadow.
   final double shadowBlurRadius;
+
+  /// Offset of the overlay shadow.
   final Offset shadowOffset;
+
+  /// Size of the loading indicator.
   final double indicatorSize;
+
+  /// Stroke width of the loading indicator.
   final double indicatorStrokeWidth;
+
+  /// Spacing between indicator and text.
   final double indicatorTextSpacing;
+
+  /// Default loading message text.
   final String defaultMessage;
 
   DataGridOverlayTheme({
