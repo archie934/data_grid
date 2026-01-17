@@ -1,3 +1,7 @@
+## 0.0.4
+
+* Removed unnecessary import in data_grid_controller.dart
+
 ## 0.0.3
 
 * Added pagination support with client-side and server-side modes

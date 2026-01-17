@@ -4,8 +4,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_data_grid/data_grid.dart';
 import 'package:flutter_data_grid/models/enums/filter_operator.dart';
 import 'package:flutter_data_grid/models/enums/sort_direction.dart';
-import 'package:flutter_data_grid/models/events/filter_events.dart';
-import 'package:flutter_data_grid/models/events/sort_events.dart';
 
 class TestRow extends DataGridRow {
   String name;
@@ -33,13 +31,7 @@ void main() {
 
     setUp(() {
       columns = [
-        DataGridColumn<TestRow>(
-          id: 1,
-          title: 'Name',
-          width: 150,
-          valueAccessor: (row) => row.name,
-          filterable: true,
-        ),
+        DataGridColumn<TestRow>(id: 1, title: 'Name', width: 150, valueAccessor: (row) => row.name, filterable: true),
         DataGridColumn<TestRow>(
           id: 2,
           title: 'Value',
@@ -49,14 +41,7 @@ void main() {
         ),
       ];
 
-      rows = List.generate(
-        100,
-        (index) => TestRow(
-          id: index.toDouble(),
-          name: 'Item $index',
-          value: index * 10,
-        ),
-      );
+      rows = List.generate(100, (index) => TestRow(id: index.toDouble(), name: 'Item $index', value: index * 10));
 
       controller = DataGridController<TestRow>(
         initialColumns: columns,
@@ -243,13 +228,7 @@ void main() {
 
       expect(controller.state.pagination.currentPage, 5);
 
-      controller.addEvent(
-        FilterEvent(
-          columnId: 1,
-          operator: FilterOperator.contains,
-          value: 'Item 1',
-        ),
-      );
+      controller.addEvent(FilterEvent(columnId: 1, operator: FilterOperator.contains, value: 'Item 1'));
       await waitForStateUpdate();
 
       expect(controller.state.pagination.currentPage, 1);
@@ -263,9 +242,7 @@ void main() {
 
       expect(controller.state.pagination.currentPage, 5);
 
-      controller.addEvent(
-        SortEvent(columnId: 1, direction: SortDirection.ascending),
-      );
+      controller.addEvent(SortEvent(columnId: 1, direction: SortDirection.ascending));
       await waitForStateUpdate();
       await waitForStateUpdate();
 
@@ -277,13 +254,7 @@ void main() {
       controller.setPageSize(10);
       await waitForStateUpdate();
 
-      controller.addEvent(
-        FilterEvent(
-          columnId: 1,
-          operator: FilterOperator.contains,
-          value: 'Item 1',
-        ),
-      );
+      controller.addEvent(FilterEvent(columnId: 1, operator: FilterOperator.contains, value: 'Item 1'));
       await waitForStateUpdate();
 
       final filteredCount = controller.state.totalItems;
@@ -323,10 +294,7 @@ void main() {
             body: SizedBox(
               width: 1000,
               height: 800,
-              child: DataGrid<TestRow>(
-                controller: controller,
-                showPagination: true,
-              ),
+              child: DataGrid<TestRow>(controller: controller, showPagination: true),
             ),
           ),
         ),
@@ -345,12 +313,7 @@ void main() {
     testWidgets('pagination widget hides when disabled', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: DataGrid<TestRow>(
-              controller: controller,
-              showPagination: true,
-            ),
-          ),
+          home: Scaffold(body: DataGrid<TestRow>(controller: controller, showPagination: true)),
         ),
       );
 
@@ -371,10 +334,7 @@ void main() {
             body: SizedBox(
               width: 1000,
               height: 800,
-              child: DataGrid<TestRow>(
-                controller: controller,
-                showPagination: true,
-              ),
+              child: DataGrid<TestRow>(controller: controller, showPagination: true),
             ),
           ),
         ),
@@ -402,10 +362,7 @@ void main() {
             body: SizedBox(
               width: 1000,
               height: 800,
-              child: DataGrid<TestRow>(
-                controller: controller,
-                showPagination: true,
-              ),
+              child: DataGrid<TestRow>(controller: controller, showPagination: true),
             ),
           ),
         ),
