@@ -2,6 +2,8 @@
 
 A high-performance, reactive data grid for Flutter with comprehensive features including virtualization, sorting, filtering, cell editing, row selection, column pinning, and keyboard navigation.
 
+![Flutter Data Grid Overview](docs/images/overview.png)
+
 > **Early Development - Beta**: This package is in active development. While core features are stable and well-tested, some advanced features are still being refined. APIs may evolve based on community feedback. See [Known Issues & Roadmap](#-known-issues--roadmap) below for current limitations.
 
 ## ✨ Features
