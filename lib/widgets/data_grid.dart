@@ -9,6 +9,7 @@ import 'package:flutter_data_grid/models/events/grid_events.dart';
 import 'package:flutter_data_grid/widgets/data_grid_header.dart';
 import 'package:flutter_data_grid/widgets/data_grid_body.dart';
 import 'package:flutter_data_grid/widgets/data_grid_inherited.dart';
+import 'package:flutter_data_grid/widgets/data_grid_pagination.dart';
 import 'package:flutter_data_grid/widgets/overlays/loading_overlay.dart';
 import 'package:flutter_data_grid/renderers/row_renderer.dart';
 import 'package:flutter_data_grid/renderers/cell_renderer.dart';
@@ -70,6 +71,13 @@ class DataGrid<T extends DataGridRow> extends StatefulWidget {
   /// If not provided, uses the default theme.
   final DataGridThemeData? theme;
 
+  /// Whether to show pagination controls (default: true)
+  final bool showPagination;
+
+  /// Custom pagination widget builder. If null, uses default pagination widget.
+  final Widget Function(BuildContext context, DataGridState<T> state)?
+  paginationBuilder;
+
   /// Creates a [DataGrid] widget.
   const DataGrid({
     super.key,
@@ -85,6 +93,8 @@ class DataGrid<T extends DataGridRow> extends StatefulWidget {
     this.loadingBackdropColor,
     this.loadingIndicatorColor,
     this.theme,
+    this.showPagination = true,
+    this.paginationBuilder,
   });
 
   @override
@@ -193,10 +203,49 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
               onKeyEvent: (node, event) => _handleKeyEvent(event),
               child: LayoutBuilder(
                 builder: (context, constraints) {
-                  _notifyViewportResize(
-                    constraints.maxWidth,
-                    constraints.maxHeight - effectiveHeaderHeight,
+                  final paginationHeight =
+                      (widget.showPagination && state.pagination.enabled)
+                      ? 56.0
+                      : 0.0;
+                  final hasFilterableColumns = state.columns.any(
+                    (col) => col.filterable && col.visible,
                   );
+                  final filterRowHeight = hasFilterableColumns
+                      ? themeData.dimensions.filterRowHeight
+                      : 0.0;
+                  final availableHeight =
+                      constraints.maxHeight -
+                      effectiveHeaderHeight -
+                      filterRowHeight -
+                      paginationHeight;
+
+                  final Widget bodyWidget;
+                  final double bodyHeight;
+
+                  if (state.pagination.enabled &&
+                      state.displayOrder.isNotEmpty) {
+                    final requiredHeight =
+                        state.pagination.pageSize * effectiveRowHeight;
+                    if (requiredHeight <= availableHeight) {
+                      bodyHeight = requiredHeight;
+                      bodyWidget = SizedBox(
+                        height: bodyHeight,
+                        child: DataGridBody<T>(rowHeight: effectiveRowHeight),
+                      );
+                    } else {
+                      bodyHeight = availableHeight;
+                      bodyWidget = Expanded(
+                        child: DataGridBody<T>(rowHeight: effectiveRowHeight),
+                      );
+                    }
+                  } else {
+                    bodyHeight = availableHeight;
+                    bodyWidget = Expanded(
+                      child: DataGridBody<T>(rowHeight: effectiveRowHeight),
+                    );
+                  }
+
+                  _notifyViewportResize(constraints.maxWidth, bodyHeight);
 
                   return Semantics(
                     label:
@@ -209,11 +258,12 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
                               defaultFilterRenderer: _filterRenderer,
                               headerHeight: effectiveHeaderHeight,
                             ),
-                            Expanded(
-                              child: DataGridBody<T>(
-                                rowHeight: effectiveRowHeight,
-                              ),
-                            ),
+                            bodyWidget,
+                            if (widget.showPagination &&
+                                state.pagination.enabled)
+                              widget.paginationBuilder != null
+                                  ? widget.paginationBuilder!(context, state)
+                                  : DataGridPagination<T>(),
                           ],
                         ),
                         if (state.isLoading && widget.showLoadingOverlay)

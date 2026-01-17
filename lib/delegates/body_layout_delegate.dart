@@ -21,7 +21,7 @@ class BodyLayoutDelegate<T extends DataGridRow>
           BoxConstraints.tightFor(width: column.width, height: size.height),
         );
 
-        // Position columns sequentially - Transform.translate handles scrolling
+        // Position columns sequentially
         positionChild(column.id, Offset(offsetX, 0));
         offsetX += column.width;
       }

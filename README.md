@@ -13,6 +13,7 @@ A high-performance, reactive data grid for Flutter with comprehensive features i
 - ✅ **Column Filtering** - Customizable column filtering
 - ✅ **Row Selection** - None/Single/Multiple modes with checkbox column
 - ✅ **Cell Editing** - Inline editing with validation and callbacks
+- ✅ **Pagination** - Client-side and server-side pagination with customizable page sizes
 - ✅ **Theming** - Fully customizable appearance
 - ✅ **Interceptors** - Logging, validation, custom event handling
 
@@ -28,7 +29,7 @@ Add this to your package's `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  flutter_data_grid: ^0.0.1
+  flutter_data_grid: ^0.0.3
 ```
 
 Then run:
@@ -53,6 +54,7 @@ This package is in active development. Core features work well, but some advance
 - **Sorting & filtering** - Single-column sorting with background processing for large datasets
 - **Column management** - Resize, pin, hide/show columns
 - **Cell editing** - Inline editing with validation (some edge cases remain)
+- **Pagination** - Client-side and server-side pagination with loading states
 - **Theming** - Comprehensive customization options
 
 ### In Progress / Known Issues ⚠️
@@ -108,6 +110,7 @@ Consider waiting for v1.0 if you need:
     │  • Filter Events                │
     │  • Selection Events             │
     │  • Edit Events                  │
+    │  • Pagination Events            │
     │  • Scroll Events                │
     │  • Keyboard Events              │
     └─────────────────────────────────┘
@@ -137,7 +140,8 @@ lib/
 │       ├── filter_events.dart       # Filtering
 │       ├── selection_events.dart    # Row/cell selection
 │       ├── edit_events.dart         # Cell editing
-│       └── keyboard_events.dart     # Keyboard navigation
+│       ├── keyboard_events.dart     # Keyboard navigation
+│       └── pagination_events.dart   # Pagination
 │
 ├── delegates/
 │   ├── sort_delegate.dart           # Pluggable sorting
@@ -168,6 +172,7 @@ lib/
 │   ├── data_grid.dart               # Main widget
 │   ├── data_grid_header.dart        # Header row
 │   ├── data_grid_body.dart          # Virtualized body
+│   ├── data_grid_pagination.dart    # Pagination controls
 │   ├── cells/
 │   │   ├── data_grid_cell.dart      # Standard cell
 │   │   ├── data_grid_header_cell.dart # Header cell
@@ -388,6 +393,53 @@ controller.addEvent(ClearSelectionEvent());
 controller.selection$.listen((selection) {
   print('Selected: ${selection.selectedRowIds}');
 });
+```
+
+### Pagination
+
+```dart
+// Enable pagination
+controller.enablePagination(true);
+
+// Navigate pages
+controller.setPage(5);           // Go to specific page
+controller.nextPage();           // Next page
+controller.previousPage();       // Previous page
+controller.firstPage();          // First page
+controller.lastPage();           // Last page
+
+// Change page size
+controller.setPageSize(25);      // 25 rows per page
+
+// Disable pagination
+controller.enablePagination(false);
+```
+
+#### Server-Side Pagination
+
+For server-side pagination, provide callbacks when creating the controller:
+
+```dart
+final controller = DataGridController<MyRow>(
+  initialColumns: columns,
+  initialRows: [],  // Start empty for server-side
+  onLoadPage: (page, pageSize) async {
+    // Fetch data from your API
+    final response = await api.fetchPage(page: page, limit: pageSize);
+    return response.rows;
+  },
+  onGetTotalCount: () async {
+    // Return total row count from server
+    return await api.getTotalCount();
+  },
+);
+
+// Enable server-side pagination
+controller.enablePagination(true);
+controller.setServerSidePagination(true);
+
+// For server-side, you must set total items after loading
+controller.setTotalItems(totalCount);
 ```
 
 ### Cell Editing
@@ -709,6 +761,15 @@ flutter test
 - `CommitCellEditEvent` - Save changes
 - `CancelCellEditEvent` - Discard changes
 
+### Pagination Events
+- `EnablePaginationEvent` - Enable/disable pagination
+- `SetServerSidePaginationEvent` - Toggle server-side mode
+- `SetPageEvent` - Go to specific page
+- `SetPageSizeEvent` - Change rows per page
+- `NextPageEvent` / `PreviousPageEvent` - Navigate pages
+- `FirstPageEvent` / `LastPageEvent` - Jump to start/end
+- `SetTotalItemsEvent` - Set total count (server-side)
+
 ### Keyboard Events
 - `NavigateUpEvent` / `NavigateDownEvent` - Move selection
 - `NavigateLeftEvent` / `NavigateRightEvent` - Navigate columns
@@ -767,7 +828,7 @@ dev_dependencies:
 - [ ] **Context menus** - Right-click menus for rows/cells/headers
 - [ ] **Copy/paste** - Clipboard integration
 - [ ] **Row grouping UI** - Visual grouping with expand/collapse
-- [ ] **Pagination** - Built-in pagination controls
+- [x] **Pagination** - Built-in pagination controls (added in v0.0.3)
 - [ ] **Export functionality** - CSV/Excel export
 - [ ] **Column auto-sizing** - Fit content or fit header
 - [ ] **Frozen rows** - Pin rows to top/bottom

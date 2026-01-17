@@ -1,3 +1,12 @@
+## 0.0.3
+
+* Added pagination support with client-side and server-side modes
+* New `DataGridPagination` widget with page navigation and page size selector
+* Pagination controller methods: `enablePagination()`, `setServerSidePagination()`, `setPage()`, `setPageSize()`, `nextPage()`, `previousPage()`, `firstPage()`, `lastPage()`
+* Server-side pagination with `onLoadPage` and `onGetTotalCount` callbacks
+* Loading overlay during async operations
+* New `SetTotalItemsEvent` for server-side pagination total count
+
 ## 0.0.2
 
 * Updated dependencies to latest versions

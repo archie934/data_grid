@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_data_grid/data_grid.dart';
 import 'package:flutter_data_grid/models/enums/selection_mode.dart';
@@ -112,6 +113,28 @@ class MainApp extends StatefulWidget {
 
 class _MainAppState extends State<MainApp> {
   late DataGridController<SomeRow> controller;
+  late List<SomeRow> _allRows;
+  StreamSubscription? _pageSubscription;
+  int _lastPage = 1;
+  bool _paginationEnabled = true;
+  bool _serverSidePagination = false;
+
+  Future<List<SomeRow>> _loadPage(int page, int pageSize) async {
+    controller.addEvent(
+      SetLoadingEvent(isLoading: true, message: 'Loading page $page...'),
+    );
+    await Future.delayed(const Duration(seconds: 2));
+    final start = (page - 1) * pageSize;
+    final end = (start + pageSize).clamp(0, _allRows.length);
+    final rows = _allRows.sublist(start, end);
+    controller.addEvent(SetLoadingEvent(isLoading: false));
+    return rows;
+  }
+
+  Future<int> _getTotalCount() async {
+    await Future.delayed(const Duration(milliseconds: 200));
+    return _allRows.length;
+  }
 
   @override
   void initState() {
@@ -194,7 +217,7 @@ class _MainAppState extends State<MainApp> {
       }),
     ];
 
-    final rows = List.generate(
+    _allRows = List.generate(
       1000000,
       (index) => SomeRow(
         id: index.toDouble(),
@@ -206,13 +229,34 @@ class _MainAppState extends State<MainApp> {
 
     controller = DataGridController<SomeRow>(
       initialColumns: columns,
-      initialRows: rows,
+      initialRows: _allRows,
       rowHeight: 48.0,
+      onLoadPage: _loadPage,
+      onGetTotalCount: _getTotalCount,
     );
+
+    controller.enablePagination(true);
+
+    _pageSubscription = controller.state$
+        .map((s) => s.pagination.currentPage)
+        .distinct()
+        .listen((page) async {
+          if (_serverSidePagination && page != _lastPage) {
+            _lastPage = page;
+            final totalItems = controller.state.totalItems;
+            final rows = await _loadPage(
+              page,
+              controller.state.pagination.pageSize,
+            );
+            controller.setRows(rows);
+            controller.setTotalItems(totalItems);
+          }
+        });
   }
 
   @override
   void dispose() {
+    _pageSubscription?.cancel();
     controller.dispose();
     super.dispose();
   }
@@ -257,7 +301,38 @@ class _MainAppState extends State<MainApp> {
                         controller.setSelectionMode(newSelection.first);
                       },
                     ),
+                    const SizedBox(width: 16),
+                    const Text('Pagination'),
+                    Switch(
+                      value: _paginationEnabled,
+                      onChanged: (value) {
+                        setState(() => _paginationEnabled = value);
+                        controller.enablePagination(value);
+                      },
+                    ),
                     const SizedBox(width: 8),
+                    const Text('Server'),
+                    Switch(
+                      value: _serverSidePagination,
+                      onChanged: _paginationEnabled
+                          ? (value) async {
+                              setState(() => _serverSidePagination = value);
+                              controller.setServerSidePagination(value);
+                              if (value) {
+                                _lastPage = 1;
+                                final totalCount = await _getTotalCount();
+                                final rows = await _loadPage(
+                                  1,
+                                  controller.state.pagination.pageSize,
+                                );
+                                controller.setRows(rows);
+                                controller.setTotalItems(totalCount);
+                              } else {
+                                controller.setRows(_allRows);
+                              }
+                            }
+                          : null,
+                    ),
                   ],
                 );
               },

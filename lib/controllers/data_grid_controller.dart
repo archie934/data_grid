@@ -6,6 +6,7 @@ import 'package:flutter_data_grid/models/state/grid_state.dart';
 import 'package:flutter_data_grid/models/events/grid_events.dart';
 import 'package:flutter_data_grid/models/events/event_context.dart';
 import 'package:flutter_data_grid/models/events/edit_events.dart';
+import 'package:flutter_data_grid/models/events/pagination_events.dart';
 import 'package:flutter_data_grid/models/enums/selection_mode.dart';
 import 'package:flutter_data_grid/utils/data_indexer.dart';
 import 'package:flutter_data_grid/delegates/viewport_delegate.dart';
@@ -66,6 +67,14 @@ class DataGridController<T extends DataGridRow> {
   )?
   onCellCommit;
 
+  /// Callback for server-side pagination to load a specific page.
+  /// Returns the list of rows for the requested page.
+  final Future<List<T>> Function(int page, int pageSize)? onLoadPage;
+
+  /// Callback for server-side pagination to get the total item count.
+  /// Returns the total number of items across all pages.
+  final Future<int> Function()? onGetTotalCount;
+
   /// Creates a [DataGridController] with optional initial data and configuration.
   DataGridController({
     List<DataGridColumn<T>>? initialColumns,
@@ -82,6 +91,8 @@ class DataGridController<T extends DataGridRow> {
     this.canEditCell,
     this.canSelectRow,
     this.onCellCommit,
+    this.onLoadPage,
+    this.onGetTotalCount,
   }) : _dataIndexer = DataIndexer<T>(),
        _stateSubject = BehaviorSubject<DataGridState<T>>.seeded(
          DataGridState<T>.initial(),
@@ -154,6 +165,7 @@ class DataGridController<T extends DataGridRow> {
         columns: columns,
         rowsById: rowsById,
         displayOrder: displayOrder,
+        totalItems: displayOrder.length,
       ),
     );
   }
@@ -311,6 +323,10 @@ class DataGridController<T extends DataGridRow> {
     addEvent(LoadDataEvent(rows: rows));
   }
 
+  void setTotalItems(int totalItems) {
+    addEvent(SetTotalItemsEvent(totalItems: totalItems));
+  }
+
   void insertRow(T row, {int? position}) {
     addEvent(InsertRowEvent(row: row, position: position));
   }
@@ -361,6 +377,38 @@ class DataGridController<T extends DataGridRow> {
 
   void cancelCellEdit() {
     addEvent(CancelCellEditEvent());
+  }
+
+  void setPage(int page) {
+    addEvent(SetPageEvent(page: page));
+  }
+
+  void setPageSize(int pageSize) {
+    addEvent(SetPageSizeEvent(pageSize: pageSize));
+  }
+
+  void nextPage() {
+    addEvent(NextPageEvent());
+  }
+
+  void previousPage() {
+    addEvent(PreviousPageEvent());
+  }
+
+  void firstPage() {
+    addEvent(FirstPageEvent());
+  }
+
+  void lastPage() {
+    addEvent(LastPageEvent());
+  }
+
+  void enablePagination(bool enabled) {
+    addEvent(EnablePaginationEvent(enabled: enabled));
+  }
+
+  void setServerSidePagination(bool serverSide) {
+    addEvent(SetServerSidePaginationEvent(serverSide: serverSide));
   }
 
   void registerRenderedRow(double rowId) {

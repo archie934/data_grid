@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:flutter_data_grid/models/data/column.dart';
 import 'package:flutter_data_grid/models/data/row.dart';
@@ -19,6 +20,8 @@ abstract class DataGridState<T extends DataGridRow> with _$DataGridState<T> {
     required FilterState filter,
     required GroupState group,
     required EditState edit,
+    required PaginationState pagination,
+    @Default(0) int totalItems,
     @Default(false) bool isLoading,
     String? loadingMessage,
   }) = _DataGridState;
@@ -35,6 +38,8 @@ abstract class DataGridState<T extends DataGridRow> with _$DataGridState<T> {
     filter: FilterState.initial(),
     group: GroupState.initial(),
     edit: EditState.initial(),
+    pagination: PaginationState.initial(),
+    totalItems: 0,
   );
 
   int get visibleRowCount => displayOrder.length;
@@ -52,6 +57,26 @@ abstract class DataGridState<T extends DataGridRow> with _$DataGridState<T> {
   }
 
   bool get isSelectionEnabled => selection.mode != SelectionMode.none;
+
+  int get currentPageStart {
+    if (!pagination.enabled) return 0;
+    return (pagination.currentPage - 1) * pagination.pageSize + 1;
+  }
+
+  int get currentPageEnd {
+    if (!pagination.enabled) return totalItems;
+    return math.min(pagination.currentPage * pagination.pageSize, totalItems);
+  }
+
+  bool get hasNextPage {
+    if (!pagination.enabled) return false;
+    return pagination.currentPage < pagination.totalPages(totalItems);
+  }
+
+  bool get hasPreviousPage {
+    if (!pagination.enabled) return false;
+    return pagination.currentPage > 1;
+  }
 }
 
 @freezed
@@ -172,4 +197,33 @@ abstract class EditState with _$EditState {
   }
 
   String createCellId(double rowId, int columnId) => '${rowId}_$columnId';
+}
+
+@freezed
+abstract class PaginationState with _$PaginationState {
+  const factory PaginationState({
+    @Default(1) int currentPage,
+    @Default(50) int pageSize,
+    @Default(false) bool enabled,
+    @Default(false) bool serverSide,
+  }) = _PaginationState;
+
+  const PaginationState._();
+
+  factory PaginationState.initial() => const PaginationState();
+
+  int totalPages(int totalItems) {
+    if (totalItems == 0) return 1;
+    return math.max(1, (totalItems / pageSize).ceil());
+  }
+
+  int startIndex(int totalItems) {
+    if (!enabled) return 0;
+    return (currentPage - 1) * pageSize;
+  }
+
+  int endIndex(int totalItems) {
+    if (!enabled) return totalItems;
+    return math.min(startIndex(totalItems) + pageSize, totalItems);
+  }
 }

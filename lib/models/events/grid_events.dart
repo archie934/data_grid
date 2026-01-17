@@ -7,3 +7,4 @@ export 'selection_events.dart';
 export 'group_events.dart';
 export 'data_events.dart';
 export 'keyboard_events.dart';
+export 'pagination_events.dart';

@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter_data_grid/models/data/row.dart';
 import 'package:flutter_data_grid/models/state/grid_state.dart';
 import 'package:flutter_data_grid/models/events/base_event.dart';
@@ -19,9 +20,30 @@ class SortEvent extends DataGridEvent {
   @override
   DataGridState<T>? apply<T extends DataGridRow>(EventContext<T> context) {
     context.sortDelegate.handleSort(this, context.state, (result) {
+      final totalItems = result.displayOrder.length;
+      var newPagination = context.state.pagination;
+      if (context.state.pagination.enabled) {
+        newPagination = newPagination.copyWith(currentPage: 1);
+      }
+
+      List<double> finalDisplayOrder;
+      if (context.state.pagination.enabled &&
+          !context.state.pagination.serverSide) {
+        final startIndex = newPagination.startIndex(totalItems);
+        final endIndex = newPagination.endIndex(totalItems);
+        finalDisplayOrder = result.displayOrder.sublist(
+          math.min(startIndex, result.displayOrder.length),
+          math.min(endIndex, result.displayOrder.length),
+        );
+      } else {
+        finalDisplayOrder = result.displayOrder;
+      }
+
       final newState = context.state.copyWith(
         sort: result.sortState,
-        displayOrder: result.displayOrder,
+        pagination: newPagination,
+        displayOrder: finalDisplayOrder,
+        totalItems: totalItems,
       );
       context.dispatchEvent(SortCompleteEvent(newState: newState));
     });

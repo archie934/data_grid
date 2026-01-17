@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter_data_grid/models/data/row.dart';
 import 'package:flutter_data_grid/models/state/grid_state.dart';
 import 'package:flutter_data_grid/models/events/base_event.dart';
@@ -60,9 +61,30 @@ class FilterEvent extends DataGridEvent {
           )
         : filteredIds;
 
+    final totalItems = sortedIds.length;
+    var newPagination = context.state.pagination;
+    if (context.state.pagination.enabled) {
+      newPagination = newPagination.copyWith(currentPage: 1);
+    }
+
+    List<double> finalDisplayOrder;
+    if (context.state.pagination.enabled &&
+        !context.state.pagination.serverSide) {
+      final startIndex = newPagination.startIndex(totalItems);
+      final endIndex = newPagination.endIndex(totalItems);
+      finalDisplayOrder = sortedIds.sublist(
+        math.min(startIndex, sortedIds.length),
+        math.min(endIndex, sortedIds.length),
+      );
+    } else {
+      finalDisplayOrder = sortedIds;
+    }
+
     return context.state.copyWith(
       filter: updatedFilter,
-      displayOrder: sortedIds,
+      pagination: newPagination,
+      displayOrder: finalDisplayOrder,
+      totalItems: totalItems,
     );
   }
 }
@@ -113,9 +135,30 @@ class ClearFilterEvent extends DataGridEvent {
           )
         : filteredIds;
 
+    final totalItems = sortedIds.length;
+    var newPagination = context.state.pagination;
+    if (context.state.pagination.enabled) {
+      newPagination = newPagination.copyWith(currentPage: 1);
+    }
+
+    List<double> finalDisplayOrder;
+    if (context.state.pagination.enabled &&
+        !context.state.pagination.serverSide) {
+      final startIndex = newPagination.startIndex(totalItems);
+      final endIndex = newPagination.endIndex(totalItems);
+      finalDisplayOrder = sortedIds.sublist(
+        math.min(startIndex, sortedIds.length),
+        math.min(endIndex, sortedIds.length),
+      );
+    } else {
+      finalDisplayOrder = sortedIds;
+    }
+
     return context.state.copyWith(
       filter: updatedFilter,
-      displayOrder: sortedIds,
+      pagination: newPagination,
+      displayOrder: finalDisplayOrder,
+      totalItems: totalItems,
     );
   }
 }

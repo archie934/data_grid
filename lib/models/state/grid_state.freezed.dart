@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$DataGridState<T extends DataGridRow> {
 
- List<DataGridColumn<T>> get columns; Map<double, T> get rowsById; List<double> get displayOrder; ViewportState get viewport; SelectionState get selection; SortState get sort; FilterState get filter; GroupState get group; EditState get edit; bool get isLoading; String? get loadingMessage;
+ List<DataGridColumn<T>> get columns; Map<double, T> get rowsById; List<double> get displayOrder; ViewportState get viewport; SelectionState get selection; SortState get sort; FilterState get filter; GroupState get group; EditState get edit; PaginationState get pagination; int get totalItems; bool get isLoading; String? get loadingMessage;
 /// Create a copy of DataGridState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $DataGridStateCopyWith<T, DataGridState<T>> get copyWith => _$DataGridStateCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is DataGridState<T>&&const DeepCollectionEquality().equals(other.columns, columns)&&const DeepCollectionEquality().equals(other.rowsById, rowsById)&&const DeepCollectionEquality().equals(other.displayOrder, displayOrder)&&(identical(other.viewport, viewport) || other.viewport == viewport)&&(identical(other.selection, selection) || other.selection == selection)&&(identical(other.sort, sort) || other.sort == sort)&&(identical(other.filter, filter) || other.filter == filter)&&(identical(other.group, group) || other.group == group)&&(identical(other.edit, edit) || other.edit == edit)&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading)&&(identical(other.loadingMessage, loadingMessage) || other.loadingMessage == loadingMessage));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DataGridState<T>&&const DeepCollectionEquality().equals(other.columns, columns)&&const DeepCollectionEquality().equals(other.rowsById, rowsById)&&const DeepCollectionEquality().equals(other.displayOrder, displayOrder)&&(identical(other.viewport, viewport) || other.viewport == viewport)&&(identical(other.selection, selection) || other.selection == selection)&&(identical(other.sort, sort) || other.sort == sort)&&(identical(other.filter, filter) || other.filter == filter)&&(identical(other.group, group) || other.group == group)&&(identical(other.edit, edit) || other.edit == edit)&&(identical(other.pagination, pagination) || other.pagination == pagination)&&(identical(other.totalItems, totalItems) || other.totalItems == totalItems)&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading)&&(identical(other.loadingMessage, loadingMessage) || other.loadingMessage == loadingMessage));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(columns),const DeepCollectionEquality().hash(rowsById),const DeepCollectionEquality().hash(displayOrder),viewport,selection,sort,filter,group,edit,isLoading,loadingMessage);
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(columns),const DeepCollectionEquality().hash(rowsById),const DeepCollectionEquality().hash(displayOrder),viewport,selection,sort,filter,group,edit,pagination,totalItems,isLoading,loadingMessage);
 
 @override
 String toString() {
-  return 'DataGridState<$T>(columns: $columns, rowsById: $rowsById, displayOrder: $displayOrder, viewport: $viewport, selection: $selection, sort: $sort, filter: $filter, group: $group, edit: $edit, isLoading: $isLoading, loadingMessage: $loadingMessage)';
+  return 'DataGridState<$T>(columns: $columns, rowsById: $rowsById, displayOrder: $displayOrder, viewport: $viewport, selection: $selection, sort: $sort, filter: $filter, group: $group, edit: $edit, pagination: $pagination, totalItems: $totalItems, isLoading: $isLoading, loadingMessage: $loadingMessage)';
 }
 
 
@@ -45,11 +45,11 @@ abstract mixin class $DataGridStateCopyWith<T extends DataGridRow,$Res>  {
   factory $DataGridStateCopyWith(DataGridState<T> value, $Res Function(DataGridState<T>) _then) = _$DataGridStateCopyWithImpl;
 @useResult
 $Res call({
- List<DataGridColumn<T>> columns, Map<double, T> rowsById, List<double> displayOrder, ViewportState viewport, SelectionState selection, SortState sort, FilterState filter, GroupState group, EditState edit, bool isLoading, String? loadingMessage
+ List<DataGridColumn<T>> columns, Map<double, T> rowsById, List<double> displayOrder, ViewportState viewport, SelectionState selection, SortState sort, FilterState filter, GroupState group, EditState edit, PaginationState pagination, int totalItems, bool isLoading, String? loadingMessage
 });
 
 
-$ViewportStateCopyWith<$Res> get viewport;$SelectionStateCopyWith<$Res> get selection;$SortStateCopyWith<$Res> get sort;$FilterStateCopyWith<$Res> get filter;$GroupStateCopyWith<$Res> get group;$EditStateCopyWith<$Res> get edit;
+$ViewportStateCopyWith<$Res> get viewport;$SelectionStateCopyWith<$Res> get selection;$SortStateCopyWith<$Res> get sort;$FilterStateCopyWith<$Res> get filter;$GroupStateCopyWith<$Res> get group;$EditStateCopyWith<$Res> get edit;$PaginationStateCopyWith<$Res> get pagination;
 
 }
 /// @nodoc
@@ -62,7 +62,7 @@ class _$DataGridStateCopyWithImpl<T extends DataGridRow,$Res>
 
 /// Create a copy of DataGridState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? columns = null,Object? rowsById = null,Object? displayOrder = null,Object? viewport = null,Object? selection = null,Object? sort = null,Object? filter = null,Object? group = null,Object? edit = null,Object? isLoading = null,Object? loadingMessage = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? columns = null,Object? rowsById = null,Object? displayOrder = null,Object? viewport = null,Object? selection = null,Object? sort = null,Object? filter = null,Object? group = null,Object? edit = null,Object? pagination = null,Object? totalItems = null,Object? isLoading = null,Object? loadingMessage = freezed,}) {
   return _then(_self.copyWith(
 columns: null == columns ? _self.columns : columns // ignore: cast_nullable_to_non_nullable
 as List<DataGridColumn<T>>,rowsById: null == rowsById ? _self.rowsById : rowsById // ignore: cast_nullable_to_non_nullable
@@ -73,7 +73,9 @@ as SelectionState,sort: null == sort ? _self.sort : sort // ignore: cast_nullabl
 as SortState,filter: null == filter ? _self.filter : filter // ignore: cast_nullable_to_non_nullable
 as FilterState,group: null == group ? _self.group : group // ignore: cast_nullable_to_non_nullable
 as GroupState,edit: null == edit ? _self.edit : edit // ignore: cast_nullable_to_non_nullable
-as EditState,isLoading: null == isLoading ? _self.isLoading : isLoading // ignore: cast_nullable_to_non_nullable
+as EditState,pagination: null == pagination ? _self.pagination : pagination // ignore: cast_nullable_to_non_nullable
+as PaginationState,totalItems: null == totalItems ? _self.totalItems : totalItems // ignore: cast_nullable_to_non_nullable
+as int,isLoading: null == isLoading ? _self.isLoading : isLoading // ignore: cast_nullable_to_non_nullable
 as bool,loadingMessage: freezed == loadingMessage ? _self.loadingMessage : loadingMessage // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
@@ -131,6 +133,15 @@ $EditStateCopyWith<$Res> get edit {
   
   return $EditStateCopyWith<$Res>(_self.edit, (value) {
     return _then(_self.copyWith(edit: value));
+  });
+}/// Create a copy of DataGridState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$PaginationStateCopyWith<$Res> get pagination {
+  
+  return $PaginationStateCopyWith<$Res>(_self.pagination, (value) {
+    return _then(_self.copyWith(pagination: value));
   });
 }
 }
@@ -214,10 +225,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<DataGridColumn<T>> columns,  Map<double, T> rowsById,  List<double> displayOrder,  ViewportState viewport,  SelectionState selection,  SortState sort,  FilterState filter,  GroupState group,  EditState edit,  bool isLoading,  String? loadingMessage)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<DataGridColumn<T>> columns,  Map<double, T> rowsById,  List<double> displayOrder,  ViewportState viewport,  SelectionState selection,  SortState sort,  FilterState filter,  GroupState group,  EditState edit,  PaginationState pagination,  int totalItems,  bool isLoading,  String? loadingMessage)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _DataGridState() when $default != null:
-return $default(_that.columns,_that.rowsById,_that.displayOrder,_that.viewport,_that.selection,_that.sort,_that.filter,_that.group,_that.edit,_that.isLoading,_that.loadingMessage);case _:
+return $default(_that.columns,_that.rowsById,_that.displayOrder,_that.viewport,_that.selection,_that.sort,_that.filter,_that.group,_that.edit,_that.pagination,_that.totalItems,_that.isLoading,_that.loadingMessage);case _:
   return orElse();
 
 }
@@ -235,10 +246,10 @@ return $default(_that.columns,_that.rowsById,_that.displayOrder,_that.viewport,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<DataGridColumn<T>> columns,  Map<double, T> rowsById,  List<double> displayOrder,  ViewportState viewport,  SelectionState selection,  SortState sort,  FilterState filter,  GroupState group,  EditState edit,  bool isLoading,  String? loadingMessage)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<DataGridColumn<T>> columns,  Map<double, T> rowsById,  List<double> displayOrder,  ViewportState viewport,  SelectionState selection,  SortState sort,  FilterState filter,  GroupState group,  EditState edit,  PaginationState pagination,  int totalItems,  bool isLoading,  String? loadingMessage)  $default,) {final _that = this;
 switch (_that) {
 case _DataGridState():
-return $default(_that.columns,_that.rowsById,_that.displayOrder,_that.viewport,_that.selection,_that.sort,_that.filter,_that.group,_that.edit,_that.isLoading,_that.loadingMessage);case _:
+return $default(_that.columns,_that.rowsById,_that.displayOrder,_that.viewport,_that.selection,_that.sort,_that.filter,_that.group,_that.edit,_that.pagination,_that.totalItems,_that.isLoading,_that.loadingMessage);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -255,10 +266,10 @@ return $default(_that.columns,_that.rowsById,_that.displayOrder,_that.viewport,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<DataGridColumn<T>> columns,  Map<double, T> rowsById,  List<double> displayOrder,  ViewportState viewport,  SelectionState selection,  SortState sort,  FilterState filter,  GroupState group,  EditState edit,  bool isLoading,  String? loadingMessage)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<DataGridColumn<T>> columns,  Map<double, T> rowsById,  List<double> displayOrder,  ViewportState viewport,  SelectionState selection,  SortState sort,  FilterState filter,  GroupState group,  EditState edit,  PaginationState pagination,  int totalItems,  bool isLoading,  String? loadingMessage)?  $default,) {final _that = this;
 switch (_that) {
 case _DataGridState() when $default != null:
-return $default(_that.columns,_that.rowsById,_that.displayOrder,_that.viewport,_that.selection,_that.sort,_that.filter,_that.group,_that.edit,_that.isLoading,_that.loadingMessage);case _:
+return $default(_that.columns,_that.rowsById,_that.displayOrder,_that.viewport,_that.selection,_that.sort,_that.filter,_that.group,_that.edit,_that.pagination,_that.totalItems,_that.isLoading,_that.loadingMessage);case _:
   return null;
 
 }
@@ -270,7 +281,7 @@ return $default(_that.columns,_that.rowsById,_that.displayOrder,_that.viewport,_
 
 
 class _DataGridState<T extends DataGridRow> extends DataGridState<T> {
-  const _DataGridState({required final  List<DataGridColumn<T>> columns, required final  Map<double, T> rowsById, required final  List<double> displayOrder, required this.viewport, required this.selection, required this.sort, required this.filter, required this.group, required this.edit, this.isLoading = false, this.loadingMessage}): _columns = columns,_rowsById = rowsById,_displayOrder = displayOrder,super._();
+  const _DataGridState({required final  List<DataGridColumn<T>> columns, required final  Map<double, T> rowsById, required final  List<double> displayOrder, required this.viewport, required this.selection, required this.sort, required this.filter, required this.group, required this.edit, required this.pagination, this.totalItems = 0, this.isLoading = false, this.loadingMessage}): _columns = columns,_rowsById = rowsById,_displayOrder = displayOrder,super._();
   
 
  final  List<DataGridColumn<T>> _columns;
@@ -300,6 +311,8 @@ class _DataGridState<T extends DataGridRow> extends DataGridState<T> {
 @override final  FilterState filter;
 @override final  GroupState group;
 @override final  EditState edit;
+@override final  PaginationState pagination;
+@override@JsonKey() final  int totalItems;
 @override@JsonKey() final  bool isLoading;
 @override final  String? loadingMessage;
 
@@ -313,16 +326,16 @@ _$DataGridStateCopyWith<T, _DataGridState<T>> get copyWith => __$DataGridStateCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _DataGridState<T>&&const DeepCollectionEquality().equals(other._columns, _columns)&&const DeepCollectionEquality().equals(other._rowsById, _rowsById)&&const DeepCollectionEquality().equals(other._displayOrder, _displayOrder)&&(identical(other.viewport, viewport) || other.viewport == viewport)&&(identical(other.selection, selection) || other.selection == selection)&&(identical(other.sort, sort) || other.sort == sort)&&(identical(other.filter, filter) || other.filter == filter)&&(identical(other.group, group) || other.group == group)&&(identical(other.edit, edit) || other.edit == edit)&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading)&&(identical(other.loadingMessage, loadingMessage) || other.loadingMessage == loadingMessage));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _DataGridState<T>&&const DeepCollectionEquality().equals(other._columns, _columns)&&const DeepCollectionEquality().equals(other._rowsById, _rowsById)&&const DeepCollectionEquality().equals(other._displayOrder, _displayOrder)&&(identical(other.viewport, viewport) || other.viewport == viewport)&&(identical(other.selection, selection) || other.selection == selection)&&(identical(other.sort, sort) || other.sort == sort)&&(identical(other.filter, filter) || other.filter == filter)&&(identical(other.group, group) || other.group == group)&&(identical(other.edit, edit) || other.edit == edit)&&(identical(other.pagination, pagination) || other.pagination == pagination)&&(identical(other.totalItems, totalItems) || other.totalItems == totalItems)&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading)&&(identical(other.loadingMessage, loadingMessage) || other.loadingMessage == loadingMessage));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_columns),const DeepCollectionEquality().hash(_rowsById),const DeepCollectionEquality().hash(_displayOrder),viewport,selection,sort,filter,group,edit,isLoading,loadingMessage);
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_columns),const DeepCollectionEquality().hash(_rowsById),const DeepCollectionEquality().hash(_displayOrder),viewport,selection,sort,filter,group,edit,pagination,totalItems,isLoading,loadingMessage);
 
 @override
 String toString() {
-  return 'DataGridState<$T>(columns: $columns, rowsById: $rowsById, displayOrder: $displayOrder, viewport: $viewport, selection: $selection, sort: $sort, filter: $filter, group: $group, edit: $edit, isLoading: $isLoading, loadingMessage: $loadingMessage)';
+  return 'DataGridState<$T>(columns: $columns, rowsById: $rowsById, displayOrder: $displayOrder, viewport: $viewport, selection: $selection, sort: $sort, filter: $filter, group: $group, edit: $edit, pagination: $pagination, totalItems: $totalItems, isLoading: $isLoading, loadingMessage: $loadingMessage)';
 }
 
 
@@ -333,11 +346,11 @@ abstract mixin class _$DataGridStateCopyWith<T extends DataGridRow,$Res> impleme
   factory _$DataGridStateCopyWith(_DataGridState<T> value, $Res Function(_DataGridState<T>) _then) = __$DataGridStateCopyWithImpl;
 @override @useResult
 $Res call({
- List<DataGridColumn<T>> columns, Map<double, T> rowsById, List<double> displayOrder, ViewportState viewport, SelectionState selection, SortState sort, FilterState filter, GroupState group, EditState edit, bool isLoading, String? loadingMessage
+ List<DataGridColumn<T>> columns, Map<double, T> rowsById, List<double> displayOrder, ViewportState viewport, SelectionState selection, SortState sort, FilterState filter, GroupState group, EditState edit, PaginationState pagination, int totalItems, bool isLoading, String? loadingMessage
 });
 
 
-@override $ViewportStateCopyWith<$Res> get viewport;@override $SelectionStateCopyWith<$Res> get selection;@override $SortStateCopyWith<$Res> get sort;@override $FilterStateCopyWith<$Res> get filter;@override $GroupStateCopyWith<$Res> get group;@override $EditStateCopyWith<$Res> get edit;
+@override $ViewportStateCopyWith<$Res> get viewport;@override $SelectionStateCopyWith<$Res> get selection;@override $SortStateCopyWith<$Res> get sort;@override $FilterStateCopyWith<$Res> get filter;@override $GroupStateCopyWith<$Res> get group;@override $EditStateCopyWith<$Res> get edit;@override $PaginationStateCopyWith<$Res> get pagination;
 
 }
 /// @nodoc
@@ -350,7 +363,7 @@ class __$DataGridStateCopyWithImpl<T extends DataGridRow,$Res>
 
 /// Create a copy of DataGridState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? columns = null,Object? rowsById = null,Object? displayOrder = null,Object? viewport = null,Object? selection = null,Object? sort = null,Object? filter = null,Object? group = null,Object? edit = null,Object? isLoading = null,Object? loadingMessage = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? columns = null,Object? rowsById = null,Object? displayOrder = null,Object? viewport = null,Object? selection = null,Object? sort = null,Object? filter = null,Object? group = null,Object? edit = null,Object? pagination = null,Object? totalItems = null,Object? isLoading = null,Object? loadingMessage = freezed,}) {
   return _then(_DataGridState<T>(
 columns: null == columns ? _self._columns : columns // ignore: cast_nullable_to_non_nullable
 as List<DataGridColumn<T>>,rowsById: null == rowsById ? _self._rowsById : rowsById // ignore: cast_nullable_to_non_nullable
@@ -361,7 +374,9 @@ as SelectionState,sort: null == sort ? _self.sort : sort // ignore: cast_nullabl
 as SortState,filter: null == filter ? _self.filter : filter // ignore: cast_nullable_to_non_nullable
 as FilterState,group: null == group ? _self.group : group // ignore: cast_nullable_to_non_nullable
 as GroupState,edit: null == edit ? _self.edit : edit // ignore: cast_nullable_to_non_nullable
-as EditState,isLoading: null == isLoading ? _self.isLoading : isLoading // ignore: cast_nullable_to_non_nullable
+as EditState,pagination: null == pagination ? _self.pagination : pagination // ignore: cast_nullable_to_non_nullable
+as PaginationState,totalItems: null == totalItems ? _self.totalItems : totalItems // ignore: cast_nullable_to_non_nullable
+as int,isLoading: null == isLoading ? _self.isLoading : isLoading // ignore: cast_nullable_to_non_nullable
 as bool,loadingMessage: freezed == loadingMessage ? _self.loadingMessage : loadingMessage // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
@@ -420,6 +435,15 @@ $EditStateCopyWith<$Res> get edit {
   
   return $EditStateCopyWith<$Res>(_self.edit, (value) {
     return _then(_self.copyWith(edit: value));
+  });
+}/// Create a copy of DataGridState
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$PaginationStateCopyWith<$Res> get pagination {
+  
+  return $PaginationStateCopyWith<$Res>(_self.pagination, (value) {
+    return _then(_self.copyWith(pagination: value));
   });
 }
 }
@@ -2573,6 +2597,272 @@ class __$EditStateCopyWithImpl<$Res>
 editingCellId: freezed == editingCellId ? _self.editingCellId : editingCellId // ignore: cast_nullable_to_non_nullable
 as String?,editingValue: freezed == editingValue ? _self.editingValue : editingValue // ignore: cast_nullable_to_non_nullable
 as dynamic,
+  ));
+}
+
+
+}
+
+/// @nodoc
+mixin _$PaginationState {
+
+ int get currentPage; int get pageSize; bool get enabled; bool get serverSide;
+/// Create a copy of PaginationState
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$PaginationStateCopyWith<PaginationState> get copyWith => _$PaginationStateCopyWithImpl<PaginationState>(this as PaginationState, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PaginationState&&(identical(other.currentPage, currentPage) || other.currentPage == currentPage)&&(identical(other.pageSize, pageSize) || other.pageSize == pageSize)&&(identical(other.enabled, enabled) || other.enabled == enabled)&&(identical(other.serverSide, serverSide) || other.serverSide == serverSide));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,currentPage,pageSize,enabled,serverSide);
+
+@override
+String toString() {
+  return 'PaginationState(currentPage: $currentPage, pageSize: $pageSize, enabled: $enabled, serverSide: $serverSide)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $PaginationStateCopyWith<$Res>  {
+  factory $PaginationStateCopyWith(PaginationState value, $Res Function(PaginationState) _then) = _$PaginationStateCopyWithImpl;
+@useResult
+$Res call({
+ int currentPage, int pageSize, bool enabled, bool serverSide
+});
+
+
+
+
+}
+/// @nodoc
+class _$PaginationStateCopyWithImpl<$Res>
+    implements $PaginationStateCopyWith<$Res> {
+  _$PaginationStateCopyWithImpl(this._self, this._then);
+
+  final PaginationState _self;
+  final $Res Function(PaginationState) _then;
+
+/// Create a copy of PaginationState
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? currentPage = null,Object? pageSize = null,Object? enabled = null,Object? serverSide = null,}) {
+  return _then(_self.copyWith(
+currentPage: null == currentPage ? _self.currentPage : currentPage // ignore: cast_nullable_to_non_nullable
+as int,pageSize: null == pageSize ? _self.pageSize : pageSize // ignore: cast_nullable_to_non_nullable
+as int,enabled: null == enabled ? _self.enabled : enabled // ignore: cast_nullable_to_non_nullable
+as bool,serverSide: null == serverSide ? _self.serverSide : serverSide // ignore: cast_nullable_to_non_nullable
+as bool,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [PaginationState].
+extension PaginationStatePatterns on PaginationState {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _PaginationState value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _PaginationState() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _PaginationState value)  $default,){
+final _that = this;
+switch (_that) {
+case _PaginationState():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _PaginationState value)?  $default,){
+final _that = this;
+switch (_that) {
+case _PaginationState() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int currentPage,  int pageSize,  bool enabled,  bool serverSide)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _PaginationState() when $default != null:
+return $default(_that.currentPage,_that.pageSize,_that.enabled,_that.serverSide);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int currentPage,  int pageSize,  bool enabled,  bool serverSide)  $default,) {final _that = this;
+switch (_that) {
+case _PaginationState():
+return $default(_that.currentPage,_that.pageSize,_that.enabled,_that.serverSide);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int currentPage,  int pageSize,  bool enabled,  bool serverSide)?  $default,) {final _that = this;
+switch (_that) {
+case _PaginationState() when $default != null:
+return $default(_that.currentPage,_that.pageSize,_that.enabled,_that.serverSide);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class _PaginationState extends PaginationState {
+  const _PaginationState({this.currentPage = 1, this.pageSize = 50, this.enabled = false, this.serverSide = false}): super._();
+  
+
+@override@JsonKey() final  int currentPage;
+@override@JsonKey() final  int pageSize;
+@override@JsonKey() final  bool enabled;
+@override@JsonKey() final  bool serverSide;
+
+/// Create a copy of PaginationState
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$PaginationStateCopyWith<_PaginationState> get copyWith => __$PaginationStateCopyWithImpl<_PaginationState>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PaginationState&&(identical(other.currentPage, currentPage) || other.currentPage == currentPage)&&(identical(other.pageSize, pageSize) || other.pageSize == pageSize)&&(identical(other.enabled, enabled) || other.enabled == enabled)&&(identical(other.serverSide, serverSide) || other.serverSide == serverSide));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,currentPage,pageSize,enabled,serverSide);
+
+@override
+String toString() {
+  return 'PaginationState(currentPage: $currentPage, pageSize: $pageSize, enabled: $enabled, serverSide: $serverSide)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$PaginationStateCopyWith<$Res> implements $PaginationStateCopyWith<$Res> {
+  factory _$PaginationStateCopyWith(_PaginationState value, $Res Function(_PaginationState) _then) = __$PaginationStateCopyWithImpl;
+@override @useResult
+$Res call({
+ int currentPage, int pageSize, bool enabled, bool serverSide
+});
+
+
+
+
+}
+/// @nodoc
+class __$PaginationStateCopyWithImpl<$Res>
+    implements _$PaginationStateCopyWith<$Res> {
+  __$PaginationStateCopyWithImpl(this._self, this._then);
+
+  final _PaginationState _self;
+  final $Res Function(_PaginationState) _then;
+
+/// Create a copy of PaginationState
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? currentPage = null,Object? pageSize = null,Object? enabled = null,Object? serverSide = null,}) {
+  return _then(_PaginationState(
+currentPage: null == currentPage ? _self.currentPage : currentPage // ignore: cast_nullable_to_non_nullable
+as int,pageSize: null == pageSize ? _self.pageSize : pageSize // ignore: cast_nullable_to_non_nullable
+as int,enabled: null == enabled ? _self.enabled : enabled // ignore: cast_nullable_to_non_nullable
+as bool,serverSide: null == serverSide ? _self.serverSide : serverSide // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 
