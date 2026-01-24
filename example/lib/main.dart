@@ -12,9 +12,14 @@ class SomeRow implements DataGridRow {
   double total;
   Map<int, dynamic> extraData;
 
-  SomeRow({required this.id, this.name = '', this.quantity = 0, this.price = 0.0, Map<int, dynamic>? extraData})
-    : total = quantity * price,
-      extraData = extraData ?? {};
+  SomeRow({
+    required this.id,
+    this.name = '',
+    this.quantity = 0,
+    this.price = 0.0,
+    Map<int, dynamic>? extraData,
+  }) : total = quantity * price,
+       extraData = extraData ?? {};
 
   void updateTotal() {
     total = quantity * price;
@@ -49,7 +54,11 @@ class RedCellRenderer extends CellRenderer<SomeRow> {
 // Example: Customizing DataGrid theme
 // Using Border objects for complete control over cell borders
 final customTheme = DataGridThemeData(
-  dimensions: DataGridDimensions.defaults().copyWith(scrollbarWidth: 16.0, rowHeight: 100.0, headerHeight: 56.0),
+  dimensions: DataGridDimensions.defaults().copyWith(
+    scrollbarWidth: 16.0,
+    rowHeight: 100.0,
+    headerHeight: 56.0,
+  ),
   padding: DataGridPadding.defaults().copyWith(
     cellPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
     headerPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -64,7 +73,10 @@ final customTheme = DataGridThemeData(
   borders: DataGridBorders.defaults().copyWith(
     cellBorder: Border(
       bottom: BorderSide(color: Colors.purple[200]!, width: 2.0),
-      right: BorderSide(color: const Color.fromARGB(255, 29, 21, 31), width: 2.0),
+      right: BorderSide(
+        color: const Color.fromARGB(255, 29, 21, 31),
+        width: 2.0,
+      ),
     ),
     headerBorder: Border(
       bottom: BorderSide(color: Colors.purple[300]!, width: 2.0),
@@ -74,9 +86,17 @@ final customTheme = DataGridThemeData(
       bottom: BorderSide(color: Colors.purple[300]!, width: 2.0),
       right: BorderSide(color: Colors.purple[300]!, width: 2.0),
     ),
-    pinnedBorder: Border(right: BorderSide(color: Colors.purple[400]!, width: 3.0)),
+    pinnedBorder: Border(
+      right: BorderSide(color: Colors.purple[400]!, width: 3.0),
+    ),
     editingBorder: Border.all(color: Colors.purple, width: 3.0),
-    pinnedShadow: [BoxShadow(color: Colors.purple.withValues(alpha: 0.2), blurRadius: 6.0, offset: const Offset(2, 0))],
+    pinnedShadow: [
+      BoxShadow(
+        color: Colors.purple.withValues(alpha: 0.2),
+        blurRadius: 6.0,
+        offset: const Offset(2, 0),
+      ),
+    ],
   ),
 );
 
@@ -100,7 +120,9 @@ class _MainAppState extends State<MainApp> {
   bool _serverSidePagination = false;
 
   Future<List<SomeRow>> _loadPage(int page, int pageSize) async {
-    controller.addEvent(SetLoadingEvent(isLoading: true, message: 'Loading page $page...'));
+    controller.addEvent(
+      SetLoadingEvent(isLoading: true, message: 'Loading page $page...'),
+    );
     await Future.delayed(const Duration(seconds: 2));
     final start = (page - 1) * pageSize;
     final end = (start + pageSize).clamp(0, _allRows.length);
@@ -133,7 +155,8 @@ class _MainAppState extends State<MainApp> {
         width: 200,
         pinned: false,
         editable: true,
-        valueAccessor: (row) => row.name.isEmpty ? 'Item ${row.id.toInt()}' : row.name,
+        valueAccessor: (row) =>
+            row.name.isEmpty ? 'Item ${row.id.toInt()}' : row.name,
         cellValueSetter: (row, value) {
           row.name = value.toString();
         },
@@ -214,15 +237,21 @@ class _MainAppState extends State<MainApp> {
 
     controller.enablePagination(true);
 
-    _pageSubscription = controller.state$.map((s) => s.pagination.currentPage).distinct().listen((page) async {
-      if (_serverSidePagination && page != _lastPage) {
-        _lastPage = page;
-        final totalItems = controller.state.totalItems;
-        final rows = await _loadPage(page, controller.state.pagination.pageSize);
-        controller.setRows(rows);
-        controller.setTotalItems(totalItems);
-      }
-    });
+    _pageSubscription = controller.state$
+        .map((s) => s.pagination.currentPage)
+        .distinct()
+        .listen((page) async {
+          if (_serverSidePagination && page != _lastPage) {
+            _lastPage = page;
+            final totalItems = controller.state.totalItems;
+            final rows = await _loadPage(
+              page,
+              controller.state.pagination.pageSize,
+            );
+            controller.setRows(rows);
+            controller.setTotalItems(totalItems);
+          }
+        });
   }
 
   @override
@@ -236,7 +265,10 @@ class _MainAppState extends State<MainApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Data Grid Demo',
-      theme: ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue), useMaterial3: true),
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        useMaterial3: true,
+      ),
       home: Scaffold(
         appBar: AppBar(
           backgroundColor: Theme.of(context).colorScheme.inversePrimary,
@@ -251,9 +283,18 @@ class _MainAppState extends State<MainApp> {
                   children: [
                     SegmentedButton<SelectionMode>(
                       segments: const [
-                        ButtonSegment(value: SelectionMode.none, label: Text('None')),
-                        ButtonSegment(value: SelectionMode.single, label: Text('Single')),
-                        ButtonSegment(value: SelectionMode.multiple, label: Text('Multi')),
+                        ButtonSegment(
+                          value: SelectionMode.none,
+                          label: Text('None'),
+                        ),
+                        ButtonSegment(
+                          value: SelectionMode.single,
+                          label: Text('Single'),
+                        ),
+                        ButtonSegment(
+                          value: SelectionMode.multiple,
+                          label: Text('Multi'),
+                        ),
                       ],
                       selected: {mode},
                       onSelectionChanged: (Set<SelectionMode> newSelection) {
@@ -280,7 +321,10 @@ class _MainAppState extends State<MainApp> {
                               if (value) {
                                 _lastPage = 1;
                                 final totalCount = await _getTotalCount();
-                                final rows = await _loadPage(1, controller.state.pagination.pageSize);
+                                final rows = await _loadPage(
+                                  1,
+                                  controller.state.pagination.pageSize,
+                                );
                                 controller.setRows(rows);
                                 controller.setTotalItems(totalCount);
                               } else {

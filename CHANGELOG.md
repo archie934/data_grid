@@ -1,3 +1,18 @@
+## 0.0.5
+
+* Performance: Refactored DataGridCell from StatefulWidget to StatelessWidget (StatefulWidget only used during editing)
+* Performance: Removed nested StreamBuilders from cells - now using direct state access
+* Performance: Added column caching in viewport renderer to avoid recalculating pinned/unpinned columns on every layout
+* Performance: Added RepaintBoundary to grid body
+* Performance: Removed scroll debounce timer from GridScrollController
+* Added `cacheExtent` parameter to DataGrid for controlling pre-rendered content
+* Added smooth scroll physics for better horizontal scrolling momentum
+* Simplified DataGridCheckboxCell by removing StreamBuilder
+* Removed unused `rowRenderer` parameter from DataGrid
+* Removed unused `default_row_renderer.dart` file
+* Fixed conditional updateRenderObject to avoid unnecessary updates
+* Fixed scroll handling - viewport now handles scroll internally via ViewportOffset
+
 ## 0.0.4
 
 * Removed unnecessary import in data_grid_controller.dart
