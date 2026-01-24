@@ -22,10 +22,36 @@ class _DataGridScrollBehavior extends MaterialScrollBehavior {
   };
 }
 
+/// Custom scroll physics with more momentum for smoother horizontal scrolling
+class _SmoothScrollPhysics extends ClampingScrollPhysics {
+  const _SmoothScrollPhysics({super.parent});
+
+  @override
+  _SmoothScrollPhysics applyTo(ScrollPhysics? ancestor) {
+    return _SmoothScrollPhysics(parent: buildParent(ancestor));
+  }
+
+  @override
+  Simulation? createBallisticSimulation(ScrollMetrics position, double velocity) {
+    if ((velocity.abs() < toleranceFor(position).velocity) ||
+        (velocity > 0.0 && position.pixels >= position.maxScrollExtent) ||
+        (velocity < 0.0 && position.pixels <= position.minScrollExtent)) {
+      return null;
+    }
+    // Lower friction = slower deceleration = more momentum feel
+    return ClampingScrollSimulation(
+      position: position.pixels,
+      velocity: velocity,
+      friction: 0.015, // Lower friction for more momentum (default is ~0.135)
+    );
+  }
+}
+
 class DataGridBody<T extends DataGridRow> extends StatelessWidget {
   final double rowHeight;
+  final double? cacheExtent;
 
-  const DataGridBody({super.key, required this.rowHeight});
+  const DataGridBody({super.key, required this.rowHeight, this.cacheExtent});
 
   @override
   Widget build(BuildContext context) {
@@ -41,134 +67,94 @@ class DataGridBody<T extends DataGridRow> extends StatelessWidget {
     if (state.displayOrder.isEmpty) {
       return const SizedBox.expand();
     }
-
-    return GestureDetector(
-      onPanUpdate: (details) {
-        // Enable horizontal scroll with mouse/finger drag (only in unpinned area)
-        if (scrollController.horizontalController.hasClients &&
-            details.delta.dx.abs() > details.delta.dy.abs()) {
-          final offset = scrollController.horizontalController.offset;
-          final max =
-              scrollController.horizontalController.position.maxScrollExtent;
-          final newOffset = (offset - details.delta.dx).clamp(0.0, max);
-          scrollController.horizontalController.jumpTo(newOffset);
-        }
-      },
-      child: Listener(
-        onPointerSignal: (event) {
-          if (event is PointerScrollEvent &&
-              scrollController.horizontalController.hasClients) {
-            final dx = event.scrollDelta.dx;
-            if (dx != 0) {
-              final offset = scrollController.horizontalController.offset;
-              final max = scrollController
-                  .horizontalController
-                  .position
-                  .maxScrollExtent;
-              final newOffset = (offset + dx).clamp(0.0, max);
-              scrollController.horizontalController.jumpTo(newOffset);
-            }
-          }
-        },
-        child: Stack(
-          children: [
-            Positioned.fill(
-              child: ScrollConfiguration(
-                behavior: const _DataGridScrollBehavior().copyWith(
-                  scrollbars: false,
+    return RepaintBoundary(
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: ScrollConfiguration(
+              behavior: const _DataGridScrollBehavior().copyWith(scrollbars: false),
+              child: DataGridScrollView(
+                columns: state.effectiveColumns,
+                rowCount: state.displayOrder.length,
+                rowHeight: rowHeight,
+                cacheExtent: cacheExtent,
+                pinnedMaskColor: theme.colors.evenRowColor,
+                verticalDetails: ScrollableDetails.vertical(controller: scrollController.verticalController),
+                horizontalDetails: ScrollableDetails.horizontal(
+                  controller: scrollController.horizontalController,
+                  physics: const _SmoothScrollPhysics(),
                 ),
-                child: DataGridScrollView(
-                  columns: state.effectiveColumns,
-                  rowCount: state.displayOrder.length,
-                  rowHeight: rowHeight,
-                  pinnedMaskColor: theme.colors.evenRowColor,
-                  verticalDetails: ScrollableDetails.vertical(
-                    controller: scrollController.verticalController,
-                  ),
-                  horizontalDetails: ScrollableDetails.horizontal(
-                    controller: scrollController.horizontalController,
-                  ),
-                  cellBuilder: (context, rowIndex, columnIndex) {
-                    final rowId = state.displayOrder[rowIndex];
-                    final row = state.rowsById[rowId]!;
-                    final column = state.effectiveColumns[columnIndex];
+                cellBuilder: (context, rowIndex, columnIndex) {
+                  final rowId = state.displayOrder[rowIndex];
+                  final row = state.rowsById[rowId]!;
+                  final column = state.effectiveColumns[columnIndex];
 
-                    if (column.id == kSelectionColumnId) {
-                      return DataGridCheckboxCell<T>(
-                        key: ValueKey('cell_${row.id}_${column.id}'),
-                        row: row,
-                        rowId: row.id,
-                        rowIndex: rowIndex,
-                      );
-                    }
-
-                    return DataGridCell<T>(
+                  if (column.id == kSelectionColumnId) {
+                    return DataGridCheckboxCell<T>(
                       key: ValueKey('cell_${row.id}_${column.id}'),
                       row: row,
                       rowId: row.id,
-                      column: column,
                       rowIndex: rowIndex,
-                      isPinned: column.pinned,
                     );
-                  },
-                ),
-              ),
-            ),
-            // Vertical scrollbar
-            Positioned(
-              right: 0,
-              top: 0,
-              bottom: scrollbarWidth,
-              child: ListenableBuilder(
-                listenable: scrollController.verticalController,
-                builder: (context, child) {
-                  if (!scrollController.verticalController.hasClients) {
-                    return const SizedBox();
                   }
-                  final position = scrollController.verticalController.position;
-                  if (!position.hasContentDimensions ||
-                      !position.hasPixels ||
-                      !position.hasViewportDimension) {
-                    return const SizedBox();
-                  }
-                  final hasVerticalScroll = position.maxScrollExtent > 0;
-                  return hasVerticalScroll
-                      ? CustomVerticalScrollbar(
-                          controller: scrollController.verticalController,
-                        )
-                      : const SizedBox();
+
+                  return DataGridCell<T>(
+                    key: ValueKey('cell_${row.id}_${column.id}'),
+                    row: row,
+                    rowId: row.id,
+                    column: column,
+                    rowIndex: rowIndex,
+                    isPinned: column.pinned,
+                  );
                 },
               ),
             ),
-            // Horizontal scrollbar (positioned after pinned columns)
-            Positioned(
-              left: pinnedWidth,
-              right: scrollbarWidth,
-              bottom: 0,
-              child: ListenableBuilder(
-                listenable: scrollController.horizontalController,
-                builder: (context, child) {
-                  if (!scrollController.horizontalController.hasClients) {
-                    return const SizedBox();
-                  }
-                  final position =
-                      scrollController.horizontalController.position;
-                  if (!position.hasContentDimensions ||
-                      !position.hasPixels ||
-                      !position.hasViewportDimension) {
-                    return const SizedBox();
-                  }
-                  final hasHorizontalScroll = position.maxScrollExtent > 0;
-                  return hasHorizontalScroll
-                      ? CustomHorizontalScrollbar(
-                          controller: scrollController.horizontalController,
-                        )
-                      : const SizedBox();
-                },
-              ),
+          ),
+          // Vertical scrollbar
+          Positioned(
+            right: 0,
+            top: 0,
+            bottom: scrollbarWidth,
+            child: ListenableBuilder(
+              listenable: scrollController.verticalController,
+              builder: (context, child) {
+                if (!scrollController.verticalController.hasClients) {
+                  return const SizedBox();
+                }
+                final position = scrollController.verticalController.position;
+                if (!position.hasContentDimensions || !position.hasPixels || !position.hasViewportDimension) {
+                  return const SizedBox();
+                }
+                final hasVerticalScroll = position.maxScrollExtent > 0;
+                return hasVerticalScroll
+                    ? CustomVerticalScrollbar(controller: scrollController.verticalController)
+                    : const SizedBox();
+              },
             ),
-          ],
-        ),
+          ),
+          // Horizontal scrollbar (positioned after pinned columns)
+          Positioned(
+            left: pinnedWidth,
+            right: scrollbarWidth,
+            bottom: 0,
+            child: ListenableBuilder(
+              listenable: scrollController.horizontalController,
+              builder: (context, child) {
+                if (!scrollController.horizontalController.hasClients) {
+                  return const SizedBox();
+                }
+                final position = scrollController.horizontalController.position;
+                if (!position.hasContentDimensions || !position.hasPixels || !position.hasViewportDimension) {
+                  return const SizedBox();
+                }
+                final hasHorizontalScroll = position.maxScrollExtent > 0;
+                return hasHorizontalScroll
+                    ? CustomHorizontalScrollbar(controller: scrollController.horizontalController)
+                    : const SizedBox();
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

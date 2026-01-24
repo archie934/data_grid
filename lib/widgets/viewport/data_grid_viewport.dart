@@ -48,17 +48,22 @@ class DataGridViewport<T extends DataGridRow> extends TwoDimensionalViewport {
     );
   }
 
-  /// Updates the render object when widget properties change.
   @override
-  void updateRenderObject(
-    BuildContext context,
-    covariant RenderDataGridViewport renderObject,
-  ) {
-    renderObject
-      ..delegate = delegate as DataGridChildDelegate
-      ..columns = columns
-      ..rowCount = rowCount
-      ..rowHeight = rowHeight
-      ..pinnedMaskColor = pinnedMaskColor;
+  void updateRenderObject(BuildContext context, covariant RenderDataGridViewport renderObject) {
+    if (renderObject.delegate != delegate) {
+      renderObject.delegate = delegate as DataGridChildDelegate;
+    }
+    if (renderObject.columns != columns) {
+      renderObject.columns = columns;
+    }
+    if (renderObject.rowCount != rowCount) {
+      renderObject.rowCount = rowCount;
+    }
+    if (renderObject.rowHeight != rowHeight) {
+      renderObject.rowHeight = rowHeight;
+    }
+    if (renderObject.pinnedMaskColor != pinnedMaskColor) {
+      renderObject.pinnedMaskColor = pinnedMaskColor;
+    }
   }
 }

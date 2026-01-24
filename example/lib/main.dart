@@ -178,13 +178,13 @@ class _MainAppState extends State<MainApp> {
         editable: false,
         valueAccessor: (row) => '\$${row.total.toStringAsFixed(2)}',
       ),
-      ...List.generate(15, (index) {
+      ...List.generate(60, (index) {
         final columnId = index + 5;
         return DataGridColumn<SomeRow>(
           id: columnId,
           title: 'Extra ${index + 1}',
           width: 150,
-          pinned: index % 5 == 0,
+          pinned: index < 3,
           editable: true,
           valueAccessor: (row) => row.extraData[columnId] ?? 'Data ${row.id}',
           cellValueSetter: (row, value) {
@@ -297,6 +297,7 @@ class _MainAppState extends State<MainApp> {
         ),
         body: DataGrid<SomeRow>(
           controller: controller,
+          cacheExtent: 960,
           // When using a custom theme, remove rowHeight and headerHeight
           // to let the theme control these dimensions
           // theme: customTheme,
