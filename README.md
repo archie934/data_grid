@@ -2,7 +2,7 @@
 
 A high-performance, reactive data grid for Flutter with comprehensive features including virtualization, sorting, filtering, cell editing, row selection, column pinning, and keyboard navigation.
 
-![Flutter Data Grid Overview](docs/images/overview.png)
+![Flutter Data Grid Overview](doc/images/overview.png)
 
 > **Early Development - Beta**: This package is in active development. While core features are stable and well-tested, some advanced features are still being refined. APIs may evolve based on community feedback. See [Known Issues & Roadmap](#-known-issues--roadmap) below for current limitations.
 
@@ -185,7 +185,8 @@ lib/
 │   │   ├── scrollbar_horizontal.dart
 │   │   └── scrollbar_vertical.dart
 │   └── viewport/
-│       └── data_grid_viewport.dart  # TwoDimensionalScrollView
+│       ├── data_grid_viewport.dart  # TwoDimensionalScrollView
+│       └── data_grid_header_viewport.dart  # Header/filter render object
 │
 └── data_grid.dart                   # Public API exports
 ```
@@ -723,7 +724,7 @@ final controller = DataGridController<MyRow>(
 ## 🧪 Testing
 
 Comprehensive test suite included:
-- Widget tests for all major features (97 passing tests)
+- Widget tests for all major features (128 passing tests)
 - State management tests
 - Selection mode tests
 - Edit workflow tests
@@ -836,7 +837,7 @@ dev_dependencies:
 - [ ] **Frozen rows** - Pin rows to top/bottom
 
 ### Low Priority
-- [ ] **CustomMultiChildLayout improvements** - Better pinning with custom layout delegates
+- [x] **Header viewport optimization** - Custom RenderObject for header/filter scrolling (no widget rebuilds)
 - [ ] **Advanced layout logic** - More flexible positioning and z-ordering for overlays
 - [ ] **Touch gestures** - Swipe actions, pinch-to-zoom
 - [ ] **Undo/redo** - Action history

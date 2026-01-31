@@ -3,11 +3,11 @@ import 'package:flutter_data_grid/models/data/row.dart';
 import 'package:flutter_data_grid/models/data/column.dart';
 import 'package:flutter_data_grid/models/state/grid_state.dart';
 import 'package:flutter_data_grid/models/events/grid_events.dart';
-import 'package:flutter_data_grid/delegates/header_layout_delegate.dart';
 import 'package:flutter_data_grid/widgets/cells/data_grid_header_cell.dart';
 import 'package:flutter_data_grid/widgets/cells/data_grid_checkbox_cell.dart';
 import 'package:flutter_data_grid/widgets/data_grid_filter_row.dart';
 import 'package:flutter_data_grid/widgets/data_grid_inherited.dart';
+import 'package:flutter_data_grid/widgets/viewport/data_grid_header_viewport.dart';
 import 'package:flutter_data_grid/renderers/filter_renderer.dart';
 import 'package:flutter_data_grid/theme/data_grid_theme.dart';
 
@@ -52,43 +52,27 @@ class _HeaderRow<T extends DataGridRow> extends StatelessWidget {
   Widget build(BuildContext context) {
     final state = context.dataGridState<T>()!;
     final scrollController = context.gridScrollController<T>()!;
+    final theme = DataGridTheme.of(context);
 
-    return ClipRect(
-      child: AnimatedBuilder(
-        animation: scrollController.horizontalController,
-        builder: (context, child) {
-          final horizontalOffset =
-              scrollController.horizontalController.hasClients
-              ? scrollController.horizontalController.offset
-              : 0.0;
+    final visibleColumns = state.effectiveColumns.where((c) => c.visible).toList();
+    final unpinnedFirst = [
+      ...visibleColumns.where((c) => !c.pinned),
+      ...visibleColumns.where((c) => c.pinned),
+    ];
 
-          // Render unpinned columns first, then pinned columns last for correct z-ordering
-          final visibleColumns = state.effectiveColumns
-              .where((c) => c.visible)
-              .toList();
-          final unpinnedFirst = [
-            ...visibleColumns.where((c) => !c.pinned),
-            ...visibleColumns.where((c) => c.pinned),
-          ];
-
-          return CustomMultiChildLayout(
-            delegate: HeaderLayoutDelegate(
-              columns: state.effectiveColumns,
-              horizontalOffset: horizontalOffset,
-            ),
-            children: [
-              for (var column in unpinnedFirst)
-                LayoutId(
-                  id: column.id,
-                  child: _HeaderCellWrapper<T>(
-                    column: column,
-                    sortState: state.sort,
-                  ),
-                ),
-            ],
-          );
-        },
-      ),
+    return DataGridHeaderViewport<T>(
+      columns: state.effectiveColumns,
+      horizontalController: scrollController.horizontalController,
+      pinnedBackgroundColor: theme.colors.headerColor,
+      childColumnIds: unpinnedFirst.map((c) => c.id).toList(),
+      children: [
+        for (var column in unpinnedFirst)
+          _HeaderCellWrapper<T>(
+            key: ValueKey('header_${column.id}'),
+            column: column,
+            sortState: state.sort,
+          ),
+      ],
     );
   }
 }
@@ -97,7 +81,7 @@ class _HeaderCellWrapper<T extends DataGridRow> extends StatelessWidget {
   final DataGridColumn column;
   final SortState sortState;
 
-  const _HeaderCellWrapper({required this.column, required this.sortState});
+  const _HeaderCellWrapper({super.key, required this.column, required this.sortState});
 
   @override
   Widget build(BuildContext context) {

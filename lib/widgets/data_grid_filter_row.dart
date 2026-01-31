@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_data_grid/models/data/row.dart';
 import 'package:flutter_data_grid/models/data/column.dart';
 import 'package:flutter_data_grid/models/events/grid_events.dart';
-import 'package:flutter_data_grid/delegates/header_layout_delegate.dart';
+import 'package:flutter_data_grid/widgets/viewport/data_grid_header_viewport.dart';
 import 'package:flutter_data_grid/renderers/filter_renderer.dart';
 import 'package:flutter_data_grid/theme/data_grid_theme.dart';
 
@@ -16,6 +16,7 @@ class DataGridFilterRow<T extends DataGridRow> extends StatelessWidget {
   Widget build(BuildContext context) {
     final state = context.dataGridState<T>()!;
     final scrollController = context.gridScrollController<T>()!;
+    final theme = DataGridTheme.of(context);
     final hasFilterableColumns = state.columns.any(
       (col) => col.filterable && col.visible,
     );
@@ -24,42 +25,25 @@ class DataGridFilterRow<T extends DataGridRow> extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    return ClipRect(
-      child: AnimatedBuilder(
-        animation: scrollController.horizontalController,
-        builder: (context, child) {
-          final horizontalOffset =
-              scrollController.horizontalController.hasClients
-              ? scrollController.horizontalController.offset
-              : 0.0;
+    final visibleColumns = state.effectiveColumns.where((c) => c.visible).toList();
+    final unpinnedFirst = [
+      ...visibleColumns.where((c) => !c.pinned),
+      ...visibleColumns.where((c) => c.pinned),
+    ];
 
-          // Render unpinned columns first, then pinned columns last for correct z-ordering
-          final visibleColumns = state.effectiveColumns
-              .where((c) => c.visible)
-              .toList();
-          final unpinnedFirst = [
-            ...visibleColumns.where((c) => !c.pinned),
-            ...visibleColumns.where((c) => c.pinned),
-          ];
-
-          return CustomMultiChildLayout(
-            delegate: HeaderLayoutDelegate(
-              columns: state.effectiveColumns,
-              horizontalOffset: horizontalOffset,
-            ),
-            children: [
-              for (var column in unpinnedFirst)
-                LayoutId(
-                  id: column.id,
-                  child: _FilterCell<T>(
-                    column: column,
-                    defaultFilterRenderer: defaultFilterRenderer,
-                  ),
-                ),
-            ],
-          );
-        },
-      ),
+    return DataGridHeaderViewport<T>(
+      columns: state.effectiveColumns,
+      horizontalController: scrollController.horizontalController,
+      pinnedBackgroundColor: theme.colors.filterBackgroundColor,
+      childColumnIds: unpinnedFirst.map((c) => c.id).toList(),
+      children: [
+        for (var column in unpinnedFirst)
+          _FilterCell<T>(
+            key: ValueKey('filter_${column.id}'),
+            column: column,
+            defaultFilterRenderer: defaultFilterRenderer,
+          ),
+      ],
     );
   }
 }
@@ -69,6 +53,7 @@ class _FilterCell<T extends DataGridRow> extends StatelessWidget {
   final FilterRenderer defaultFilterRenderer;
 
   const _FilterCell({
+    super.key,
     required this.column,
     required this.defaultFilterRenderer,
   });
