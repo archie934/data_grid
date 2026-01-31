@@ -7,21 +7,28 @@ class GridScrollController {
   final ScrollController verticalController;
 
   final PublishSubject<ScrollEvent> _scrollEventSubject = PublishSubject();
-  final BehaviorSubject<ScrollMetrics?> _horizontalMetricsSubject = BehaviorSubject.seeded(null);
-  final BehaviorSubject<ScrollMetrics?> _verticalMetricsSubject = BehaviorSubject.seeded(null);
+  final BehaviorSubject<ScrollMetrics?> _horizontalMetricsSubject =
+      BehaviorSubject.seeded(null);
+  final BehaviorSubject<ScrollMetrics?> _verticalMetricsSubject =
+      BehaviorSubject.seeded(null);
 
-  GridScrollController({ScrollController? horizontal, ScrollController? vertical})
-    : horizontalController = horizontal ?? ScrollController(),
-      verticalController = vertical ?? ScrollController() {
+  GridScrollController({
+    ScrollController? horizontal,
+    ScrollController? vertical,
+  }) : horizontalController = horizontal ?? ScrollController(),
+       verticalController = vertical ?? ScrollController() {
     _setupListeners();
   }
 
   Stream<ScrollEvent> get scrollEvent$ => _scrollEventSubject.stream;
-  Stream<ScrollMetrics?> get horizontalMetrics$ => _horizontalMetricsSubject.stream;
+  Stream<ScrollMetrics?> get horizontalMetrics$ =>
+      _horizontalMetricsSubject.stream;
   Stream<ScrollMetrics?> get verticalMetrics$ => _verticalMetricsSubject.stream;
 
-  double get horizontalOffset => horizontalController.hasClients ? horizontalController.offset : 0;
-  double get verticalOffset => verticalController.hasClients ? verticalController.offset : 0;
+  double get horizontalOffset =>
+      horizontalController.hasClients ? horizontalController.offset : 0;
+  double get verticalOffset =>
+      verticalController.hasClients ? verticalController.offset : 0;
 
   void _setupListeners() {
     horizontalController.addListener(_onHorizontalScroll);
@@ -43,7 +50,9 @@ class GridScrollController {
   }
 
   void _emitScrollEvent() {
-    _scrollEventSubject.add(ScrollEvent(offsetX: horizontalOffset, offsetY: verticalOffset));
+    _scrollEventSubject.add(
+      ScrollEvent(offsetX: horizontalOffset, offsetY: verticalOffset),
+    );
   }
 
   Future<void> scrollToRow(
@@ -55,7 +64,11 @@ class GridScrollController {
     if (!verticalController.hasClients) return;
 
     final offset = rowIndex * rowHeight;
-    await verticalController.animateTo(offset, duration: duration, curve: curve);
+    await verticalController.animateTo(
+      offset,
+      duration: duration,
+      curve: curve,
+    );
   }
 
   Future<void> scrollToColumn(
@@ -71,7 +84,11 @@ class GridScrollController {
       offset += columnWidths[i];
     }
 
-    await horizontalController.animateTo(offset, duration: duration, curve: curve);
+    await horizontalController.animateTo(
+      offset,
+      duration: duration,
+      curve: curve,
+    );
   }
 
   void jumpToRow(int rowIndex, {required double rowHeight}) {

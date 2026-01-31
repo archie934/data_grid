@@ -1,3 +1,13 @@
+## 0.0.6
+
+* Performance: Replaced AnimatedBuilder in header/filter rows with custom RenderObject (`RenderDataGridHeader`)
+* Header and filter rows now use `markNeedsPaint()` on scroll instead of widget rebuilds
+* Eliminated widget rebuilds during horizontal scrolling for smoother performance
+* Added `DataGridHeaderViewport` widget for efficient header/filter rendering
+* Added 8 new tests for header viewport with pinned/unpinned columns
+* Fixed README image path
+* Updated test count to 128 passing tests
+
 ## 0.0.5
 
 * Performance: Refactored DataGridCell from StatefulWidget to StatelessWidget (StatefulWidget only used during editing)

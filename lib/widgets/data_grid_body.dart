@@ -32,7 +32,10 @@ class _SmoothScrollPhysics extends ClampingScrollPhysics {
   }
 
   @override
-  Simulation? createBallisticSimulation(ScrollMetrics position, double velocity) {
+  Simulation? createBallisticSimulation(
+    ScrollMetrics position,
+    double velocity,
+  ) {
     if ((velocity.abs() < toleranceFor(position).velocity) ||
         (velocity > 0.0 && position.pixels >= position.maxScrollExtent) ||
         (velocity < 0.0 && position.pixels <= position.minScrollExtent)) {
@@ -72,14 +75,18 @@ class DataGridBody<T extends DataGridRow> extends StatelessWidget {
         children: [
           Positioned.fill(
             child: ScrollConfiguration(
-              behavior: const _DataGridScrollBehavior().copyWith(scrollbars: false),
+              behavior: const _DataGridScrollBehavior().copyWith(
+                scrollbars: false,
+              ),
               child: DataGridScrollView(
                 columns: state.effectiveColumns,
                 rowCount: state.displayOrder.length,
                 rowHeight: rowHeight,
                 cacheExtent: cacheExtent,
                 pinnedMaskColor: theme.colors.evenRowColor,
-                verticalDetails: ScrollableDetails.vertical(controller: scrollController.verticalController),
+                verticalDetails: ScrollableDetails.vertical(
+                  controller: scrollController.verticalController,
+                ),
                 horizontalDetails: ScrollableDetails.horizontal(
                   controller: scrollController.horizontalController,
                   physics: const _SmoothScrollPhysics(),
@@ -122,12 +129,16 @@ class DataGridBody<T extends DataGridRow> extends StatelessWidget {
                   return const SizedBox();
                 }
                 final position = scrollController.verticalController.position;
-                if (!position.hasContentDimensions || !position.hasPixels || !position.hasViewportDimension) {
+                if (!position.hasContentDimensions ||
+                    !position.hasPixels ||
+                    !position.hasViewportDimension) {
                   return const SizedBox();
                 }
                 final hasVerticalScroll = position.maxScrollExtent > 0;
                 return hasVerticalScroll
-                    ? CustomVerticalScrollbar(controller: scrollController.verticalController)
+                    ? CustomVerticalScrollbar(
+                        controller: scrollController.verticalController,
+                      )
                     : const SizedBox();
               },
             ),
@@ -144,12 +155,16 @@ class DataGridBody<T extends DataGridRow> extends StatelessWidget {
                   return const SizedBox();
                 }
                 final position = scrollController.horizontalController.position;
-                if (!position.hasContentDimensions || !position.hasPixels || !position.hasViewportDimension) {
+                if (!position.hasContentDimensions ||
+                    !position.hasPixels ||
+                    !position.hasViewportDimension) {
                   return const SizedBox();
                 }
                 final hasHorizontalScroll = position.maxScrollExtent > 0;
                 return hasHorizontalScroll
-                    ? CustomHorizontalScrollbar(controller: scrollController.horizontalController)
+                    ? CustomHorizontalScrollbar(
+                        controller: scrollController.horizontalController,
+                      )
                     : const SizedBox();
               },
             ),

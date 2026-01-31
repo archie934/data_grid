@@ -54,7 +54,9 @@ class _HeaderRow<T extends DataGridRow> extends StatelessWidget {
     final scrollController = context.gridScrollController<T>()!;
     final theme = DataGridTheme.of(context);
 
-    final visibleColumns = state.effectiveColumns.where((c) => c.visible).toList();
+    final visibleColumns = state.effectiveColumns
+        .where((c) => c.visible)
+        .toList();
     final unpinnedFirst = [
       ...visibleColumns.where((c) => !c.pinned),
       ...visibleColumns.where((c) => c.pinned),
@@ -81,7 +83,11 @@ class _HeaderCellWrapper<T extends DataGridRow> extends StatelessWidget {
   final DataGridColumn column;
   final SortState sortState;
 
-  const _HeaderCellWrapper({super.key, required this.column, required this.sortState});
+  const _HeaderCellWrapper({
+    super.key,
+    required this.column,
+    required this.sortState,
+  });
 
   @override
   Widget build(BuildContext context) {

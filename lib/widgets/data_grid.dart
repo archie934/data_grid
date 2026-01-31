@@ -53,7 +53,8 @@ class DataGrid<T extends DataGridRow> extends StatefulWidget {
   final bool showLoadingOverlay;
 
   /// Custom loading overlay builder. If null, uses default overlay.
-  final Widget Function(BuildContext context, String? message)? loadingOverlayBuilder;
+  final Widget Function(BuildContext context, String? message)?
+  loadingOverlayBuilder;
 
   /// Backdrop color for the loading overlay (default: black with 30% opacity)
   final Color? loadingBackdropColor;
@@ -69,7 +70,8 @@ class DataGrid<T extends DataGridRow> extends StatefulWidget {
   final bool showPagination;
 
   /// Custom pagination widget builder. If null, uses default pagination widget.
-  final Widget Function(BuildContext context, DataGridState<T> state)? paginationBuilder;
+  final Widget Function(BuildContext context, DataGridState<T> state)?
+  paginationBuilder;
 
   /// Cache extent for the scroll view. Controls how many pixels of content
   /// are rendered beyond the visible viewport.
@@ -118,7 +120,9 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
       _lastViewportSize = newSize;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
-          widget.controller.addEvent(ViewportResizeEvent(width: width, height: height));
+          widget.controller.addEvent(
+            ViewportResizeEvent(width: width, height: height),
+          );
         }
       });
     }
@@ -155,7 +159,8 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
       widget.controller.addEvent(ClearSelectionEvent());
       return KeyEventResult.handled;
     } else if (event.logicalKey == LogicalKeyboardKey.keyA &&
-        (HardwareKeyboard.instance.isControlPressed || HardwareKeyboard.instance.isMetaPressed)) {
+        (HardwareKeyboard.instance.isControlPressed ||
+            HardwareKeyboard.instance.isMetaPressed)) {
       widget.controller.addEvent(SelectAllVisibleEvent());
       return KeyEventResult.handled;
     }
@@ -166,8 +171,10 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
   @override
   Widget build(BuildContext context) {
     final themeData = widget.theme ?? DataGridThemeData.defaultTheme();
-    final effectiveHeaderHeight = widget.headerHeight ?? themeData.dimensions.headerHeight;
-    final effectiveRowHeight = widget.rowHeight ?? themeData.dimensions.rowHeight;
+    final effectiveHeaderHeight =
+        widget.headerHeight ?? themeData.dimensions.headerHeight;
+    final effectiveRowHeight =
+        widget.rowHeight ?? themeData.dimensions.rowHeight;
 
     return DataGridTheme(
       data: themeData,
@@ -191,40 +198,62 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
               onKeyEvent: (node, event) => _handleKeyEvent(event),
               child: LayoutBuilder(
                 builder: (context, constraints) {
-                  final paginationHeight = (widget.showPagination && state.pagination.enabled) ? 56.0 : 0.0;
-                  final hasFilterableColumns = state.columns.any((col) => col.filterable && col.visible);
-                  final filterRowHeight = hasFilterableColumns ? themeData.dimensions.filterRowHeight : 0.0;
+                  final paginationHeight =
+                      (widget.showPagination && state.pagination.enabled)
+                      ? 56.0
+                      : 0.0;
+                  final hasFilterableColumns = state.columns.any(
+                    (col) => col.filterable && col.visible,
+                  );
+                  final filterRowHeight = hasFilterableColumns
+                      ? themeData.dimensions.filterRowHeight
+                      : 0.0;
                   final availableHeight =
-                      constraints.maxHeight - effectiveHeaderHeight - filterRowHeight - paginationHeight;
+                      constraints.maxHeight -
+                      effectiveHeaderHeight -
+                      filterRowHeight -
+                      paginationHeight;
 
                   final Widget bodyWidget;
                   final double bodyHeight;
 
-                  if (state.pagination.enabled && state.displayOrder.isNotEmpty) {
-                    final requiredHeight = state.pagination.pageSize * effectiveRowHeight;
+                  if (state.pagination.enabled &&
+                      state.displayOrder.isNotEmpty) {
+                    final requiredHeight =
+                        state.pagination.pageSize * effectiveRowHeight;
                     if (requiredHeight <= availableHeight) {
                       bodyHeight = requiredHeight;
                       bodyWidget = SizedBox(
                         height: bodyHeight,
-                        child: DataGridBody<T>(rowHeight: effectiveRowHeight, cacheExtent: widget.cacheExtent),
+                        child: DataGridBody<T>(
+                          rowHeight: effectiveRowHeight,
+                          cacheExtent: widget.cacheExtent,
+                        ),
                       );
                     } else {
                       bodyHeight = availableHeight;
                       bodyWidget = Expanded(
-                        child: DataGridBody<T>(rowHeight: effectiveRowHeight, cacheExtent: widget.cacheExtent),
+                        child: DataGridBody<T>(
+                          rowHeight: effectiveRowHeight,
+                          cacheExtent: widget.cacheExtent,
+                        ),
                       );
                     }
                   } else {
                     bodyHeight = availableHeight;
                     bodyWidget = Expanded(
-                      child: DataGridBody<T>(rowHeight: effectiveRowHeight, cacheExtent: widget.cacheExtent),
+                      child: DataGridBody<T>(
+                        rowHeight: effectiveRowHeight,
+                        cacheExtent: widget.cacheExtent,
+                      ),
                     );
                   }
 
                   _notifyViewportResize(constraints.maxWidth, bodyHeight);
 
                   return Semantics(
-                    label: 'Data grid with $rowCount rows and $columnCount columns',
+                    label:
+                        'Data grid with $rowCount rows and $columnCount columns',
                     child: Stack(
                       children: [
                         Column(
@@ -234,7 +263,8 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
                               headerHeight: effectiveHeaderHeight,
                             ),
                             bodyWidget,
-                            if (widget.showPagination && state.pagination.enabled)
+                            if (widget.showPagination &&
+                                state.pagination.enabled)
                               widget.paginationBuilder != null
                                   ? widget.paginationBuilder!(context, state)
                                   : DataGridPagination<T>(),
@@ -242,7 +272,10 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
                         ),
                         if (state.isLoading && widget.showLoadingOverlay)
                           widget.loadingOverlayBuilder != null
-                              ? widget.loadingOverlayBuilder!(context, state.loadingMessage)
+                              ? widget.loadingOverlayBuilder!(
+                                  context,
+                                  state.loadingMessage,
+                                )
                               : DataGridLoadingOverlay(
                                   message: state.loadingMessage,
                                   backdropColor: widget.loadingBackdropColor,

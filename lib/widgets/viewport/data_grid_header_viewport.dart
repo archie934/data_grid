@@ -7,7 +7,8 @@ class HeaderChildData extends ContainerBoxParentData<RenderBox> {
   int columnId = 0;
 }
 
-class DataGridHeaderViewport<T extends DataGridRow> extends MultiChildRenderObjectWidget {
+class DataGridHeaderViewport<T extends DataGridRow>
+    extends MultiChildRenderObjectWidget {
   final List<DataGridColumn<T>> columns;
   final ScrollController horizontalController;
   final Color pinnedBackgroundColor;
@@ -36,7 +37,10 @@ class DataGridHeaderViewport<T extends DataGridRow> extends MultiChildRenderObje
   }
 
   @override
-  void updateRenderObject(BuildContext context, RenderDataGridHeader<T> renderObject) {
+  void updateRenderObject(
+    BuildContext context,
+    RenderDataGridHeader<T> renderObject,
+  ) {
     renderObject
       ..columns = columns
       ..horizontalController = horizontalController
@@ -46,11 +50,10 @@ class DataGridHeaderViewport<T extends DataGridRow> extends MultiChildRenderObje
   }
 }
 
-class RenderDataGridHeader<T extends DataGridRow>
-    extends RenderBox
-    with ContainerRenderObjectMixin<RenderBox, HeaderChildData>,
-         RenderBoxContainerDefaultsMixin<RenderBox, HeaderChildData> {
-
+class RenderDataGridHeader<T extends DataGridRow> extends RenderBox
+    with
+        ContainerRenderObjectMixin<RenderBox, HeaderChildData>,
+        RenderBoxContainerDefaultsMixin<RenderBox, HeaderChildData> {
   RenderDataGridHeader({
     required List<DataGridColumn<T>> columns,
     required ScrollController horizontalController,
@@ -195,53 +198,51 @@ class RenderDataGridHeader<T extends DataGridRow>
     }
 
     // Clip the painting area
-    context.pushClipRect(
-      needsCompositing,
+    context.pushClipRect(needsCompositing, offset, Offset.zero & size, (
+      context,
       offset,
-      Offset.zero & size,
-      (context, offset) {
-        // Paint unpinned children first (scrolled)
-        RenderBox? child = firstChild;
-        while (child != null) {
-          final parentData = child.parentData! as HeaderChildData;
-          final column = columnById[parentData.columnId];
+    ) {
+      // Paint unpinned children first (scrolled)
+      RenderBox? child = firstChild;
+      while (child != null) {
+        final parentData = child.parentData! as HeaderChildData;
+        final column = columnById[parentData.columnId];
 
-          if (column != null && column.visible && !column.pinned) {
-            final xPos = unpinnedPositions[column.id]!;
-            final paintX = _pinnedWidth + xPos - horizontalOffset;
+        if (column != null && column.visible && !column.pinned) {
+          final xPos = unpinnedPositions[column.id]!;
+          final paintX = _pinnedWidth + xPos - horizontalOffset;
 
-            // Only paint if visible
-            if (paintX + column.width > _pinnedWidth && paintX < size.width) {
-              context.paintChild(child, offset + Offset(paintX, 0));
-            }
+          // Only paint if visible
+          if (paintX + column.width > _pinnedWidth && paintX < size.width) {
+            context.paintChild(child, offset + Offset(paintX, 0));
           }
-
-          child = parentData.nextSibling;
         }
 
-        // Paint mask over pinned area to hide scrolling content bleeding
-        if (_pinnedWidth > 0) {
-          context.canvas.drawRect(
-            Rect.fromLTWH(offset.dx, offset.dy, _pinnedWidth, size.height),
-            Paint()..color = _pinnedBackgroundColor,
-          );
+        child = parentData.nextSibling;
+      }
+
+      // Paint mask over pinned area to hide scrolling content bleeding
+      if (_pinnedWidth > 0) {
+        context.canvas.drawRect(
+          Rect.fromLTWH(offset.dx, offset.dy, _pinnedWidth, size.height),
+          Paint()..color = _pinnedBackgroundColor,
+        );
+      }
+
+      // Paint pinned children last (fixed position, on top)
+      child = firstChild;
+      while (child != null) {
+        final parentData = child.parentData! as HeaderChildData;
+        final column = columnById[parentData.columnId];
+
+        if (column != null && column.visible && column.pinned) {
+          final xPos = pinnedPositions[column.id]!;
+          context.paintChild(child, offset + Offset(xPos, 0));
         }
 
-        // Paint pinned children last (fixed position, on top)
-        child = firstChild;
-        while (child != null) {
-          final parentData = child.parentData! as HeaderChildData;
-          final column = columnById[parentData.columnId];
-
-          if (column != null && column.visible && column.pinned) {
-            final xPos = pinnedPositions[column.id]!;
-            context.paintChild(child, offset + Offset(xPos, 0));
-          }
-
-          child = parentData.nextSibling;
-        }
-      },
-    );
+        child = parentData.nextSibling;
+      }
+    });
   }
 
   @override
@@ -277,7 +278,8 @@ class RenderDataGridHeader<T extends DataGridRow>
         final isHit = result.addWithPaintOffset(
           offset: childOffset,
           position: position,
-          hitTest: (result, transformed) => child!.hitTest(result, position: transformed),
+          hitTest: (result, transformed) =>
+              child!.hitTest(result, position: transformed),
         );
         if (isHit) return true;
       }
@@ -300,7 +302,8 @@ class RenderDataGridHeader<T extends DataGridRow>
           final isHit = result.addWithPaintOffset(
             offset: childOffset,
             position: position,
-            hitTest: (result, transformed) => child!.hitTest(result, position: transformed),
+            hitTest: (result, transformed) =>
+                child!.hitTest(result, position: transformed),
           );
           if (isHit) return true;
         }

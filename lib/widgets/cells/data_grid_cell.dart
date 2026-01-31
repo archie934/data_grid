@@ -47,7 +47,9 @@ class DataGridCell<T extends DataGridRow> extends StatelessWidget {
 
     final bgColor = isSelected
         ? theme.colors.selectionColor
-        : (rowIndex % 2 == 0 ? theme.colors.evenRowColor : theme.colors.oddRowColor);
+        : (rowIndex % 2 == 0
+              ? theme.colors.evenRowColor
+              : theme.colors.oddRowColor);
 
     Widget cellContent;
 
@@ -59,7 +61,13 @@ class DataGridCell<T extends DataGridRow> extends StatelessWidget {
         isPinned: isPinned,
         rowIndex: rowIndex,
       );
-      cellContent = column.cellRenderer!.buildCell(context, row, column, rowIndex, renderContext);
+      cellContent = column.cellRenderer!.buildCell(
+        context,
+        row,
+        column,
+        rowIndex,
+        renderContext,
+      );
     } else {
       final value = column.valueAccessor?.call(row);
       final displayText = value?.toString() ?? '';
@@ -73,16 +81,23 @@ class DataGridCell<T extends DataGridRow> extends StatelessWidget {
     }
 
     return GestureDetector(
-      onDoubleTap: column.editable ? () => controller.startEditCell(rowId, column.id) : null,
+      onDoubleTap: column.editable
+          ? () => controller.startEditCell(rowId, column.id)
+          : null,
       onTap: state.selection.mode != SelectionMode.none
           ? () => controller.addEvent(
-              SelectRowEvent(rowId: rowId, multiSelect: state.selection.mode == SelectionMode.multiple),
+              SelectRowEvent(
+                rowId: rowId,
+                multiSelect: state.selection.mode == SelectionMode.multiple,
+              ),
             )
           : null,
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: bgColor,
-          border: isPinned ? theme.borders.pinnedBorder : theme.borders.cellBorder,
+          border: isPinned
+              ? theme.borders.pinnedBorder
+              : theme.borders.cellBorder,
           boxShadow: isPinned ? theme.borders.pinnedShadow : null,
         ),
         child: cellContent,
@@ -157,7 +172,9 @@ class _EditingCellState<T extends DataGridRow> extends State<_EditingCell<T>> {
 
     return Container(
       decoration: BoxDecoration(
-        color: widget.rowIndex % 2 == 0 ? theme.colors.evenRowColor : theme.colors.oddRowColor,
+        color: widget.rowIndex % 2 == 0
+            ? theme.colors.evenRowColor
+            : theme.colors.oddRowColor,
         border: theme.borders.editingBorder,
       ),
       alignment: Alignment.center,
@@ -210,7 +227,10 @@ class _CellEditorState<T extends DataGridRow> extends State<_CellEditor<T>> {
   void _initializeController() {
     if (_initialized) return;
     widget.editController.text = widget.value?.toString() ?? '';
-    widget.editController.selection = TextSelection(baseOffset: 0, extentOffset: widget.editController.text.length);
+    widget.editController.selection = TextSelection(
+      baseOffset: 0,
+      extentOffset: widget.editController.text.length,
+    );
     _initialized = true;
   }
 

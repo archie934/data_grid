@@ -17,7 +17,6 @@ class DefaultCellRenderer<T extends DataGridRow> extends CellRenderer<T> {
     int rowIndex,
     CellRenderContext<T> renderContext,
   ) {
-    
     final theme = DataGridTheme.of(context);
     final value = column.valueAccessor?.call(row);
     final displayText = value?.toString() ?? '';

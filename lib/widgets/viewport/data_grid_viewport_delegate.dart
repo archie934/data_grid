@@ -4,12 +4,17 @@ import 'package:flutter_data_grid/models/data/row.dart';
 
 /// Delegate that provides children (cells) for the 2D grid viewport.
 /// This is responsible for building widgets at specific grid coordinates.
-class DataGridChildDelegate<T extends DataGridRow> extends TwoDimensionalChildDelegate {
+class DataGridChildDelegate<T extends DataGridRow>
+    extends TwoDimensionalChildDelegate {
   final List<DataGridColumn<T>> columns;
   final int rowCount;
   final Widget Function(BuildContext context, int row, int column) cellBuilder;
 
-  DataGridChildDelegate({required this.columns, required this.rowCount, required this.cellBuilder});
+  DataGridChildDelegate({
+    required this.columns,
+    required this.rowCount,
+    required this.cellBuilder,
+  });
 
   /// Builds a child widget for a specific cell location (vicinity).
   /// Returns null if the coordinates are out of bounds.
@@ -38,7 +43,8 @@ class DataGridChildDelegate<T extends DataGridRow> extends TwoDimensionalChildDe
 /// Represents a cell's location in the 2D grid.
 /// Maps row/column coordinates to xIndex/yIndex used by the viewport.
 class DataGridVicinity extends ChildVicinity {
-  const DataGridVicinity(int row, int column) : super(xIndex: column, yIndex: row);
+  const DataGridVicinity(int row, int column)
+    : super(xIndex: column, yIndex: row);
 
   /// Convenience getter to access the row index
   int get row => yIndex;

@@ -49,7 +49,10 @@ class DataGridViewport<T extends DataGridRow> extends TwoDimensionalViewport {
   }
 
   @override
-  void updateRenderObject(BuildContext context, covariant RenderDataGridViewport renderObject) {
+  void updateRenderObject(
+    BuildContext context,
+    covariant RenderDataGridViewport renderObject,
+  ) {
     if (renderObject.delegate != delegate) {
       renderObject.delegate = delegate as DataGridChildDelegate;
     }

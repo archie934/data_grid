@@ -25,7 +25,9 @@ class DataGridFilterRow<T extends DataGridRow> extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    final visibleColumns = state.effectiveColumns.where((c) => c.visible).toList();
+    final visibleColumns = state.effectiveColumns
+        .where((c) => c.visible)
+        .toList();
     final unpinnedFirst = [
       ...visibleColumns.where((c) => !c.pinned),
       ...visibleColumns.where((c) => c.pinned),

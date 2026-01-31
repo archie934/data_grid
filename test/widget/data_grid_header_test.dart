@@ -15,13 +15,23 @@ class TestRow extends DataGridRow {
 void main() {
   group('DataGridHeaderCell', () {
     testWidgets('renders column title', (tester) async {
-      final column = DataGridColumn<TestRow>(id: 1, title: 'Test Column', width: 150, valueAccessor: (row) => row.name);
+      final column = DataGridColumn<TestRow>(
+        id: 1,
+        title: 'Test Column',
+        width: 150,
+        valueAccessor: (row) => row.name,
+      );
       final sortState = SortState.initial();
 
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: DataGridHeaderCell(column: column, sortState: sortState, onSort: (_) {}, onResize: (_) {}),
+            body: DataGridHeaderCell(
+              column: column,
+              sortState: sortState,
+              onSort: (_) {},
+              onResize: (_) {},
+            ),
           ),
         ),
       );
@@ -29,14 +39,28 @@ void main() {
       expect(find.text('Test Column'), findsOneWidget);
     });
 
-    testWidgets('shows ascending sort icon when sorted ascending', (tester) async {
-      final column = DataGridColumn<TestRow>(id: 1, title: 'Test Column', width: 150, valueAccessor: (row) => row.name);
-      final sortState = SortState(sortColumn: SortColumn(columnId: 1, direction: SortDirection.ascending));
+    testWidgets('shows ascending sort icon when sorted ascending', (
+      tester,
+    ) async {
+      final column = DataGridColumn<TestRow>(
+        id: 1,
+        title: 'Test Column',
+        width: 150,
+        valueAccessor: (row) => row.name,
+      );
+      final sortState = SortState(
+        sortColumn: SortColumn(columnId: 1, direction: SortDirection.ascending),
+      );
 
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: DataGridHeaderCell(column: column, sortState: sortState, onSort: (_) {}, onResize: (_) {}),
+            body: DataGridHeaderCell(
+              column: column,
+              sortState: sortState,
+              onSort: (_) {},
+              onResize: (_) {},
+            ),
           ),
         ),
       );
@@ -44,14 +68,31 @@ void main() {
       expect(find.byIcon(Icons.arrow_upward), findsOneWidget);
     });
 
-    testWidgets('shows descending sort icon when sorted descending', (tester) async {
-      final column = DataGridColumn<TestRow>(id: 1, title: 'Test Column', width: 150, valueAccessor: (row) => row.name);
-      final sortState = SortState(sortColumn: SortColumn(columnId: 1, direction: SortDirection.descending));
+    testWidgets('shows descending sort icon when sorted descending', (
+      tester,
+    ) async {
+      final column = DataGridColumn<TestRow>(
+        id: 1,
+        title: 'Test Column',
+        width: 150,
+        valueAccessor: (row) => row.name,
+      );
+      final sortState = SortState(
+        sortColumn: SortColumn(
+          columnId: 1,
+          direction: SortDirection.descending,
+        ),
+      );
 
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: DataGridHeaderCell(column: column, sortState: sortState, onSort: (_) {}, onResize: (_) {}),
+            body: DataGridHeaderCell(
+              column: column,
+              sortState: sortState,
+              onSort: (_) {},
+              onResize: (_) {},
+            ),
           ),
         ),
       );
@@ -60,7 +101,12 @@ void main() {
     });
 
     testWidgets('cycles through sort states on tap', (tester) async {
-      final column = DataGridColumn<TestRow>(id: 1, title: 'Test Column', width: 150, valueAccessor: (row) => row.name);
+      final column = DataGridColumn<TestRow>(
+        id: 1,
+        title: 'Test Column',
+        width: 150,
+        valueAccessor: (row) => row.name,
+      );
       SortDirection? lastDirection;
 
       await tester.pumpWidget(
@@ -87,7 +133,12 @@ void main() {
           home: Scaffold(
             body: DataGridHeaderCell(
               column: column,
-              sortState: SortState(sortColumn: SortColumn(columnId: 1, direction: SortDirection.ascending)),
+              sortState: SortState(
+                sortColumn: SortColumn(
+                  columnId: 1,
+                  direction: SortDirection.ascending,
+                ),
+              ),
               onSort: (direction) {
                 lastDirection = direction;
               },
@@ -106,7 +157,12 @@ void main() {
           home: Scaffold(
             body: DataGridHeaderCell(
               column: column,
-              sortState: SortState(sortColumn: SortColumn(columnId: 1, direction: SortDirection.descending)),
+              sortState: SortState(
+                sortColumn: SortColumn(
+                  columnId: 1,
+                  direction: SortDirection.descending,
+                ),
+              ),
               onSort: (direction) {
                 lastDirection = direction;
               },
@@ -122,13 +178,25 @@ void main() {
     });
 
     testWidgets('does not show sort icon for different column', (tester) async {
-      final column = DataGridColumn<TestRow>(id: 1, title: 'Test Column', width: 150, valueAccessor: (row) => row.name);
-      final sortState = SortState(sortColumn: SortColumn(columnId: 2, direction: SortDirection.ascending));
+      final column = DataGridColumn<TestRow>(
+        id: 1,
+        title: 'Test Column',
+        width: 150,
+        valueAccessor: (row) => row.name,
+      );
+      final sortState = SortState(
+        sortColumn: SortColumn(columnId: 2, direction: SortDirection.ascending),
+      );
 
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: DataGridHeaderCell(column: column, sortState: sortState, onSort: (_) {}, onResize: (_) {}),
+            body: DataGridHeaderCell(
+              column: column,
+              sortState: sortState,
+              onSort: (_) {},
+              onResize: (_) {},
+            ),
           ),
         ),
       );
@@ -138,7 +206,12 @@ void main() {
     });
 
     testWidgets('triggers resize on drag', (tester) async {
-      final column = DataGridColumn<TestRow>(id: 1, title: 'Test Column', width: 150, valueAccessor: (row) => row.name);
+      final column = DataGridColumn<TestRow>(
+        id: 1,
+        title: 'Test Column',
+        width: 150,
+        valueAccessor: (row) => row.name,
+      );
       double? resizeDelta;
 
       await tester.pumpWidget(
@@ -156,7 +229,10 @@ void main() {
         ),
       );
 
-      final resizeHandle = find.descendant(of: find.byType(GestureDetector), matching: find.byType(MouseRegion));
+      final resizeHandle = find.descendant(
+        of: find.byType(GestureDetector),
+        matching: find.byType(MouseRegion),
+      );
 
       expect(resizeHandle, findsOneWidget);
 
@@ -167,18 +243,31 @@ void main() {
     });
 
     testWidgets('shows resize cursor on hover', (tester) async {
-      final column = DataGridColumn<TestRow>(id: 1, title: 'Test Column', width: 150, valueAccessor: (row) => row.name);
+      final column = DataGridColumn<TestRow>(
+        id: 1,
+        title: 'Test Column',
+        width: 150,
+        valueAccessor: (row) => row.name,
+      );
 
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: DataGridHeaderCell(column: column, sortState: SortState.initial(), onSort: (_) {}, onResize: (_) {}),
+            body: DataGridHeaderCell(
+              column: column,
+              sortState: SortState.initial(),
+              onSort: (_) {},
+              onResize: (_) {},
+            ),
           ),
         ),
       );
 
       final mouseRegion = tester.widget<MouseRegion>(
-        find.descendant(of: find.byType(GestureDetector), matching: find.byType(MouseRegion)),
+        find.descendant(
+          of: find.byType(GestureDetector),
+          matching: find.byType(MouseRegion),
+        ),
       );
 
       expect(mouseRegion.cursor, SystemMouseCursors.resizeColumn);
@@ -188,9 +277,24 @@ void main() {
   group('DataGridHeaderViewport', () {
     testWidgets('renders all unpinned columns', (tester) async {
       final columns = [
-        DataGridColumn<TestRow>(id: 1, title: 'Col1', width: 100, valueAccessor: (r) => r.name),
-        DataGridColumn<TestRow>(id: 2, title: 'Col2', width: 100, valueAccessor: (r) => r.name),
-        DataGridColumn<TestRow>(id: 3, title: 'Col3', width: 100, valueAccessor: (r) => r.name),
+        DataGridColumn<TestRow>(
+          id: 1,
+          title: 'Col1',
+          width: 100,
+          valueAccessor: (r) => r.name,
+        ),
+        DataGridColumn<TestRow>(
+          id: 2,
+          title: 'Col2',
+          width: 100,
+          valueAccessor: (r) => r.name,
+        ),
+        DataGridColumn<TestRow>(
+          id: 3,
+          title: 'Col3',
+          width: 100,
+          valueAccessor: (r) => r.name,
+        ),
       ];
       final scrollController = ScrollController();
 
@@ -224,9 +328,25 @@ void main() {
 
     testWidgets('renders pinned columns at fixed position', (tester) async {
       final columns = [
-        DataGridColumn<TestRow>(id: 1, title: 'Pinned', width: 100, pinned: true, valueAccessor: (r) => r.name),
-        DataGridColumn<TestRow>(id: 2, title: 'Unpinned1', width: 100, valueAccessor: (r) => r.name),
-        DataGridColumn<TestRow>(id: 3, title: 'Unpinned2', width: 100, valueAccessor: (r) => r.name),
+        DataGridColumn<TestRow>(
+          id: 1,
+          title: 'Pinned',
+          width: 100,
+          pinned: true,
+          valueAccessor: (r) => r.name,
+        ),
+        DataGridColumn<TestRow>(
+          id: 2,
+          title: 'Unpinned1',
+          width: 100,
+          valueAccessor: (r) => r.name,
+        ),
+        DataGridColumn<TestRow>(
+          id: 3,
+          title: 'Unpinned2',
+          width: 100,
+          valueAccessor: (r) => r.name,
+        ),
       ];
       final scrollController = ScrollController();
 
@@ -242,9 +362,18 @@ void main() {
                 pinnedBackgroundColor: Colors.white,
                 childColumnIds: [2, 3, 1],
                 children: [
-                  Container(key: const ValueKey(2), child: const Text('Unpinned1')),
-                  Container(key: const ValueKey(3), child: const Text('Unpinned2')),
-                  Container(key: const ValueKey(1), child: const Text('Pinned')),
+                  Container(
+                    key: const ValueKey(2),
+                    child: const Text('Unpinned1'),
+                  ),
+                  Container(
+                    key: const ValueKey(3),
+                    child: const Text('Unpinned2'),
+                  ),
+                  Container(
+                    key: const ValueKey(1),
+                    child: const Text('Pinned'),
+                  ),
                 ],
               ),
             ),
@@ -259,11 +388,29 @@ void main() {
       scrollController.dispose();
     });
 
-    testWidgets('pinned column remains visible after horizontal scroll', (tester) async {
+    testWidgets('pinned column remains visible after horizontal scroll', (
+      tester,
+    ) async {
       final columns = [
-        DataGridColumn<TestRow>(id: 1, title: 'Pinned', width: 100, pinned: true, valueAccessor: (r) => r.name),
-        DataGridColumn<TestRow>(id: 2, title: 'Unpinned1', width: 200, valueAccessor: (r) => r.name),
-        DataGridColumn<TestRow>(id: 3, title: 'Unpinned2', width: 200, valueAccessor: (r) => r.name),
+        DataGridColumn<TestRow>(
+          id: 1,
+          title: 'Pinned',
+          width: 100,
+          pinned: true,
+          valueAccessor: (r) => r.name,
+        ),
+        DataGridColumn<TestRow>(
+          id: 2,
+          title: 'Unpinned1',
+          width: 200,
+          valueAccessor: (r) => r.name,
+        ),
+        DataGridColumn<TestRow>(
+          id: 3,
+          title: 'Unpinned2',
+          width: 200,
+          valueAccessor: (r) => r.name,
+        ),
       ];
       final scrollController = ScrollController();
 
@@ -284,9 +431,18 @@ void main() {
                     pinnedBackgroundColor: Colors.white,
                     childColumnIds: [2, 3, 1],
                     children: [
-                      Container(key: const ValueKey(2), child: const Text('Unpinned1')),
-                      Container(key: const ValueKey(3), child: const Text('Unpinned2')),
-                      Container(key: const ValueKey(1), child: const Text('Pinned')),
+                      Container(
+                        key: const ValueKey(2),
+                        child: const Text('Unpinned1'),
+                      ),
+                      Container(
+                        key: const ValueKey(3),
+                        child: const Text('Unpinned2'),
+                      ),
+                      Container(
+                        key: const ValueKey(1),
+                        child: const Text('Pinned'),
+                      ),
                     ],
                   ),
                 ),
@@ -308,9 +464,26 @@ void main() {
 
     testWidgets('handles multiple pinned columns', (tester) async {
       final columns = [
-        DataGridColumn<TestRow>(id: 1, title: 'Pinned1', width: 80, pinned: true, valueAccessor: (r) => r.name),
-        DataGridColumn<TestRow>(id: 2, title: 'Pinned2', width: 80, pinned: true, valueAccessor: (r) => r.name),
-        DataGridColumn<TestRow>(id: 3, title: 'Unpinned', width: 200, valueAccessor: (r) => r.name),
+        DataGridColumn<TestRow>(
+          id: 1,
+          title: 'Pinned1',
+          width: 80,
+          pinned: true,
+          valueAccessor: (r) => r.name,
+        ),
+        DataGridColumn<TestRow>(
+          id: 2,
+          title: 'Pinned2',
+          width: 80,
+          pinned: true,
+          valueAccessor: (r) => r.name,
+        ),
+        DataGridColumn<TestRow>(
+          id: 3,
+          title: 'Unpinned',
+          width: 200,
+          valueAccessor: (r) => r.name,
+        ),
       ];
       final scrollController = ScrollController();
 
@@ -326,9 +499,18 @@ void main() {
                 pinnedBackgroundColor: Colors.white,
                 childColumnIds: [3, 1, 2],
                 children: [
-                  Container(key: const ValueKey(3), child: const Text('Unpinned')),
-                  Container(key: const ValueKey(1), child: const Text('Pinned1')),
-                  Container(key: const ValueKey(2), child: const Text('Pinned2')),
+                  Container(
+                    key: const ValueKey(3),
+                    child: const Text('Unpinned'),
+                  ),
+                  Container(
+                    key: const ValueKey(1),
+                    child: const Text('Pinned1'),
+                  ),
+                  Container(
+                    key: const ValueKey(2),
+                    child: const Text('Pinned2'),
+                  ),
                 ],
               ),
             ),
@@ -346,8 +528,19 @@ void main() {
     testWidgets('hit test works on pinned columns', (tester) async {
       var tapped = false;
       final columns = [
-        DataGridColumn<TestRow>(id: 1, title: 'Pinned', width: 100, pinned: true, valueAccessor: (r) => r.name),
-        DataGridColumn<TestRow>(id: 2, title: 'Unpinned', width: 200, valueAccessor: (r) => r.name),
+        DataGridColumn<TestRow>(
+          id: 1,
+          title: 'Pinned',
+          width: 100,
+          pinned: true,
+          valueAccessor: (r) => r.name,
+        ),
+        DataGridColumn<TestRow>(
+          id: 2,
+          title: 'Unpinned',
+          width: 200,
+          valueAccessor: (r) => r.name,
+        ),
       ];
       final scrollController = ScrollController();
 
@@ -363,7 +556,10 @@ void main() {
                 pinnedBackgroundColor: Colors.white,
                 childColumnIds: [2, 1],
                 children: [
-                  Container(key: const ValueKey(2), child: const Text('Unpinned')),
+                  Container(
+                    key: const ValueKey(2),
+                    child: const Text('Unpinned'),
+                  ),
                   GestureDetector(
                     key: const ValueKey(1),
                     onTap: () => tapped = true,
@@ -387,8 +583,19 @@ void main() {
     testWidgets('hit test works on unpinned columns', (tester) async {
       var tapped = false;
       final columns = [
-        DataGridColumn<TestRow>(id: 1, title: 'Pinned', width: 100, pinned: true, valueAccessor: (r) => r.name),
-        DataGridColumn<TestRow>(id: 2, title: 'Unpinned', width: 200, valueAccessor: (r) => r.name),
+        DataGridColumn<TestRow>(
+          id: 1,
+          title: 'Pinned',
+          width: 100,
+          pinned: true,
+          valueAccessor: (r) => r.name,
+        ),
+        DataGridColumn<TestRow>(
+          id: 2,
+          title: 'Unpinned',
+          width: 200,
+          valueAccessor: (r) => r.name,
+        ),
       ];
       final scrollController = ScrollController();
 
@@ -409,7 +616,10 @@ void main() {
                     onTap: () => tapped = true,
                     child: const Text('Unpinned'),
                   ),
-                  Container(key: const ValueKey(1), child: const Text('Pinned')),
+                  Container(
+                    key: const ValueKey(1),
+                    child: const Text('Pinned'),
+                  ),
                 ],
               ),
             ),
@@ -427,17 +637,35 @@ void main() {
   });
 
   group('DataGrid with pinned columns', () {
-    testWidgets('header displays pinned and unpinned columns correctly', (tester) async {
+    testWidgets('header displays pinned and unpinned columns correctly', (
+      tester,
+    ) async {
       final columns = [
-        DataGridColumn<TestRow>(id: 1, title: 'Pinned', width: 100, pinned: true, valueAccessor: (r) => r.name),
-        DataGridColumn<TestRow>(id: 2, title: 'Name', width: 150, valueAccessor: (r) => r.name),
-        DataGridColumn<TestRow>(id: 3, title: 'Other', width: 150, valueAccessor: (r) => r.name),
+        DataGridColumn<TestRow>(
+          id: 1,
+          title: 'Pinned',
+          width: 100,
+          pinned: true,
+          valueAccessor: (r) => r.name,
+        ),
+        DataGridColumn<TestRow>(
+          id: 2,
+          title: 'Name',
+          width: 150,
+          valueAccessor: (r) => r.name,
+        ),
+        DataGridColumn<TestRow>(
+          id: 3,
+          title: 'Other',
+          width: 150,
+          valueAccessor: (r) => r.name,
+        ),
       ];
-      final rows = [
-        TestRow(id: 1, name: 'Alice'),
-        TestRow(id: 2, name: 'Bob'),
-      ];
-      final controller = DataGridController<TestRow>(initialColumns: columns, initialRows: rows);
+      final rows = [TestRow(id: 1, name: 'Alice'), TestRow(id: 2, name: 'Bob')];
+      final controller = DataGridController<TestRow>(
+        initialColumns: columns,
+        initialRows: rows,
+      );
 
       await tester.pumpWidget(
         MaterialApp(
@@ -460,15 +688,41 @@ void main() {
       controller.dispose();
     });
 
-    testWidgets('pinned column header stays visible after scroll', (tester) async {
+    testWidgets('pinned column header stays visible after scroll', (
+      tester,
+    ) async {
       final columns = [
-        DataGridColumn<TestRow>(id: 1, title: 'Pinned', width: 100, pinned: true, valueAccessor: (r) => r.name),
-        DataGridColumn<TestRow>(id: 2, title: 'Col2', width: 200, valueAccessor: (r) => r.name),
-        DataGridColumn<TestRow>(id: 3, title: 'Col3', width: 200, valueAccessor: (r) => r.name),
-        DataGridColumn<TestRow>(id: 4, title: 'Col4', width: 200, valueAccessor: (r) => r.name),
+        DataGridColumn<TestRow>(
+          id: 1,
+          title: 'Pinned',
+          width: 100,
+          pinned: true,
+          valueAccessor: (r) => r.name,
+        ),
+        DataGridColumn<TestRow>(
+          id: 2,
+          title: 'Col2',
+          width: 200,
+          valueAccessor: (r) => r.name,
+        ),
+        DataGridColumn<TestRow>(
+          id: 3,
+          title: 'Col3',
+          width: 200,
+          valueAccessor: (r) => r.name,
+        ),
+        DataGridColumn<TestRow>(
+          id: 4,
+          title: 'Col4',
+          width: 200,
+          valueAccessor: (r) => r.name,
+        ),
       ];
       final rows = [TestRow(id: 1, name: 'Test')];
-      final controller = DataGridController<TestRow>(initialColumns: columns, initialRows: rows);
+      final controller = DataGridController<TestRow>(
+        initialColumns: columns,
+        initialRows: rows,
+      );
       final scrollController = GridScrollController();
 
       await tester.pumpWidget(
@@ -477,7 +731,10 @@ void main() {
             body: SizedBox(
               width: 400,
               height: 300,
-              child: DataGrid<TestRow>(controller: controller, scrollController: scrollController),
+              child: DataGrid<TestRow>(
+                controller: controller,
+                scrollController: scrollController,
+              ),
             ),
           ),
         ),
