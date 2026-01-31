@@ -50,6 +50,7 @@ class RenderDataGridViewport<T extends DataGridRow>
   set columns(List<DataGridColumn<T>> value) {
     if (_columns == value) return;
     _columns = value;
+    _cachedPinnedIndices = null;
     markNeedsLayout();
   }
 

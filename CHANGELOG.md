@@ -1,3 +1,9 @@
+## 0.0.7
+
+* Fixed: Selection checkbox column now always pinned in multi-selection mode
+* Fixed: Body viewport now invalidates column cache when columns change
+* Fixed checkbox column alignment issue when switching selection modes
+
 ## 0.0.6
 
 * Performance: Replaced AnimatedBuilder in header/filter rows with custom RenderObject (`RenderDataGridHeader`)

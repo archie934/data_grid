@@ -47,10 +47,7 @@ abstract class DataGridState<T extends DataGridRow> with _$DataGridState<T> {
 
   List<DataGridColumn<T>> get effectiveColumns {
     if (selection.mode == SelectionMode.multiple) {
-      final hasPinnedColumns = columns.any((col) => col.pinned);
-      final selectionColumn = DataGridColumn<T>.selection(
-        pinned: hasPinnedColumns,
-      );
+      final selectionColumn = DataGridColumn<T>.selection(pinned: true);
       return [selectionColumn, ...columns];
     }
     return columns;
