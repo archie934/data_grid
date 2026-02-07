@@ -125,21 +125,30 @@ class DataGridBody<T extends DataGridRow> extends StatelessWidget {
             child: ListenableBuilder(
               listenable: scrollController.verticalController,
               builder: (context, child) {
-                if (!scrollController.verticalController.hasClients) {
+                try {
+                  if (!scrollController.verticalController.hasClients) {
+                    return const SizedBox();
+                  }
+                  final positions =
+                      scrollController.verticalController.positions;
+                  if (positions.length != 1) {
+                    return const SizedBox();
+                  }
+                  final position = positions.first;
+                  if (!position.hasContentDimensions ||
+                      !position.hasPixels ||
+                      !position.hasViewportDimension) {
+                    return const SizedBox();
+                  }
+                  final hasVerticalScroll = position.maxScrollExtent > 0;
+                  return hasVerticalScroll
+                      ? CustomVerticalScrollbar(
+                          controller: scrollController.verticalController,
+                        )
+                      : const SizedBox();
+                } catch (_) {
                   return const SizedBox();
                 }
-                final position = scrollController.verticalController.position;
-                if (!position.hasContentDimensions ||
-                    !position.hasPixels ||
-                    !position.hasViewportDimension) {
-                  return const SizedBox();
-                }
-                final hasVerticalScroll = position.maxScrollExtent > 0;
-                return hasVerticalScroll
-                    ? CustomVerticalScrollbar(
-                        controller: scrollController.verticalController,
-                      )
-                    : const SizedBox();
               },
             ),
           ),
@@ -151,21 +160,30 @@ class DataGridBody<T extends DataGridRow> extends StatelessWidget {
             child: ListenableBuilder(
               listenable: scrollController.horizontalController,
               builder: (context, child) {
-                if (!scrollController.horizontalController.hasClients) {
+                try {
+                  if (!scrollController.horizontalController.hasClients) {
+                    return const SizedBox();
+                  }
+                  final positions =
+                      scrollController.horizontalController.positions;
+                  if (positions.length != 1) {
+                    return const SizedBox();
+                  }
+                  final position = positions.first;
+                  if (!position.hasContentDimensions ||
+                      !position.hasPixels ||
+                      !position.hasViewportDimension) {
+                    return const SizedBox();
+                  }
+                  final hasHorizontalScroll = position.maxScrollExtent > 0;
+                  return hasHorizontalScroll
+                      ? CustomHorizontalScrollbar(
+                          controller: scrollController.horizontalController,
+                        )
+                      : const SizedBox();
+                } catch (_) {
                   return const SizedBox();
                 }
-                final position = scrollController.horizontalController.position;
-                if (!position.hasContentDimensions ||
-                    !position.hasPixels ||
-                    !position.hasViewportDimension) {
-                  return const SizedBox();
-                }
-                final hasHorizontalScroll = position.maxScrollExtent > 0;
-                return hasHorizontalScroll
-                    ? CustomHorizontalScrollbar(
-                        controller: scrollController.horizontalController,
-                      )
-                    : const SizedBox();
               },
             ),
           ),

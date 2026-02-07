@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_data_grid/controllers/data_grid_controller.dart';
 import 'package:flutter_data_grid/models/data/row.dart';
 import 'package:flutter_data_grid/models/data/column.dart';
 import 'package:flutter_data_grid/models/events/selection_events.dart';
@@ -151,18 +152,8 @@ class _EditingCellState<T extends DataGridRow> extends State<_EditingCell<T>> {
     if (controller != null &&
         !_focusNode.hasFocus &&
         controller.state.edit.isCellEditing(widget.rowId, widget.column.id)) {
+      controller.updateCellEditValue(_editController.text);
       controller.commitCellEdit();
-    }
-  }
-
-  void _handleKeyPress(KeyEvent event) {
-    final controller = context.dataGridController<T>();
-    if (controller != null && event is KeyDownEvent) {
-      if (event.logicalKey == LogicalKeyboardKey.enter) {
-        controller.commitCellEdit();
-      } else if (event.logicalKey == LogicalKeyboardKey.escape) {
-        controller.cancelCellEdit();
-      }
     }
   }
 
@@ -183,7 +174,6 @@ class _EditingCellState<T extends DataGridRow> extends State<_EditingCell<T>> {
         value: widget.editingValue,
         editController: _editController,
         focusNode: _focusNode,
-        onKeyPress: _handleKeyPress,
       ),
     );
   }
@@ -194,14 +184,12 @@ class _CellEditor<T extends DataGridRow> extends StatefulWidget {
   final dynamic value;
   final TextEditingController editController;
   final FocusNode focusNode;
-  final void Function(KeyEvent) onKeyPress;
 
   const _CellEditor({
     required this.column,
     required this.value,
     required this.editController,
     required this.focusNode,
-    required this.onKeyPress,
   });
 
   @override
@@ -209,13 +197,11 @@ class _CellEditor<T extends DataGridRow> extends StatefulWidget {
 }
 
 class _CellEditorState<T extends DataGridRow> extends State<_CellEditor<T>> {
-  late final FocusNode _keyboardListenerFocusNode;
   bool _initialized = false;
 
   @override
   void initState() {
     super.initState();
-    _keyboardListenerFocusNode = FocusNode();
     _initializeController();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
@@ -234,10 +220,9 @@ class _CellEditorState<T extends DataGridRow> extends State<_CellEditor<T>> {
     _initialized = true;
   }
 
-  @override
-  void dispose() {
-    _keyboardListenerFocusNode.dispose();
-    super.dispose();
+  void _commitEdit(DataGridController<T> controller) {
+    controller.updateCellEditValue(widget.editController.text);
+    controller.commitCellEdit();
   }
 
   @override
@@ -253,9 +238,15 @@ class _CellEditorState<T extends DataGridRow> extends State<_CellEditor<T>> {
       );
     }
 
-    return KeyboardListener(
-      focusNode: _keyboardListenerFocusNode,
-      onKeyEvent: widget.onKeyPress,
+    return Focus(
+      onKeyEvent: (node, event) {
+        if (event is KeyDownEvent &&
+            event.logicalKey == LogicalKeyboardKey.escape) {
+          controller.cancelCellEdit();
+          return KeyEventResult.handled;
+        }
+        return KeyEventResult.ignored;
+      },
       child: TextField(
         key: const ValueKey('cell_editor_textfield'),
         controller: widget.editController,
@@ -265,7 +256,7 @@ class _CellEditorState<T extends DataGridRow> extends State<_CellEditor<T>> {
           contentPadding: theme.padding.editorPadding,
           isDense: true,
         ),
-        onChanged: (newValue) => controller.updateCellEditValue(newValue),
+        onSubmitted: (_) => _commitEdit(controller),
       ),
     );
   }

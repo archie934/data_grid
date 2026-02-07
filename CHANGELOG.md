@@ -1,3 +1,12 @@
+## 0.0.8
+
+* Performance: Cell editing now only commits on Enter/focus loss instead of every keystroke
+* Fixed: Scroll controller attachment error when changing page size
+* Fixed: Keyboard handling in cell editor (Enter commits, Escape cancels)
+* Improved: Consistent widget tree structure prevents scroll view conflicts during rebuilds
+* Example: Added Actions column with delete button
+* Example: Refactored into organized file structure (models, config, renderers)
+
 ## 0.0.7
 
 * Fixed: Selection checkbox column now always pinned in multi-selection mode

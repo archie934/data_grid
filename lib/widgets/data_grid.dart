@@ -214,40 +214,30 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
                       filterRowHeight -
                       paginationHeight;
 
-                  final Widget bodyWidget;
                   final double bodyHeight;
 
                   if (state.pagination.enabled &&
                       state.displayOrder.isNotEmpty) {
                     final requiredHeight =
                         state.pagination.pageSize * effectiveRowHeight;
-                    if (requiredHeight <= availableHeight) {
-                      bodyHeight = requiredHeight;
-                      bodyWidget = SizedBox(
-                        height: bodyHeight,
-                        child: DataGridBody<T>(
-                          rowHeight: effectiveRowHeight,
-                          cacheExtent: widget.cacheExtent,
-                        ),
-                      );
-                    } else {
-                      bodyHeight = availableHeight;
-                      bodyWidget = Expanded(
-                        child: DataGridBody<T>(
-                          rowHeight: effectiveRowHeight,
-                          cacheExtent: widget.cacheExtent,
-                        ),
-                      );
-                    }
+                    bodyHeight = requiredHeight <= availableHeight
+                        ? requiredHeight
+                        : availableHeight;
                   } else {
                     bodyHeight = availableHeight;
-                    bodyWidget = Expanded(
+                  }
+
+                  // Always use Expanded to maintain consistent widget type
+                  // This prevents scroll controller attachment issues during rebuilds
+                  final bodyWidget = Expanded(
+                    child: SizedBox(
+                      height: bodyHeight,
                       child: DataGridBody<T>(
                         rowHeight: effectiveRowHeight,
                         cacheExtent: widget.cacheExtent,
                       ),
-                    );
-                  }
+                    ),
+                  );
 
                   _notifyViewportResize(constraints.maxWidth, bodyHeight);
 
