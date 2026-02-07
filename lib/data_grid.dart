@@ -29,7 +29,6 @@ export 'widgets/data_grid_pagination.dart';
 // Cell widgets (for customization)
 export 'widgets/cells/data_grid_cell.dart';
 export 'widgets/cells/data_grid_header_cell.dart';
-export 'widgets/cells/data_grid_row_pinned.dart';
 
 // Overlays (for customization)
 export 'widgets/overlays/loading_overlay.dart';
