@@ -16,7 +16,8 @@ typedef CellFormatter<T extends DataGridRow> =
     String Function(T row, DataGridColumn column);
 
 /// Column ID used for the selection checkbox column.
-const int kSelectionColumnId = -1;
+/// Uses a very negative value to avoid conflicts with user-defined column IDs.
+const int kSelectionColumnId = -9999;
 
 /// Default width for the selection checkbox column.
 const double kSelectionColumnWidth = 50.0;

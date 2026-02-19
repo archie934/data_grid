@@ -7,6 +7,8 @@ import 'models/product_row.dart';
 import 'config/columns.dart';
 import 'renderers/cell_renderers.dart';
 
+const exampleRows = 1000000;
+
 void main() {
   runApp(const MainApp());
 }
@@ -34,7 +36,7 @@ class _MainAppState extends State<MainApp> {
   }
 
   void _initializeGrid() {
-    _allRows = ProductRow.generateSampleData(100000);
+    _allRows = ProductRow.generateSampleData(exampleRows);
 
     final actionsRenderer = ActionsCellRenderer(onDelete: _deleteRow);
     final columns = createColumns(actionsRenderer);

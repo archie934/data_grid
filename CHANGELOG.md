@@ -1,3 +1,12 @@
+## 0.0.10 - 2026-02-19
+
+* Fixed: Pagination not re-rendering when rows are deleted — `totalItems` and `currentPage` are now updated in `DeleteRowEvent` and `DeleteRowsEvent`
+
+## 0.0.9 - 2026-02-19
+
+* Fix: Reduced rasterization thread overload during fast scrolling by isolating repaint-heavy subtrees, minimizing per-frame allocations, and preventing unnecessary rebuilds during scroll.
+* Performance: Added targeted RepaintBoundary placements and tightened delegate rebuild logic to avoid per-cell subscriptions and costly per-frame work.
+
 ## 0.0.8
 
 * Performance: Cell editing now only commits on Enter/focus loss instead of every keystroke

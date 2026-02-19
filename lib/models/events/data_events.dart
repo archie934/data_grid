@@ -214,9 +214,18 @@ class DeleteRowEvent extends DataGridEvent {
     );
     selectedRows.remove(rowId);
 
+    final newTotalItems = context.state.totalItems - 1;
+    final pagination = context.state.pagination;
+    final newTotalPages = pagination.totalPages(newTotalItems);
+    final adjustedPage = pagination.currentPage > newTotalPages
+        ? newTotalPages
+        : pagination.currentPage;
+
     return context.state.copyWith(
       rowsById: newRowsById,
       displayOrder: newDisplayOrder,
+      totalItems: newTotalItems,
+      pagination: pagination.copyWith(currentPage: adjustedPage),
       selection: context.state.selection.copyWith(
         selectedRowIds: selectedRows,
         focusedRowId: context.state.selection.focusedRowId == rowId
@@ -250,9 +259,19 @@ class DeleteRowsEvent extends DataGridEvent {
     );
     selectedRows.removeAll(rowIds);
 
+    final removedCount = context.state.rowsById.length - newRowsById.length;
+    final newTotalItems = context.state.totalItems - removedCount;
+    final pagination = context.state.pagination;
+    final newTotalPages = pagination.totalPages(newTotalItems);
+    final adjustedPage = pagination.currentPage > newTotalPages
+        ? newTotalPages
+        : pagination.currentPage;
+
     return context.state.copyWith(
       rowsById: newRowsById,
       displayOrder: newDisplayOrder,
+      totalItems: newTotalItems,
+      pagination: pagination.copyWith(currentPage: adjustedPage),
       selection: context.state.selection.copyWith(
         selectedRowIds: selectedRows,
         focusedRowId: rowIds.contains(context.state.selection.focusedRowId)

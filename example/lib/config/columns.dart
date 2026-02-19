@@ -2,10 +2,12 @@ import 'package:flutter_data_grid/data_grid.dart';
 import '../models/product_row.dart';
 import '../renderers/cell_renderers.dart';
 
-List<DataGridColumn<ProductRow>> createColumns(ActionsCellRenderer actionsRenderer) {
+List<DataGridColumn<ProductRow>> createColumns(
+  ActionsCellRenderer actionsRenderer,
+) {
   return [
     DataGridColumn<ProductRow>(
-      id: -1,
+      id: -2,
       title: '',
       width: 50,
       pinned: true,
@@ -27,7 +29,8 @@ List<DataGridColumn<ProductRow>> createColumns(ActionsCellRenderer actionsRender
       title: 'Name',
       width: 200,
       editable: true,
-      valueAccessor: (row) => row.name.isEmpty ? 'Item ${row.id.toInt()}' : row.name,
+      valueAccessor: (row) =>
+          row.name.isEmpty ? 'Item ${row.id.toInt()}' : row.name,
       cellValueSetter: (row, value) => row.name = value.toString(),
     ),
     DataGridColumn<ProductRow>(
@@ -78,7 +81,8 @@ List<DataGridColumn<ProductRow>> createColumns(ActionsCellRenderer actionsRender
         width: 120,
         pinned: index < 2,
         editable: true,
-        valueAccessor: (row) => row.extraData[columnId]?.toString() ?? 'Data ${row.id.toInt()}',
+        valueAccessor: (row) =>
+            row.extraData[columnId]?.toString() ?? 'Data ${row.id.toInt()}',
         cellValueSetter: (row, value) => row.extraData[columnId] = value,
       );
     }),
