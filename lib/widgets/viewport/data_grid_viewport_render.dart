@@ -91,27 +91,25 @@ class RenderDataGridViewport<T extends DataGridRow>
 
   @override
   void layoutChildSequence() {
-    // Handle empty grid
     if (_columns.isEmpty || _rowCount == 0) {
       verticalOffset.applyContentDimensions(0, 0);
       horizontalOffset.applyContentDimensions(0, 0);
       return;
     }
 
-    // STEP 1: Get viewport dimensions and current scroll positions
     final double viewportWidth = viewportDimension.width;
     final double viewportHeight = viewportDimension.height;
     final double verticalScrollOffset = verticalOffset.pixels;
     final double horizontalScrollOffset = horizontalOffset.pixels;
+    final double effectiveCacheExtent = cacheExtent;
 
-    // STEP 2: Use cached column separation
     _ensureColumnCache();
     final pinnedIndices = _cachedPinnedIndices!;
     final unpinnedIndices = _cachedUnpinnedIndices!;
     final pinnedWidth = _cachedPinnedWidth;
     final unpinnedWidth = _cachedUnpinnedWidth;
 
-    // STEP 3: Calculate which ROWS are currently visible in the viewport
+    // Visible row range (what the user sees)
     final int firstVisibleRow = (verticalScrollOffset / _rowHeight)
         .floor()
         .clamp(0, _rowCount);
@@ -121,13 +119,26 @@ class RenderDataGridViewport<T extends DataGridRow>
       _rowCount,
     );
 
-    // Calculate starting Y offset accounting for partially scrolled rows
-    final double startingYOffset =
-        (firstVisibleRow * _rowHeight) - verticalScrollOffset;
+    // Expand by buffer rows above and below for pre-rendering
+    final int bufferRows = (effectiveCacheExtent / _rowHeight).ceil();
+    final int firstBufferedRow = (firstVisibleRow - bufferRows).clamp(
+      0,
+      _rowCount,
+    );
+    final int lastBufferedRow = (lastVisibleRow + bufferRows).clamp(
+      0,
+      _rowCount,
+    );
 
-    // STEP 4: Calculate which UNPINNED columns are visible
-    // The scrollable area starts after pinned columns
+    final double startingYOffset =
+        (firstBufferedRow * _rowHeight) - verticalScrollOffset;
+
+    // Visible unpinned column range with horizontal buffer
     final double scrollableViewportWidth = viewportWidth - pinnedWidth;
+    final double bufferedScrollStart =
+        (horizontalScrollOffset - effectiveCacheExtent).clamp(0.0, double.infinity);
+    final double bufferedScrollEnd =
+        horizontalScrollOffset + scrollableViewportWidth + effectiveCacheExtent;
 
     int firstVisibleUnpinnedIdx = -1;
     int lastVisibleUnpinnedIdx = unpinnedIndices.length;
@@ -137,7 +148,7 @@ class RenderDataGridViewport<T extends DataGridRow>
     for (int i = 0; i < unpinnedIndices.length; i++) {
       final colWidth = _columns[unpinnedIndices[i]].width;
 
-      if (accumulatedUnpinnedWidth + colWidth > horizontalScrollOffset &&
+      if (accumulatedUnpinnedWidth + colWidth > bufferedScrollStart &&
           firstVisibleUnpinnedIdx == -1) {
         firstVisibleUnpinnedIdx = i;
         firstUnpinnedColumnOffset =
@@ -145,8 +156,7 @@ class RenderDataGridViewport<T extends DataGridRow>
       }
       accumulatedUnpinnedWidth += colWidth;
 
-      if (accumulatedUnpinnedWidth >=
-          horizontalScrollOffset + scrollableViewportWidth) {
+      if (accumulatedUnpinnedWidth >= bufferedScrollEnd) {
         lastVisibleUnpinnedIdx = (i + 1).clamp(0, unpinnedIndices.length);
         break;
       }
@@ -157,15 +167,13 @@ class RenderDataGridViewport<T extends DataGridRow>
       firstUnpinnedColumnOffset = 0;
     }
 
-    // Clear child tracking for this layout pass
     _unpinnedChildren.clear();
     _pinnedChildren.clear();
     _pinnedWidth = pinnedWidth;
 
-    // STEP 5: Layout cells for each visible row
+    // Layout cells for each buffered row (visible + pre-rendered buffer)
     double yOffset = startingYOffset;
-    for (int row = firstVisibleRow; row < lastVisibleRow; row++) {
-      // Layout UNPINNED columns
+    for (int row = firstBufferedRow; row < lastBufferedRow; row++) {
       double xOffset = pinnedWidth + firstUnpinnedColumnOffset;
       for (int i = firstVisibleUnpinnedIdx; i < lastVisibleUnpinnedIdx; i++) {
         final colIndex = unpinnedIndices[i];
@@ -187,7 +195,6 @@ class RenderDataGridViewport<T extends DataGridRow>
         xOffset += colWidth;
       }
 
-      // Layout PINNED columns at fixed positions
       xOffset = 0;
       for (final colIndex in pinnedIndices) {
         final vicinity = DataGridVicinity(row, colIndex);
@@ -206,15 +213,12 @@ class RenderDataGridViewport<T extends DataGridRow>
       yOffset += _rowHeight;
     }
 
-    // STEP 6: Apply content dimensions
-    // Vertical: total height minus viewport height
     final totalHeight = _rowCount * _rowHeight;
     verticalOffset.applyContentDimensions(
       0,
       (totalHeight - viewportHeight).clamp(0, double.infinity),
     );
 
-    // Horizontal: only unpinned width is scrollable (pinned columns are always visible)
     final horizontalMaxScroll = (unpinnedWidth - scrollableViewportWidth).clamp(
       0.0,
       double.infinity,

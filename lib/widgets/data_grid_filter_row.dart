@@ -14,7 +14,7 @@ class DataGridFilterRow<T extends DataGridRow> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final state = context.dataGridState<T>()!;
+    final state = context.dataGridState<T>({DataGridAspect.columns})!;
     final scrollController = context.gridScrollController<T>()!;
     final theme = DataGridTheme.of(context);
     final hasFilterableColumns = state.columns.any(
@@ -25,7 +25,8 @@ class DataGridFilterRow<T extends DataGridRow> extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    final visibleColumns = state.effectiveColumns
+    final columns = context.dataGridEffectiveColumns<T>()!;
+    final visibleColumns = columns
         .where((c) => c.visible)
         .toList();
     final unpinnedFirst = [
@@ -34,7 +35,7 @@ class DataGridFilterRow<T extends DataGridRow> extends StatelessWidget {
     ];
 
     return DataGridHeaderViewport<T>(
-      columns: state.effectiveColumns,
+      columns: columns,
       horizontalController: scrollController.horizontalController,
       pinnedBackgroundColor: theme.colors.filterBackgroundColor,
       childColumnIds: unpinnedFirst.map((c) => c.id).toList(),
@@ -63,7 +64,7 @@ class _FilterCell<T extends DataGridRow> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = DataGridTheme.of(context);
-    final state = context.dataGridState<T>()!;
+    final state = context.dataGridState<T>({DataGridAspect.filter})!;
     final controller = context.dataGridController<T>()!;
 
     Widget cell;

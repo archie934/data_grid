@@ -1,4 +1,6 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_data_grid/controllers/data_grid_controller.dart';
 import 'package:flutter_data_grid/models/data/row.dart';
@@ -9,8 +11,12 @@ import 'package:flutter_data_grid/widgets/data_grid_inherited.dart';
 import 'package:flutter_data_grid/theme/data_grid_theme.dart';
 import 'package:flutter_data_grid/renderers/render_context.dart';
 
-/// Optimized cell widget - uses StatelessWidget for display, StatefulWidget only for editing
-class DataGridCell<T extends DataGridRow> extends StatelessWidget {
+/// Cell widget that caches its content across rebuilds.
+/// Only re-calls the cell renderer when the row data, column, or selection
+/// state for THIS cell actually changes. Unrelated state changes (e.g.
+/// selection of a different row) reuse the cached content widget, allowing
+/// Flutter to skip diffing the entire subtree.
+class DataGridCell<T extends DataGridRow> extends StatefulWidget {
   final T row;
   final double rowId;
   final DataGridColumn<T> column;
@@ -27,83 +33,232 @@ class DataGridCell<T extends DataGridRow> extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    final theme = DataGridTheme.of(context);
-    final controller = context.dataGridController<T>()!;
-    final state = controller.state;
-    final isSelected = state.selection.isRowSelected(rowId);
-    final isEditing = state.edit.isCellEditing(rowId, column.id);
+  State<DataGridCell<T>> createState() => _DataGridCellState<T>();
+}
 
-    // Use editing widget only when actually editing
-    if (isEditing) {
-      return _EditingCell<T>(
-        row: row,
-        rowId: rowId,
-        column: column,
-        rowIndex: rowIndex,
-        isPinned: isPinned,
-        editingValue: state.edit.editingValue,
-      );
+class _DataGridCellState<T extends DataGridRow> extends State<DataGridCell<T>> {
+  Widget? _cachedContent;
+  bool _cachedIsSelected = false;
+  Object? _cachedRow;
+  Object? _cachedValue;
+
+  @override
+  void didUpdateWidget(covariant DataGridCell<T> oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.column != widget.column || oldWidget.column.valueAccessor?.call(widget.row) != widget.column.valueAccessor?.call(oldWidget.row) ||
+        oldWidget.rowIndex != widget.rowIndex ||
+        oldWidget.isPinned != widget.isPinned) {
+      _cachedContent = null;
+      _cachedRow = null;
+      _cachedValue = null;
     }
+  }
 
-    final bgColor = isSelected
-        ? theme.colors.selectionColor
-        : (rowIndex % 2 == 0
-              ? theme.colors.evenRowColor
-              : theme.colors.oddRowColor);
+  Widget _buildContent(
+    BuildContext context,
+    DataGridController<T> controller,
+    bool isSelected,
+  ) {
+    final newValue = widget.column.valueAccessor?.call(widget.row);
+    if (_cachedContent != null &&
+        _cachedIsSelected == isSelected &&
+        identical(_cachedRow, widget.row) &&
+        _cachedValue == newValue) {
+      return _cachedContent!;
+    }
+    _cachedRow = widget.row;
+    _cachedValue = newValue;
+    _cachedIsSelected = isSelected;
 
-    Widget cellContent;
-
-    if (column.cellRenderer != null) {
-      final renderContext = CellRenderContext<T>(
-        controller: controller,
-        isSelected: isSelected,
-        isHovered: false,
-        isPinned: isPinned,
-        rowIndex: rowIndex,
-      );
-      cellContent = column.cellRenderer!.buildCell(
+    if (widget.column.cellRenderer != null) {
+      _cachedContent = widget.column.cellRenderer!.buildCell(
         context,
-        row,
-        column,
-        rowIndex,
-        renderContext,
+        widget.row,
+        widget.column,
+        widget.rowIndex,
+        CellRenderContext<T>(
+          controller: controller,
+          isSelected: isSelected,
+          isHovered: false,
+          isPinned: widget.isPinned,
+          rowIndex: widget.rowIndex,
+        ),
       );
     } else {
-      final value = column.valueAccessor?.call(row);
-      final displayText = value?.toString() ?? '';
-      cellContent = Padding(
+      final theme = DataGridTheme.of(context);
+      final value = widget.column.valueAccessor?.call(widget.row);
+      _cachedContent = Padding(
         padding: theme.padding.cellPadding,
         child: Align(
           alignment: Alignment.centerLeft,
-          child: Text(displayText, overflow: TextOverflow.ellipsis),
+          child: Text(value?.toString() ?? '', overflow: TextOverflow.ellipsis),
         ),
       );
     }
 
-    return GestureDetector(
-      onDoubleTap: column.editable
-          ? () => controller.startEditCell(rowId, column.id)
-          : null,
-      onTap: state.selection.mode != SelectionMode.none
-          ? () => controller.addEvent(
-              SelectRowEvent(
-                rowId: rowId,
-                multiSelect: state.selection.mode == SelectionMode.multiple,
-              ),
-            )
-          : null,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: bgColor,
-          border: isPinned
-              ? theme.borders.pinnedBorder
-              : theme.borders.cellBorder,
-          boxShadow: isPinned ? theme.borders.pinnedShadow : null,
+    return _cachedContent!;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // All InheritedWidget reads are inside the Builder so this element
+    // has no dependencies and won't be marked dirty by ancestor changes.
+    return Builder(builder: (innerContext) {
+      final theme = DataGridTheme.of(innerContext);
+      final controller = innerContext.dataGridController<T>()!;
+      final state = controller.state;
+      final isSelected = state.selection.isRowSelected(widget.rowId);
+      final isEditing =
+          state.edit.isCellEditing(widget.rowId, widget.column.id);
+
+      if (isEditing) {
+        return _EditingCell<T>(
+          row: widget.row,
+          rowId: widget.rowId,
+          column: widget.column,
+          rowIndex: widget.rowIndex,
+          isPinned: widget.isPinned,
+          editingValue: state.edit.editingValue,
+        );
+      }
+
+      final cellContent =
+          _buildContent(innerContext, controller, isSelected);
+
+      return _CellContainer(
+        decoration: theme.cellDecorations.forCell(
+          isEven: widget.rowIndex % 2 == 0,
+          isSelected: isSelected,
+          isPinned: widget.isPinned,
         ),
+        onTap: state.selection.mode != SelectionMode.none
+            ? () => controller.addEvent(
+                  SelectRowEvent(
+                    rowId: widget.rowId,
+                    multiSelect:
+                        state.selection.mode == SelectionMode.multiple,
+                  ),
+                )
+            : null,
+        onDoubleTap: widget.column.editable
+            ? () => controller.startEditCell(
+                widget.rowId, widget.column.id)
+            : null,
         child: cellContent,
-      ),
+      );
+    });
+  }
+}
+
+/// Single render object that handles both decoration painting and tap/double-tap
+/// gestures. Replaces GestureDetector + DecoratedBox with one element.
+/// Decoration changes trigger markNeedsPaint only; callback changes are just
+/// pointer swaps with zero framework cost.
+class _CellContainer extends SingleChildRenderObjectWidget {
+  final BoxDecoration decoration;
+  final VoidCallback? onTap;
+  final VoidCallback? onDoubleTap;
+
+  const _CellContainer({
+    required this.decoration,
+    this.onTap,
+    this.onDoubleTap,
+    super.child,
+  });
+
+  @override
+  _RenderCellContainer createRenderObject(BuildContext context) {
+    return _RenderCellContainer(
+      decoration: decoration,
+      onTap: onTap,
+      onDoubleTap: onDoubleTap,
     );
+  }
+
+  @override
+  void updateRenderObject(
+    BuildContext context,
+    _RenderCellContainer renderObject,
+  ) {
+    renderObject
+      ..decoration = decoration
+      ..onTap = onTap
+      ..onDoubleTap = onDoubleTap;
+  }
+}
+
+class _RenderCellContainer extends RenderProxyBox {
+  _RenderCellContainer({
+    required BoxDecoration decoration,
+    VoidCallback? onTap,
+    VoidCallback? onDoubleTap,
+  })  : _decoration = decoration,
+        _onTap = onTap,
+        _onDoubleTap = onDoubleTap;
+
+  BoxDecoration _decoration;
+  BoxPainter? _painter;
+
+  set decoration(BoxDecoration value) {
+    if (identical(_decoration, value)) return;
+    _painter?.dispose();
+    _painter = null;
+    _decoration = value;
+    markNeedsPaint();
+  }
+
+  VoidCallback? _onTap;
+  set onTap(VoidCallback? value) {
+    _onTap = value;
+    _tapRecognizer?.onTap = value;
+  }
+
+  VoidCallback? _onDoubleTap;
+  set onDoubleTap(VoidCallback? value) {
+    _onDoubleTap = value;
+    _doubleTapRecognizer?.onDoubleTap = value;
+  }
+
+  TapGestureRecognizer? _tapRecognizer;
+  DoubleTapGestureRecognizer? _doubleTapRecognizer;
+
+  @override
+  bool hitTestSelf(Offset position) =>
+      _onTap != null || _onDoubleTap != null;
+
+  @override
+  void handleEvent(PointerEvent event, BoxHitTestEntry entry) {
+    if (event is PointerDownEvent) {
+      if (_onDoubleTap != null) {
+        _doubleTapRecognizer ??= DoubleTapGestureRecognizer()
+          ..onDoubleTap = _onDoubleTap;
+        _doubleTapRecognizer!.addPointer(event);
+      }
+      if (_onTap != null) {
+        _tapRecognizer ??= TapGestureRecognizer()
+          ..onTap = _onTap;
+        _tapRecognizer!.addPointer(event);
+      }
+    }
+  }
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    _painter ??= _decoration.createBoxPainter(markNeedsPaint);
+    _painter!.paint(
+      context.canvas,
+      offset,
+      ImageConfiguration(size: size),
+    );
+    super.paint(context, offset);
+  }
+
+  @override
+  void dispose() {
+    _painter?.dispose();
+    _tapRecognizer?.dispose();
+    _doubleTapRecognizer?.dispose();
+    super.dispose();
   }
 }
 

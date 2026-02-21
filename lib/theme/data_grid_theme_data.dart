@@ -19,6 +19,9 @@ class DataGridThemeData {
   /// Theme settings for loading overlays.
   final DataGridOverlayTheme overlay;
 
+  /// Pre-computed cell decorations to avoid per-cell allocation.
+  late final DataGridCellDecorations cellDecorations;
+
   /// Creates a [DataGridThemeData] with optional custom configurations.
   DataGridThemeData({
     DataGridDimensions? dimensions,
@@ -30,7 +33,9 @@ class DataGridThemeData {
        padding = padding ?? DataGridPadding.defaults(),
        colors = colors ?? DataGridColors.defaults(),
        borders = borders ?? DataGridBorders.defaults(),
-       overlay = overlay ?? DataGridOverlayTheme.defaults();
+       overlay = overlay ?? DataGridOverlayTheme.defaults() {
+    cellDecorations = DataGridCellDecorations._(this.colors, this.borders);
+  }
 
   /// Creates a default theme with standard settings.
   factory DataGridThemeData.defaultTheme() {
@@ -51,6 +56,84 @@ class DataGridThemeData {
       borders: borders ?? this.borders,
       overlay: overlay ?? this.overlay,
     );
+  }
+}
+
+/// Pre-computed [BoxDecoration] instances for all common cell variants.
+/// Avoids allocating new decorations on every cell build.
+class DataGridCellDecorations {
+  final BoxDecoration evenRow;
+  final BoxDecoration oddRow;
+  final BoxDecoration evenRowSelected;
+  final BoxDecoration oddRowSelected;
+  final BoxDecoration evenRowPinned;
+  final BoxDecoration oddRowPinned;
+  final BoxDecoration evenRowPinnedSelected;
+  final BoxDecoration oddRowPinnedSelected;
+  final BoxDecoration checkboxEven;
+  final BoxDecoration checkboxOdd;
+
+  DataGridCellDecorations._(DataGridColors colors, DataGridBorders borders)
+      : evenRow = BoxDecoration(
+          color: colors.evenRowColor,
+          border: borders.cellBorder,
+        ),
+        oddRow = BoxDecoration(
+          color: colors.oddRowColor,
+          border: borders.cellBorder,
+        ),
+        evenRowSelected = BoxDecoration(
+          color: colors.selectionColor,
+          border: borders.cellBorder,
+        ),
+        oddRowSelected = BoxDecoration(
+          color: colors.selectionColor,
+          border: borders.cellBorder,
+        ),
+        evenRowPinned = BoxDecoration(
+          color: colors.evenRowColor,
+          border: borders.pinnedBorder,
+          boxShadow: borders.pinnedShadow,
+        ),
+        oddRowPinned = BoxDecoration(
+          color: colors.oddRowColor,
+          border: borders.pinnedBorder,
+          boxShadow: borders.pinnedShadow,
+        ),
+        evenRowPinnedSelected = BoxDecoration(
+          color: colors.selectionColor,
+          border: borders.pinnedBorder,
+          boxShadow: borders.pinnedShadow,
+        ),
+        oddRowPinnedSelected = BoxDecoration(
+          color: colors.selectionColor,
+          border: borders.pinnedBorder,
+          boxShadow: borders.pinnedShadow,
+        ),
+        checkboxEven = BoxDecoration(
+          color: colors.evenRowColor,
+          border: borders.checkboxCellBorder,
+        ),
+        checkboxOdd = BoxDecoration(
+          color: colors.oddRowColor,
+          border: borders.checkboxCellBorder,
+        );
+
+  BoxDecoration forCell({
+    required bool isEven,
+    required bool isSelected,
+    required bool isPinned,
+  }) {
+    if (isPinned) {
+      if (isSelected) return isEven ? evenRowPinnedSelected : oddRowPinnedSelected;
+      return isEven ? evenRowPinned : oddRowPinned;
+    }
+    if (isSelected) return isEven ? evenRowSelected : oddRowSelected;
+    return isEven ? evenRow : oddRow;
+  }
+
+  BoxDecoration forCheckbox({required bool isEven}) {
+    return isEven ? checkboxEven : checkboxOdd;
   }
 }
 

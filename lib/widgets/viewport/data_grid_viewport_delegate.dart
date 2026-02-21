@@ -36,7 +36,9 @@ class DataGridChildDelegate<T extends DataGridRow>
 
   @override
   bool shouldRebuild(covariant DataGridChildDelegate<T> oldDelegate) {
-    return true;
+    return columns != oldDelegate.columns ||
+        rowCount != oldDelegate.rowCount ||
+        cellBuilder != oldDelegate.cellBuilder;
   }
 }
 

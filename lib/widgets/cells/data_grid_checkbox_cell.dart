@@ -25,17 +25,13 @@ class DataGridCheckboxCell<T extends DataGridRow> extends StatelessWidget {
     final theme = DataGridTheme.of(context);
     final controller = context.dataGridController<T>()!;
     final isSelected = controller.state.selection.isRowSelected(rowId);
-    final bgColor = rowIndex % 2 == 0
-        ? theme.colors.evenRowColor
-        : theme.colors.oddRowColor;
 
     return GestureDetector(
       onTap: () =>
           controller.addEvent(SelectRowEvent(rowId: rowId, multiSelect: true)),
       child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: bgColor,
-          border: theme.borders.checkboxCellBorder,
+        decoration: theme.cellDecorations.forCheckbox(
+          isEven: rowIndex % 2 == 0,
         ),
         child: Padding(
           padding: theme.padding.checkboxPadding,

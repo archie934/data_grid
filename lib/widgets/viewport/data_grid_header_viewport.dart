@@ -120,6 +120,13 @@ class RenderDataGridHeader<T extends DataGridRow> extends RenderBox
 
   double _pinnedWidth = 0;
 
+  // Cached column positions computed during layout, reused in paint and hit test
+  final Map<int, double> _pinnedPositions = {};
+  final Map<int, double> _unpinnedPositions = {};
+
+  // Cached paint object for the pinned mask
+  Paint? _maskPaint;
+
   @override
   void attach(PipelineOwner owner) {
     super.attach(owner);
@@ -143,6 +150,24 @@ class RenderDataGridHeader<T extends DataGridRow> extends RenderBox
     }
   }
 
+  void _computeColumnPositions() {
+    _pinnedPositions.clear();
+    _unpinnedPositions.clear();
+
+    double pinnedX = 0;
+    double unpinnedX = 0;
+    for (final col in _columns) {
+      if (!col.visible) continue;
+      if (col.pinned) {
+        _pinnedPositions[col.id] = pinnedX;
+        pinnedX += col.width;
+      } else {
+        _unpinnedPositions[col.id] = unpinnedX;
+        unpinnedX += col.width;
+      }
+    }
+  }
+
   @override
   void performLayout() {
     final height = constraints.maxHeight;
@@ -153,6 +178,8 @@ class RenderDataGridHeader<T extends DataGridRow> extends RenderBox
         _pinnedWidth += col.width;
       }
     }
+
+    _computeColumnPositions();
 
     RenderBox? child = firstChild;
     int childIndex = 0;
@@ -180,39 +207,19 @@ class RenderDataGridHeader<T extends DataGridRow> extends RenderBox
   void paint(PaintingContext context, Offset offset) {
     final horizontalOffset = _horizontalOffset;
 
-    // Calculate column positions
-    final pinnedPositions = <int, double>{};
-    final unpinnedPositions = <int, double>{};
-
-    double pinnedX = 0;
-    double unpinnedX = 0;
-    for (final col in _columns) {
-      if (!col.visible) continue;
-      if (col.pinned) {
-        pinnedPositions[col.id] = pinnedX;
-        pinnedX += col.width;
-      } else {
-        unpinnedPositions[col.id] = unpinnedX;
-        unpinnedX += col.width;
-      }
-    }
-
-    // Clip the painting area
     context.pushClipRect(needsCompositing, offset, Offset.zero & size, (
       context,
       offset,
     ) {
-      // Paint unpinned children first (scrolled)
       RenderBox? child = firstChild;
       while (child != null) {
         final parentData = child.parentData! as HeaderChildData;
         final column = columnById[parentData.columnId];
 
         if (column != null && column.visible && !column.pinned) {
-          final xPos = unpinnedPositions[column.id]!;
+          final xPos = _unpinnedPositions[column.id]!;
           final paintX = _pinnedWidth + xPos - horizontalOffset;
 
-          // Only paint if visible
           if (paintX + column.width > _pinnedWidth && paintX < size.width) {
             context.paintChild(child, offset + Offset(paintX, 0));
           }
@@ -221,22 +228,22 @@ class RenderDataGridHeader<T extends DataGridRow> extends RenderBox
         child = parentData.nextSibling;
       }
 
-      // Paint mask over pinned area to hide scrolling content bleeding
       if (_pinnedWidth > 0) {
+        _maskPaint ??= Paint();
+        _maskPaint!.color = _pinnedBackgroundColor;
         context.canvas.drawRect(
           Rect.fromLTWH(offset.dx, offset.dy, _pinnedWidth, size.height),
-          Paint()..color = _pinnedBackgroundColor,
+          _maskPaint!,
         );
       }
 
-      // Paint pinned children last (fixed position, on top)
       child = firstChild;
       while (child != null) {
         final parentData = child.parentData! as HeaderChildData;
         final column = columnById[parentData.columnId];
 
         if (column != null && column.visible && column.pinned) {
-          final xPos = pinnedPositions[column.id]!;
+          final xPos = _pinnedPositions[column.id]!;
           context.paintChild(child, offset + Offset(xPos, 0));
         }
 
@@ -249,31 +256,13 @@ class RenderDataGridHeader<T extends DataGridRow> extends RenderBox
   bool hitTestChildren(BoxHitTestResult result, {required Offset position}) {
     final horizontalOffset = _horizontalOffset;
 
-    // Calculate column positions (same logic as paint)
-    final pinnedPositions = <int, double>{};
-    final unpinnedPositions = <int, double>{};
-
-    double pinnedX = 0;
-    double unpinnedX = 0;
-    for (final col in _columns) {
-      if (!col.visible) continue;
-      if (col.pinned) {
-        pinnedPositions[col.id] = pinnedX;
-        pinnedX += col.width;
-      } else {
-        unpinnedPositions[col.id] = unpinnedX;
-        unpinnedX += col.width;
-      }
-    }
-
-    // Hit test pinned children first (they're on top)
     RenderBox? child = lastChild;
     while (child != null) {
       final parentData = child.parentData! as HeaderChildData;
       final column = columnById[parentData.columnId];
 
       if (column != null && column.visible && column.pinned) {
-        final xPos = pinnedPositions[column.id]!;
+        final xPos = _pinnedPositions[column.id]!;
         final childOffset = Offset(xPos, 0);
         final isHit = result.addWithPaintOffset(
           offset: childOffset,
@@ -287,14 +276,13 @@ class RenderDataGridHeader<T extends DataGridRow> extends RenderBox
       child = parentData.previousSibling;
     }
 
-    // Hit test unpinned children
     child = lastChild;
     while (child != null) {
       final parentData = child.parentData! as HeaderChildData;
       final column = columnById[parentData.columnId];
 
       if (column != null && column.visible && !column.pinned) {
-        final xPos = unpinnedPositions[column.id]!;
+        final xPos = _unpinnedPositions[column.id]!;
         final paintX = _pinnedWidth + xPos - horizontalOffset;
 
         if (paintX + column.width > _pinnedWidth && paintX < size.width) {

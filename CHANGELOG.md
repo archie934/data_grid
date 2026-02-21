@@ -1,3 +1,11 @@
+## 0.0.11 - 2026-02-21
+
+* Performance: Converted `DataGridCell` from `StatelessWidget` to `StatefulWidget` with content caching — cell renderers are only re-called when the row data, column, or selection state for that specific cell changes; unrelated state changes reuse the cached widget
+* Performance: Replaced `GestureDetector` + `DecoratedBox` per cell with a single custom `RenderObject` (`_CellContainer`) — decoration changes are a `markNeedsPaint()` only, gesture callback updates are pointer swaps with zero framework cost
+* Performance: Isolated `InheritedModel` dependencies in cells using `Builder` pattern — cell element has no inherited dependencies, only the inner `Builder` subscribes
+* Performance: Cell content cache uses `identical()` row reference comparison and `valueAccessor` value comparison for accurate invalidation
+* Fixed: Cell value not updating after edit commit due to row equality comparison missing actual data changes
+
 ## 0.0.10 - 2026-02-19
 
 * Fixed: Pagination not re-rendering when rows are deleted — `totalItems` and `currentPage` are now updated in `DeleteRowEvent` and `DeleteRowsEvent`

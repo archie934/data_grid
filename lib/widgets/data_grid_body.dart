@@ -52,21 +52,23 @@ class _SmoothScrollPhysics extends ClampingScrollPhysics {
 
 class DataGridBody<T extends DataGridRow> extends StatelessWidget {
   final double rowHeight;
-  final double? cacheExtent;
+  final double cacheExtent;
 
-  const DataGridBody({super.key, required this.rowHeight, this.cacheExtent});
+  const DataGridBody({super.key, required this.rowHeight, required this.cacheExtent});
 
   @override
   Widget build(BuildContext context) {
     final theme = DataGridTheme.of(context);
-    final state = context.dataGridState<T>()!;
+    final state = context.dataGridState<T>(
+      {DataGridAspect.data, DataGridAspect.columns, DataGridAspect.selection, DataGridAspect.edit},
+    )!;
+    final columns = context.dataGridEffectiveColumns<T>()!;
     final scrollController = context.gridScrollController<T>()!;
     final scrollbarWidth = theme.dimensions.scrollbarWidth;
-    final pinnedWidth = state.effectiveColumns
+    final pinnedWidth = columns
         .where((col) => col.pinned && col.visible)
         .fold<double>(0.0, (sum, col) => sum + col.width);
 
-    // Handle empty state - just show empty area, no scrolling needed
     if (state.displayOrder.isEmpty) {
       return const SizedBox.expand();
     }
@@ -79,7 +81,7 @@ class DataGridBody<T extends DataGridRow> extends StatelessWidget {
                 scrollbars: false,
               ),
               child: DataGridScrollView(
-                columns: state.effectiveColumns,
+                columns: columns,
                 rowCount: state.displayOrder.length,
                 rowHeight: rowHeight,
                 cacheExtent: cacheExtent,
@@ -94,7 +96,7 @@ class DataGridBody<T extends DataGridRow> extends StatelessWidget {
                 cellBuilder: (context, rowIndex, columnIndex) {
                   final rowId = state.displayOrder[rowIndex];
                   final row = state.rowsById[rowId]!;
-                  final column = state.effectiveColumns[columnIndex];
+                  final column = columns[columnIndex];
 
                   if (column.id == kSelectionColumnId) {
                     return DataGridCheckboxCell<T>(

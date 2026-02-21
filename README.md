@@ -31,7 +31,7 @@ Add this to your package's `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  flutter_data_grid: ^0.0.7
+  flutter_data_grid: ^0.0.11
 ```
 
 Then run:
@@ -712,6 +712,20 @@ final controller = DataGridController<MyRow>(
 3. **Implement valueAccessor efficiently**: Avoid heavy computations
 4. **Use pinned columns sparingly**: Too many pinned columns affect performance
 5. **Dispose controllers**: Always call `controller.dispose()` in `State.dispose()`
+
+### Web / Chrome Performance
+
+**Debug mode on Chrome (without `--release` or `--wasm`) will have poor performance.** This is expected — Flutter's debug mode includes extra assertions, disables optimizations, and the Dart-to-JS compilation is unoptimized. The data grid automatically caps `cacheExtent` to 500px in debug builds to mitigate this, but scrolling will still feel sluggish compared to release builds.
+
+For accurate performance testing on the web, always use one of:
+
+```bash
+# Release mode (recommended for testing)
+flutter run -d chrome --release
+
+# WebAssembly (best performance)
+flutter run -d chrome --wasm
+```
 
 ## 📊 Performance Benchmarks
 

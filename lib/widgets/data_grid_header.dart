@@ -24,7 +24,7 @@ class DataGridHeader<T extends DataGridRow> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = DataGridTheme.of(context);
-    final state = context.dataGridState<T>()!;
+    final state = context.dataGridState<T>({DataGridAspect.columns})!;
     final hasFilterableColumns = state.columns.any(
       (col) => col.filterable && col.visible,
     );
@@ -50,11 +50,14 @@ class _HeaderRow<T extends DataGridRow> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final state = context.dataGridState<T>()!;
+    final state = context.dataGridState<T>(
+      {DataGridAspect.columns, DataGridAspect.sort},
+    )!;
     final scrollController = context.gridScrollController<T>()!;
     final theme = DataGridTheme.of(context);
 
-    final visibleColumns = state.effectiveColumns
+    final columns = context.dataGridEffectiveColumns<T>()!;
+    final visibleColumns = columns
         .where((c) => c.visible)
         .toList();
     final unpinnedFirst = [
@@ -63,7 +66,7 @@ class _HeaderRow<T extends DataGridRow> extends StatelessWidget {
     ];
 
     return DataGridHeaderViewport<T>(
-      columns: state.effectiveColumns,
+      columns: columns,
       horizontalController: scrollController.horizontalController,
       pinnedBackgroundColor: theme.colors.headerColor,
       childColumnIds: unpinnedFirst.map((c) => c.id).toList(),

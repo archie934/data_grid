@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_data_grid/controllers/data_grid_controller.dart';
@@ -74,8 +75,10 @@ class DataGrid<T extends DataGridRow> extends StatefulWidget {
   paginationBuilder;
 
   /// Cache extent for the scroll view. Controls how many pixels of content
-  /// are rendered beyond the visible viewport.
-  final double? cacheExtent;
+  /// are pre-rendered beyond the visible viewport in each direction.
+  /// Defaults to 2000.0 (~40 extra rows at default row height).
+  /// Automatically capped to 500.0 in debug mode to keep debug builds usable.
+  final double cacheExtent;
 
   /// Creates a [DataGrid] widget.
   const DataGrid({
@@ -93,7 +96,7 @@ class DataGrid<T extends DataGridRow> extends StatefulWidget {
     this.theme,
     this.showPagination = true,
     this.paginationBuilder,
-    this.cacheExtent,
+    this.cacheExtent = 2000.0,
   });
 
   @override
@@ -234,7 +237,9 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
                       height: bodyHeight,
                       child: DataGridBody<T>(
                         rowHeight: effectiveRowHeight,
-                        cacheExtent: widget.cacheExtent,
+                        cacheExtent: kDebugMode
+                            ? widget.cacheExtent.clamp(0, 500.0)
+                            : widget.cacheExtent,
                       ),
                     ),
                   );
