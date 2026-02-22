@@ -1,5 +1,38 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_data_grid/models/data/row.dart';
+import 'package:flutter_data_grid/widgets/data_grid_inherited.dart';
 import 'package:flutter_data_grid/theme/data_grid_theme.dart';
+
+/// Scoped loading overlay that only rebuilds when loading state changes.
+///
+/// Uses [InheritedModel] with [DataGridAspect.loading] to avoid
+/// unnecessary rebuilds when unrelated grid state changes.
+class DataGridLoadingScope<T extends DataGridRow> extends StatelessWidget {
+  final Widget Function(BuildContext context, String? message)? loadingOverlayBuilder;
+  final Color? backdropColor;
+  final Color? indicatorColor;
+
+  const DataGridLoadingScope({
+    super.key,
+    this.loadingOverlayBuilder,
+    this.backdropColor,
+    this.indicatorColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final state = context.dataGridState<T>({DataGridAspect.loading});
+    if (state == null || !state.isLoading) return const SizedBox.shrink();
+
+    return loadingOverlayBuilder != null
+        ? loadingOverlayBuilder!(context, state.loadingMessage)
+        : DataGridLoadingOverlay(
+            message: state.loadingMessage,
+            backdropColor: backdropColor,
+            indicatorColor: indicatorColor,
+          );
+  }
+}
 
 /// Default loading overlay widget displayed during heavy operations.
 ///

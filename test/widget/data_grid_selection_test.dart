@@ -151,7 +151,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(controller.state.effectiveColumns.length, 3);
-      expect(controller.state.effectiveColumns[0].id, -1);
+      expect(controller.state.effectiveColumns[0].id, -9999);
     });
 
     testWidgets('clear selection removes all selections', (tester) async {

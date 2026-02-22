@@ -31,7 +31,7 @@ Add this to your package's `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  flutter_data_grid: ^0.0.11
+  flutter_data_grid: ^0.0.12
 ```
 
 Then run:
@@ -113,7 +113,6 @@ Consider waiting for v1.0 if you need:
     │  • Selection Events             │
     │  • Edit Events                  │
     │  • Pagination Events            │
-    │  • Scroll Events                │
     │  • Keyboard Events              │
     └─────────────────────────────────┘
 ```
@@ -147,13 +146,7 @@ lib/
 │
 ├── delegates/
 │   ├── sort_delegate.dart           # Pluggable sorting
-│   ├── filter_delegate.dart         # Pluggable filtering
-│   └── viewport_delegate.dart       # Viewport calculations
-│
-├── renderers/
-│   ├── cell_renderer.dart           # Custom cell rendering
-│   ├── row_renderer.dart            # Custom row rendering
-│   └── filter_renderer.dart         # Custom filter widgets
+│   └── filter_delegate.dart         # Pluggable filtering
 │
 ├── interceptors/
 │   ├── data_grid_interceptor.dart   # Base interceptor
@@ -167,8 +160,7 @@ lib/
 ├── utils/
 │   ├── data_indexer.dart            # Sort/filter operations
 │   ├── isolate_sort.dart            # Background sorting
-│   ├── isolate_filter.dart          # Background filtering
-│   └── viewport_calculator.dart     # Virtualization math
+│   └── isolate_filter.dart          # Background filtering
 │
 ├── widgets/
 │   ├── data_grid.dart               # Main widget
@@ -178,9 +170,14 @@ lib/
 │   ├── cells/
 │   │   ├── data_grid_cell.dart      # Standard cell
 │   │   ├── data_grid_header_cell.dart # Header cell
-│   │   └── data_grid_checkbox_cell.dart # Selection checkbox
+│   │   ├── data_grid_checkbox_cell.dart # Selection checkbox
+│   │   └── cell_scope.dart          # Per-cell InheritedWidget (CellScope)
+│   ├── filters/
+│   │   ├── filter_scope.dart        # Per-column filter InheritedWidget
+│   │   ├── default_filter_widget.dart # Default text-based filter
+│   │   └── filter_text_field.dart   # Reusable filter text field
 │   ├── overlays/
-│   │   └── loading_overlay.dart     # Loading indicator
+│   │   └── loading_overlay.dart     # Loading indicator + scoped overlay
 │   ├── scroll/
 │   │   ├── scrollbar_horizontal.dart
 │   │   └── scrollbar_vertical.dart
@@ -190,6 +187,150 @@ lib/
 │
 └── data_grid.dart                   # Public API exports
 ```
+
+## ⚡ Migration Guide
+
+### v0.0.11 → v0.0.12: Cell rebuild optimization & removed viewport/scroll state
+
+**Breaking changes:**
+
+1. **`ViewportState` removed from `DataGridState`** — The `viewport` field on `DataGridState` and the entire `ViewportState` freezed class have been removed. Flutter's `TwoDimensionalScrollView` already manages scroll offsets and visible range internally, so tracking them in grid state was redundant and caused unnecessary rebuilds.
+
+2. **`ViewportDelegate` removed** — `ViewportDelegate`, `DefaultViewportDelegate`, and `ViewportCalculator` have been deleted. Remove the `viewportDelegate:` parameter from your `DataGridController` constructor if you were passing one.
+
+3. **`ScrollEvent` / `ViewportResizeEvent` removed** — These events are no longer dispatched or handled. Remove any code that dispatches or listens for them.
+
+4. **`FilterRenderer` → `filterWidget` + `FilterScope`** — The `FilterRenderer` abstract class and `DataGrid.filterRenderer` parameter have been replaced by `DataGrid.filterWidget` (a plain `Widget`) paired with `FilterScope` (an `InheritedWidget`). See the v0.0.9 → v0.0.10 migration below for the pattern — the same approach now applies globally.
+
+5. **`RowRenderer` / `RenderContext` removed** — These unused renderer abstractions have been deleted.
+
+**Cell rebuild performance:**
+
+Cells no longer subscribe to global state changes via `InheritedModel`. Instead, each cell subscribes to a stream scoped to its own row/column, so only the affected cells rebuild when selection or edit state changes. This dramatically reduces unnecessary rebuilds in grids with many visible cells.
+
+**Loading overlay:**
+
+The loading overlay is now wrapped in `DataGridLoadingScope`, which subscribes only to the `loading` aspect of the grid state. This prevents loading state changes from triggering rebuilds in unrelated widgets.
+
+---
+
+### v0.0.8 → v0.0.9+: `cellRenderer` → `cellWidget` + `CellScope`
+
+The `CellRenderer` interface and the `DataGrid.cellRenderer` parameter have been removed. Custom cell rendering now uses a plain `Widget` declared on each `DataGridColumn` and a `CellScope` inherited widget for per-cell data access.
+
+**Before (v0.0.8):**
+```dart
+class MyRenderer implements CellRenderer<MyRow> {
+  @override
+  Widget buildCell(RenderContext<MyRow> context) {
+    return Text(context.value.toString());
+  }
+}
+
+DataGrid<MyRow>(
+  controller: controller,
+  cellRenderer: MyRenderer(),
+)
+```
+
+**After (v0.0.9+):**
+```dart
+class MyCell extends StatelessWidget {
+  const MyCell({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final scope = CellScope.of<MyRow>(context);
+    return Text(scope.value.toString());
+  }
+}
+
+// Set per-column — no global cellRenderer on DataGrid:
+DataGridColumn<MyRow>(
+  id: 1,
+  title: 'Name',
+  width: 150,
+  valueAccessor: (row) => row.name,
+  cellWidget: const MyCell(),
+)
+```
+
+**Migration checklist:**
+- [ ] Delete any class that implements `CellRenderer<T>`
+- [ ] Remove `cellRenderer:` from your `DataGrid(...)` constructor call
+- [ ] Create a `StatelessWidget` with a `const` constructor for each custom cell
+- [ ] Inside the widget's `build`, call `CellScope.of<MyRow>(context)` to access row data
+- [ ] Set `cellWidget: const MyCell()` on each `DataGridColumn` that needs custom rendering
+
+**Why this change?**
+The old approach built a new renderer widget every frame, preventing Flutter from reusing element subtrees. The new `const cellWidget` + `CellScope` pattern lets Flutter preserve element identity across scrolls and rebuilds — only the `InheritedWidget` data changes, so only `CellScope.of` call sites are rebuilt.
+
+### v0.0.9 → v0.0.10+: `filterRenderer` → `filterWidget` + `FilterScope`
+
+The `FilterRenderer` abstract class and the `DataGrid.filterRenderer` / `DataGridColumn.filterRenderer` parameters have been removed. Custom filter rendering now uses a plain `Widget` on each column and a `FilterScope` inherited widget for accessing filter context.
+
+**Before (v0.0.9):**
+```dart
+class MyFilter implements FilterRenderer {
+  @override
+  Widget buildFilter(
+    BuildContext context,
+    DataGridColumn column,
+    ColumnFilter? currentFilter,
+    void Function(FilterOperator, dynamic) onChange,
+    void Function() onClear,
+  ) {
+    return TextField(onChanged: (v) => onChange(FilterOperator.contains, v));
+  }
+}
+
+DataGridColumn<MyRow>(
+  id: 1,
+  title: 'Name',
+  width: 150,
+  filterRenderer: MyFilter(),
+)
+```
+
+**After (v0.0.10+):**
+```dart
+class MyFilter extends StatelessWidget {
+  const MyFilter({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final scope = FilterScope.of(context);
+    return TextField(
+      onChanged: (v) => scope.onChange(FilterOperator.contains, v),
+    );
+  }
+}
+
+DataGridColumn<MyRow>(
+  id: 1,
+  title: 'Name',
+  width: 150,
+  filterWidget: const MyFilter(),
+)
+```
+
+**Migration checklist:**
+- [ ] Delete any class that implements `FilterRenderer`
+- [ ] Remove `filterRenderer:` from your `DataGrid(...)` and `DataGridColumn(...)` calls
+- [ ] Create a `StatelessWidget` with a `const` constructor for each custom filter
+- [ ] Inside the widget's `build`, call `FilterScope.of(context)` to access column, currentFilter, onChange, onClear
+- [ ] Set `filterWidget: const MyFilter()` on each `DataGridColumn` that needs a custom filter
+
+`FilterScope` provides:
+- `scope.column` — the column definition
+- `scope.currentFilter` — the active `ColumnFilter` (operator + value), or null
+- `scope.onChange(operator, value)` — dispatch a filter change
+- `scope.onClear()` — dispatch a filter clear
+
+**Why this change?**
+Same reason as the `CellScope` migration: `FilterRenderer.buildFilter()` was called every frame, creating a new widget subtree each rebuild. The `const filterWidget` + `FilterScope` pattern preserves element identity — only widgets that call `FilterScope.of` are rebuilt when filter state changes.
+
+---
 
 ## 🚀 Quick Start
 
@@ -286,7 +427,7 @@ DataGridColumn<MyRow>(
   valueAccessor: (row) => row.value,      // Get cell value
   cellValueSetter: (row, val) => row.value = val,  // Set cell value
   validator: (old, new) => new != null,   // Validate edits
-  cellRenderer: customRenderer,           // Custom rendering
+  cellWidget: const MyCell(),             // Custom cell widget (see CellScope)
   cellEditorBuilder: customEditor,        // Custom editor
   cellFormatter: (row, col) => 'text',    // Format display
 )
@@ -482,23 +623,43 @@ Built-in keyboard shortcuts:
 
 ### Custom Rendering
 
+Custom cell widgets use `CellScope` to access per-cell data. Declare a `const` widget on the column — Flutter preserves element identity across rebuilds, so only widgets that call `CellScope.of` are rebuilt when data changes.
+
 ```dart
-// Custom cell renderer
-class MyRenderer implements CellRenderer<MyRow> {
+// 1. Define a const cell widget
+class ValueCell extends StatelessWidget {
+  const ValueCell({super.key});
+
   @override
-  Widget buildCell(RenderContext<MyRow> context) {
+  Widget build(BuildContext context) {
+    final scope = CellScope.of<MyRow>(context);
     return Container(
-      color: context.row.value > 100 ? Colors.green : Colors.red,
-      child: Text(context.value.toString()),
+      color: scope.row.value > 100 ? Colors.green : Colors.red,
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      alignment: Alignment.centerLeft,
+      child: Text(scope.value.toString()),
     );
   }
 }
 
-DataGrid<MyRow>(
-  controller: controller,
-  cellRenderer: MyRenderer(),
+// 2. Assign it to the column
+DataGridColumn<MyRow>(
+  id: 1,
+  title: 'Value',
+  width: 150,
+  valueAccessor: (row) => row.value,
+  cellWidget: const ValueCell(),  // const for maximum performance
 )
 ```
+
+`CellScope<T>` provides:
+- `scope.row` — the typed row object
+- `scope.column` — the column configuration
+- `scope.value` — pre-computed value from `valueAccessor`
+- `scope.rowIndex` — zero-based visible row index
+- `scope.isSelected` — whether the row is currently selected
+- `scope.isPinned` — whether the column is pinned
+- `scope.controller` — grid controller for dispatching events
 
 ### Theming
 
@@ -701,7 +862,6 @@ final controller = DataGridController<MyRow>(
   rows: rows,
   sortDelegate: MySortDelegate(),
   filterDelegate: MyFilterDelegate(),
-  viewportDelegate: MyViewportDelegate(),
 );
 ```
 
@@ -794,10 +954,6 @@ flutter test
 ### Column Events
 - `ColumnResizeEvent` - Resize column
 - `SetColumnWidthEvent` - Set exact width
-
-### Scroll Events
-- `ScrollEvent` - Scroll viewport
-- `ViewportResizeEvent` - Viewport size changed
 
 ## 🔧 Troubleshooting
 

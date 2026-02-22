@@ -1,56 +1,48 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_data_grid/models/data/column.dart';
 import 'package:flutter_data_grid/models/data/row.dart';
+import 'package:flutter_data_grid/widgets/cells/data_grid_cell.dart';
+import 'package:flutter_data_grid/widgets/cells/data_grid_checkbox_cell.dart';
 
 /// Delegate that provides children (cells) for the 2D grid viewport.
-/// This is responsible for building widgets at specific grid coordinates.
-class DataGridChildDelegate<T extends DataGridRow>
-    extends TwoDimensionalChildDelegate {
+/// Builds [DataGridCell] / [DataGridCheckboxCell] widgets directly from
+/// the grid's data, avoiding closure allocation on every body rebuild.
+class DataGridChildDelegate<T extends DataGridRow> extends TwoDimensionalChildDelegate {
   final List<DataGridColumn<T>> columns;
   final int rowCount;
-  final Widget Function(BuildContext context, int row, int column) cellBuilder;
+  final List<double> displayOrder;
+  final Map<double, T> rowsById;
 
-  DataGridChildDelegate({
-    required this.columns,
-    required this.rowCount,
-    required this.cellBuilder,
-  });
+  DataGridChildDelegate({required this.columns, required this.rowCount, required this.displayOrder, required this.rowsById});
 
-  /// Builds a child widget for a specific cell location (vicinity).
-  /// Returns null if the coordinates are out of bounds.
   @override
   Widget? build(BuildContext context, covariant ChildVicinity vicinity) {
-    final childVicinity = vicinity as DataGridVicinity;
-
-    // Validate that the requested cell is within grid bounds
-    if (childVicinity.row < 0 ||
-        childVicinity.row >= rowCount ||
-        childVicinity.column < 0 ||
-        childVicinity.column >= columns.length) {
+    final v = vicinity as DataGridVicinity;
+    if (v.row < 0 || v.row >= rowCount || v.column < 0 || v.column >= columns.length) {
       return null;
     }
 
-    // Build and return the cell widget at this location
-    return cellBuilder(context, childVicinity.row, childVicinity.column);
+    final rowId = displayOrder[v.row];
+    final row = rowsById[rowId]!;
+    final column = columns[v.column];
+
+    if (column.id == kSelectionColumnId) {
+      return DataGridCheckboxCell<T>(key: ValueKey('cell_${row.id}_${column.id}'), row: row, rowId: row.id, rowIndex: v.row);
+    }
+
+    return DataGridCell<T>(key: ValueKey('cell_${row.id}_${column.id}'), row: row, rowId: row.id, column: column, rowIndex: v.row, isPinned: column.pinned);
   }
 
   @override
   bool shouldRebuild(covariant DataGridChildDelegate<T> oldDelegate) {
-    return columns != oldDelegate.columns ||
-        rowCount != oldDelegate.rowCount ||
-        cellBuilder != oldDelegate.cellBuilder;
+    return columns != oldDelegate.columns || rowCount != oldDelegate.rowCount || !identical(displayOrder, oldDelegate.displayOrder) || !identical(rowsById, oldDelegate.rowsById);
   }
 }
 
 /// Represents a cell's location in the 2D grid.
-/// Maps row/column coordinates to xIndex/yIndex used by the viewport.
 class DataGridVicinity extends ChildVicinity {
-  const DataGridVicinity(int row, int column)
-    : super(xIndex: column, yIndex: row);
+  const DataGridVicinity(int row, int column) : super(xIndex: column, yIndex: row);
 
-  /// Convenience getter to access the row index
   int get row => yIndex;
-
-  /// Convenience getter to access the column index
   int get column => xIndex;
 }

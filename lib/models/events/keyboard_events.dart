@@ -80,20 +80,9 @@ class SelectAllVisibleEvent extends DataGridEvent {
       return null;
     }
 
-    final viewport = context.state.viewport;
-    final visibleRowIds = <double>{};
-
-    for (
-      int i = viewport.firstVisibleRow;
-      i <= viewport.lastVisibleRow && i < context.state.displayOrder.length;
-      i++
-    ) {
-      visibleRowIds.add(context.state.displayOrder[i]);
-    }
-
     return context.state.copyWith(
       selection: context.state.selection.copyWith(
-        selectedRowIds: visibleRowIds,
+        selectedRowIds: context.state.displayOrder.toSet(),
       ),
     );
   }

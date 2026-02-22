@@ -31,7 +31,6 @@ class StartCellEditEvent extends DataGridEvent {
     }
 
     final cellId = context.state.edit.createCellId(rowId, columnId);
-    final currentValue = context.dataIndexer.getCellValue(row, column);
 
     var newState = context.state;
 
@@ -53,6 +52,8 @@ class StartCellEditEvent extends DataGridEvent {
         );
       }
     }
+
+    final currentValue = column.valueAccessor != null ? column.valueAccessor!(row) : null;
 
     return newState.copyWith(
       edit: newState.edit.copyWith(

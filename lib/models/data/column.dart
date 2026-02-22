@@ -1,6 +1,4 @@
 import 'package:flutter/widgets.dart';
-import 'package:flutter_data_grid/renderers/filter_renderer.dart';
-import 'package:flutter_data_grid/renderers/cell_renderer.dart';
 import 'package:flutter_data_grid/models/data/row.dart';
 
 /// Builder function for custom cell editor widgets.
@@ -54,14 +52,28 @@ class DataGridColumn<T extends DataGridRow> {
   /// Whether cells in this column can be edited.
   final bool editable;
 
-  /// Custom filter widget renderer for this column.
-  final FilterRenderer? filterRenderer;
+  /// Custom filter widget for this column.
+  ///
+  /// Wrapped in a [FilterScope] that provides the column, current filter state,
+  /// and onChange/onClear callbacks. Use `FilterScope.of(context)` inside the
+  /// widget to access filter data.
+  ///
+  /// If null, the grid's default filter widget ([DefaultFilterWidget]) is used.
+  /// Const widgets are especially efficient here.
+  final Widget? filterWidget;
 
   /// Custom editor builder for cell editing.
   final CellEditorBuilder? cellEditorBuilder;
 
-  /// Custom cell renderer for this column.
-  final CellRenderer? cellRenderer;
+  /// Widget to render for cells in this column.
+  ///
+  /// Wrapped in a [CellScope] that provides row data, column, selection state,
+  /// etc. Use `CellScope.of<T>(context)` inside the widget to access cell data.
+  ///
+  /// Because the same widget instance is reused across rebuilds, Flutter
+  /// preserves element identity and only rebuilds descendants that actually
+  /// read from [CellScope]. Const widgets are especially efficient here.
+  final Widget? cellWidget;
 
   /// Formatter function to format cell display values.
   final Function? cellFormatter;
@@ -86,9 +98,9 @@ class DataGridColumn<T extends DataGridRow> {
     this.sortable = true,
     this.filterable = true,
     this.editable = true,
-    this.filterRenderer,
+    this.filterWidget,
     this.cellEditorBuilder,
-    this.cellRenderer,
+    this.cellWidget,
     this.cellFormatter,
     this.valueAccessor,
     this.cellValueSetter,
@@ -109,8 +121,8 @@ class DataGridColumn<T extends DataGridRow> {
           sortable == other.sortable &&
           filterable == other.filterable &&
           editable == other.editable &&
-          filterRenderer == other.filterRenderer &&
-          cellRenderer == other.cellRenderer;
+          filterWidget == other.filterWidget &&
+          cellWidget == other.cellWidget;
 
   @override
   int get hashCode => Object.hash(
@@ -123,8 +135,8 @@ class DataGridColumn<T extends DataGridRow> {
     sortable,
     filterable,
     editable,
-    filterRenderer,
-    cellRenderer,
+    filterWidget,
+    cellWidget,
   );
 
   DataGridColumn<T> copyWith({
@@ -137,9 +149,9 @@ class DataGridColumn<T extends DataGridRow> {
     bool? sortable,
     bool? filterable,
     bool? editable,
-    FilterRenderer? filterRenderer,
+    Widget? filterWidget,
     CellEditorBuilder? cellEditorBuilder,
-    CellRenderer? cellRenderer,
+    Widget? cellWidget,
     Function? cellFormatter,
     dynamic Function(T)? valueAccessor,
     void Function(T row, dynamic value)? cellValueSetter,
@@ -155,9 +167,9 @@ class DataGridColumn<T extends DataGridRow> {
       sortable: sortable ?? this.sortable,
       filterable: filterable ?? this.filterable,
       editable: editable ?? this.editable,
-      filterRenderer: filterRenderer ?? this.filterRenderer,
+      filterWidget: filterWidget ?? this.filterWidget,
       cellEditorBuilder: cellEditorBuilder ?? this.cellEditorBuilder,
-      cellRenderer: cellRenderer ?? this.cellRenderer,
+      cellWidget: cellWidget ?? this.cellWidget,
       cellFormatter: cellFormatter ?? this.cellFormatter,
       valueAccessor: valueAccessor ?? this.valueAccessor,
       cellValueSetter: cellValueSetter ?? this.cellValueSetter,

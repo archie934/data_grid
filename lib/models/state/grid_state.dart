@@ -14,7 +14,6 @@ abstract class DataGridState<T extends DataGridRow> with _$DataGridState<T> {
     required List<DataGridColumn<T>> columns,
     required Map<double, T> rowsById,
     required List<double> displayOrder,
-    required ViewportState viewport,
     required SelectionState selection,
     required SortState sort,
     required FilterState filter,
@@ -32,7 +31,6 @@ abstract class DataGridState<T extends DataGridRow> with _$DataGridState<T> {
     columns: [],
     rowsById: {},
     displayOrder: [],
-    viewport: ViewportState.initial(),
     selection: SelectionState.initial(),
     sort: SortState.initial(),
     filter: FilterState.initial(),
@@ -74,31 +72,6 @@ abstract class DataGridState<T extends DataGridRow> with _$DataGridState<T> {
     if (!pagination.enabled) return false;
     return pagination.currentPage > 1;
   }
-}
-
-@freezed
-abstract class ViewportState with _$ViewportState {
-  const factory ViewportState({
-    required double scrollOffsetX,
-    required double scrollOffsetY,
-    required double viewportWidth,
-    required double viewportHeight,
-    required int firstVisibleRow,
-    required int lastVisibleRow,
-    required int firstVisibleColumn,
-    required int lastVisibleColumn,
-  }) = _ViewportState;
-
-  factory ViewportState.initial() => const ViewportState(
-    scrollOffsetX: 0,
-    scrollOffsetY: 0,
-    viewportWidth: 0,
-    viewportHeight: 0,
-    firstVisibleRow: 0,
-    lastVisibleRow: 0,
-    firstVisibleColumn: 0,
-    lastVisibleColumn: 0,
-  );
 }
 
 @freezed

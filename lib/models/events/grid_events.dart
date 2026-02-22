@@ -1,5 +1,4 @@
 export 'base_event.dart';
-export 'scroll_events.dart';
 export 'column_events.dart';
 export 'sort_events.dart';
 export 'filter_events.dart';

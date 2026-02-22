@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$DataGridState<T extends DataGridRow> {
 
- List<DataGridColumn<T>> get columns; Map<double, T> get rowsById; List<double> get displayOrder; ViewportState get viewport; SelectionState get selection; SortState get sort; FilterState get filter; GroupState get group; EditState get edit; PaginationState get pagination; int get totalItems; bool get isLoading; String? get loadingMessage;
+ List<DataGridColumn<T>> get columns; Map<double, T> get rowsById; List<double> get displayOrder; SelectionState get selection; SortState get sort; FilterState get filter; GroupState get group; EditState get edit; PaginationState get pagination; int get totalItems; bool get isLoading; String? get loadingMessage;
 /// Create a copy of DataGridState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $DataGridStateCopyWith<T, DataGridState<T>> get copyWith => _$DataGridStateCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is DataGridState<T>&&const DeepCollectionEquality().equals(other.columns, columns)&&const DeepCollectionEquality().equals(other.rowsById, rowsById)&&const DeepCollectionEquality().equals(other.displayOrder, displayOrder)&&(identical(other.viewport, viewport) || other.viewport == viewport)&&(identical(other.selection, selection) || other.selection == selection)&&(identical(other.sort, sort) || other.sort == sort)&&(identical(other.filter, filter) || other.filter == filter)&&(identical(other.group, group) || other.group == group)&&(identical(other.edit, edit) || other.edit == edit)&&(identical(other.pagination, pagination) || other.pagination == pagination)&&(identical(other.totalItems, totalItems) || other.totalItems == totalItems)&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading)&&(identical(other.loadingMessage, loadingMessage) || other.loadingMessage == loadingMessage));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DataGridState<T>&&const DeepCollectionEquality().equals(other.columns, columns)&&const DeepCollectionEquality().equals(other.rowsById, rowsById)&&const DeepCollectionEquality().equals(other.displayOrder, displayOrder)&&(identical(other.selection, selection) || other.selection == selection)&&(identical(other.sort, sort) || other.sort == sort)&&(identical(other.filter, filter) || other.filter == filter)&&(identical(other.group, group) || other.group == group)&&(identical(other.edit, edit) || other.edit == edit)&&(identical(other.pagination, pagination) || other.pagination == pagination)&&(identical(other.totalItems, totalItems) || other.totalItems == totalItems)&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading)&&(identical(other.loadingMessage, loadingMessage) || other.loadingMessage == loadingMessage));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(columns),const DeepCollectionEquality().hash(rowsById),const DeepCollectionEquality().hash(displayOrder),viewport,selection,sort,filter,group,edit,pagination,totalItems,isLoading,loadingMessage);
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(columns),const DeepCollectionEquality().hash(rowsById),const DeepCollectionEquality().hash(displayOrder),selection,sort,filter,group,edit,pagination,totalItems,isLoading,loadingMessage);
 
 @override
 String toString() {
-  return 'DataGridState<$T>(columns: $columns, rowsById: $rowsById, displayOrder: $displayOrder, viewport: $viewport, selection: $selection, sort: $sort, filter: $filter, group: $group, edit: $edit, pagination: $pagination, totalItems: $totalItems, isLoading: $isLoading, loadingMessage: $loadingMessage)';
+  return 'DataGridState<$T>(columns: $columns, rowsById: $rowsById, displayOrder: $displayOrder, selection: $selection, sort: $sort, filter: $filter, group: $group, edit: $edit, pagination: $pagination, totalItems: $totalItems, isLoading: $isLoading, loadingMessage: $loadingMessage)';
 }
 
 
@@ -45,11 +45,11 @@ abstract mixin class $DataGridStateCopyWith<T extends DataGridRow,$Res>  {
   factory $DataGridStateCopyWith(DataGridState<T> value, $Res Function(DataGridState<T>) _then) = _$DataGridStateCopyWithImpl;
 @useResult
 $Res call({
- List<DataGridColumn<T>> columns, Map<double, T> rowsById, List<double> displayOrder, ViewportState viewport, SelectionState selection, SortState sort, FilterState filter, GroupState group, EditState edit, PaginationState pagination, int totalItems, bool isLoading, String? loadingMessage
+ List<DataGridColumn<T>> columns, Map<double, T> rowsById, List<double> displayOrder, SelectionState selection, SortState sort, FilterState filter, GroupState group, EditState edit, PaginationState pagination, int totalItems, bool isLoading, String? loadingMessage
 });
 
 
-$ViewportStateCopyWith<$Res> get viewport;$SelectionStateCopyWith<$Res> get selection;$SortStateCopyWith<$Res> get sort;$FilterStateCopyWith<$Res> get filter;$GroupStateCopyWith<$Res> get group;$EditStateCopyWith<$Res> get edit;$PaginationStateCopyWith<$Res> get pagination;
+$SelectionStateCopyWith<$Res> get selection;$SortStateCopyWith<$Res> get sort;$FilterStateCopyWith<$Res> get filter;$GroupStateCopyWith<$Res> get group;$EditStateCopyWith<$Res> get edit;$PaginationStateCopyWith<$Res> get pagination;
 
 }
 /// @nodoc
@@ -62,13 +62,12 @@ class _$DataGridStateCopyWithImpl<T extends DataGridRow,$Res>
 
 /// Create a copy of DataGridState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? columns = null,Object? rowsById = null,Object? displayOrder = null,Object? viewport = null,Object? selection = null,Object? sort = null,Object? filter = null,Object? group = null,Object? edit = null,Object? pagination = null,Object? totalItems = null,Object? isLoading = null,Object? loadingMessage = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? columns = null,Object? rowsById = null,Object? displayOrder = null,Object? selection = null,Object? sort = null,Object? filter = null,Object? group = null,Object? edit = null,Object? pagination = null,Object? totalItems = null,Object? isLoading = null,Object? loadingMessage = freezed,}) {
   return _then(_self.copyWith(
 columns: null == columns ? _self.columns : columns // ignore: cast_nullable_to_non_nullable
 as List<DataGridColumn<T>>,rowsById: null == rowsById ? _self.rowsById : rowsById // ignore: cast_nullable_to_non_nullable
 as Map<double, T>,displayOrder: null == displayOrder ? _self.displayOrder : displayOrder // ignore: cast_nullable_to_non_nullable
-as List<double>,viewport: null == viewport ? _self.viewport : viewport // ignore: cast_nullable_to_non_nullable
-as ViewportState,selection: null == selection ? _self.selection : selection // ignore: cast_nullable_to_non_nullable
+as List<double>,selection: null == selection ? _self.selection : selection // ignore: cast_nullable_to_non_nullable
 as SelectionState,sort: null == sort ? _self.sort : sort // ignore: cast_nullable_to_non_nullable
 as SortState,filter: null == filter ? _self.filter : filter // ignore: cast_nullable_to_non_nullable
 as FilterState,group: null == group ? _self.group : group // ignore: cast_nullable_to_non_nullable
@@ -81,15 +80,6 @@ as String?,
   ));
 }
 /// Create a copy of DataGridState
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$ViewportStateCopyWith<$Res> get viewport {
-  
-  return $ViewportStateCopyWith<$Res>(_self.viewport, (value) {
-    return _then(_self.copyWith(viewport: value));
-  });
-}/// Create a copy of DataGridState
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
@@ -225,10 +215,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<DataGridColumn<T>> columns,  Map<double, T> rowsById,  List<double> displayOrder,  ViewportState viewport,  SelectionState selection,  SortState sort,  FilterState filter,  GroupState group,  EditState edit,  PaginationState pagination,  int totalItems,  bool isLoading,  String? loadingMessage)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<DataGridColumn<T>> columns,  Map<double, T> rowsById,  List<double> displayOrder,  SelectionState selection,  SortState sort,  FilterState filter,  GroupState group,  EditState edit,  PaginationState pagination,  int totalItems,  bool isLoading,  String? loadingMessage)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _DataGridState() when $default != null:
-return $default(_that.columns,_that.rowsById,_that.displayOrder,_that.viewport,_that.selection,_that.sort,_that.filter,_that.group,_that.edit,_that.pagination,_that.totalItems,_that.isLoading,_that.loadingMessage);case _:
+return $default(_that.columns,_that.rowsById,_that.displayOrder,_that.selection,_that.sort,_that.filter,_that.group,_that.edit,_that.pagination,_that.totalItems,_that.isLoading,_that.loadingMessage);case _:
   return orElse();
 
 }
@@ -246,10 +236,10 @@ return $default(_that.columns,_that.rowsById,_that.displayOrder,_that.viewport,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<DataGridColumn<T>> columns,  Map<double, T> rowsById,  List<double> displayOrder,  ViewportState viewport,  SelectionState selection,  SortState sort,  FilterState filter,  GroupState group,  EditState edit,  PaginationState pagination,  int totalItems,  bool isLoading,  String? loadingMessage)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<DataGridColumn<T>> columns,  Map<double, T> rowsById,  List<double> displayOrder,  SelectionState selection,  SortState sort,  FilterState filter,  GroupState group,  EditState edit,  PaginationState pagination,  int totalItems,  bool isLoading,  String? loadingMessage)  $default,) {final _that = this;
 switch (_that) {
 case _DataGridState():
-return $default(_that.columns,_that.rowsById,_that.displayOrder,_that.viewport,_that.selection,_that.sort,_that.filter,_that.group,_that.edit,_that.pagination,_that.totalItems,_that.isLoading,_that.loadingMessage);case _:
+return $default(_that.columns,_that.rowsById,_that.displayOrder,_that.selection,_that.sort,_that.filter,_that.group,_that.edit,_that.pagination,_that.totalItems,_that.isLoading,_that.loadingMessage);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -266,10 +256,10 @@ return $default(_that.columns,_that.rowsById,_that.displayOrder,_that.viewport,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<DataGridColumn<T>> columns,  Map<double, T> rowsById,  List<double> displayOrder,  ViewportState viewport,  SelectionState selection,  SortState sort,  FilterState filter,  GroupState group,  EditState edit,  PaginationState pagination,  int totalItems,  bool isLoading,  String? loadingMessage)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<DataGridColumn<T>> columns,  Map<double, T> rowsById,  List<double> displayOrder,  SelectionState selection,  SortState sort,  FilterState filter,  GroupState group,  EditState edit,  PaginationState pagination,  int totalItems,  bool isLoading,  String? loadingMessage)?  $default,) {final _that = this;
 switch (_that) {
 case _DataGridState() when $default != null:
-return $default(_that.columns,_that.rowsById,_that.displayOrder,_that.viewport,_that.selection,_that.sort,_that.filter,_that.group,_that.edit,_that.pagination,_that.totalItems,_that.isLoading,_that.loadingMessage);case _:
+return $default(_that.columns,_that.rowsById,_that.displayOrder,_that.selection,_that.sort,_that.filter,_that.group,_that.edit,_that.pagination,_that.totalItems,_that.isLoading,_that.loadingMessage);case _:
   return null;
 
 }
@@ -281,7 +271,7 @@ return $default(_that.columns,_that.rowsById,_that.displayOrder,_that.viewport,_
 
 
 class _DataGridState<T extends DataGridRow> extends DataGridState<T> {
-  const _DataGridState({required final  List<DataGridColumn<T>> columns, required final  Map<double, T> rowsById, required final  List<double> displayOrder, required this.viewport, required this.selection, required this.sort, required this.filter, required this.group, required this.edit, required this.pagination, this.totalItems = 0, this.isLoading = false, this.loadingMessage}): _columns = columns,_rowsById = rowsById,_displayOrder = displayOrder,super._();
+  const _DataGridState({required final  List<DataGridColumn<T>> columns, required final  Map<double, T> rowsById, required final  List<double> displayOrder, required this.selection, required this.sort, required this.filter, required this.group, required this.edit, required this.pagination, this.totalItems = 0, this.isLoading = false, this.loadingMessage}): _columns = columns,_rowsById = rowsById,_displayOrder = displayOrder,super._();
   
 
  final  List<DataGridColumn<T>> _columns;
@@ -305,7 +295,6 @@ class _DataGridState<T extends DataGridRow> extends DataGridState<T> {
   return EqualUnmodifiableListView(_displayOrder);
 }
 
-@override final  ViewportState viewport;
 @override final  SelectionState selection;
 @override final  SortState sort;
 @override final  FilterState filter;
@@ -326,16 +315,16 @@ _$DataGridStateCopyWith<T, _DataGridState<T>> get copyWith => __$DataGridStateCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _DataGridState<T>&&const DeepCollectionEquality().equals(other._columns, _columns)&&const DeepCollectionEquality().equals(other._rowsById, _rowsById)&&const DeepCollectionEquality().equals(other._displayOrder, _displayOrder)&&(identical(other.viewport, viewport) || other.viewport == viewport)&&(identical(other.selection, selection) || other.selection == selection)&&(identical(other.sort, sort) || other.sort == sort)&&(identical(other.filter, filter) || other.filter == filter)&&(identical(other.group, group) || other.group == group)&&(identical(other.edit, edit) || other.edit == edit)&&(identical(other.pagination, pagination) || other.pagination == pagination)&&(identical(other.totalItems, totalItems) || other.totalItems == totalItems)&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading)&&(identical(other.loadingMessage, loadingMessage) || other.loadingMessage == loadingMessage));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _DataGridState<T>&&const DeepCollectionEquality().equals(other._columns, _columns)&&const DeepCollectionEquality().equals(other._rowsById, _rowsById)&&const DeepCollectionEquality().equals(other._displayOrder, _displayOrder)&&(identical(other.selection, selection) || other.selection == selection)&&(identical(other.sort, sort) || other.sort == sort)&&(identical(other.filter, filter) || other.filter == filter)&&(identical(other.group, group) || other.group == group)&&(identical(other.edit, edit) || other.edit == edit)&&(identical(other.pagination, pagination) || other.pagination == pagination)&&(identical(other.totalItems, totalItems) || other.totalItems == totalItems)&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading)&&(identical(other.loadingMessage, loadingMessage) || other.loadingMessage == loadingMessage));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_columns),const DeepCollectionEquality().hash(_rowsById),const DeepCollectionEquality().hash(_displayOrder),viewport,selection,sort,filter,group,edit,pagination,totalItems,isLoading,loadingMessage);
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_columns),const DeepCollectionEquality().hash(_rowsById),const DeepCollectionEquality().hash(_displayOrder),selection,sort,filter,group,edit,pagination,totalItems,isLoading,loadingMessage);
 
 @override
 String toString() {
-  return 'DataGridState<$T>(columns: $columns, rowsById: $rowsById, displayOrder: $displayOrder, viewport: $viewport, selection: $selection, sort: $sort, filter: $filter, group: $group, edit: $edit, pagination: $pagination, totalItems: $totalItems, isLoading: $isLoading, loadingMessage: $loadingMessage)';
+  return 'DataGridState<$T>(columns: $columns, rowsById: $rowsById, displayOrder: $displayOrder, selection: $selection, sort: $sort, filter: $filter, group: $group, edit: $edit, pagination: $pagination, totalItems: $totalItems, isLoading: $isLoading, loadingMessage: $loadingMessage)';
 }
 
 
@@ -346,11 +335,11 @@ abstract mixin class _$DataGridStateCopyWith<T extends DataGridRow,$Res> impleme
   factory _$DataGridStateCopyWith(_DataGridState<T> value, $Res Function(_DataGridState<T>) _then) = __$DataGridStateCopyWithImpl;
 @override @useResult
 $Res call({
- List<DataGridColumn<T>> columns, Map<double, T> rowsById, List<double> displayOrder, ViewportState viewport, SelectionState selection, SortState sort, FilterState filter, GroupState group, EditState edit, PaginationState pagination, int totalItems, bool isLoading, String? loadingMessage
+ List<DataGridColumn<T>> columns, Map<double, T> rowsById, List<double> displayOrder, SelectionState selection, SortState sort, FilterState filter, GroupState group, EditState edit, PaginationState pagination, int totalItems, bool isLoading, String? loadingMessage
 });
 
 
-@override $ViewportStateCopyWith<$Res> get viewport;@override $SelectionStateCopyWith<$Res> get selection;@override $SortStateCopyWith<$Res> get sort;@override $FilterStateCopyWith<$Res> get filter;@override $GroupStateCopyWith<$Res> get group;@override $EditStateCopyWith<$Res> get edit;@override $PaginationStateCopyWith<$Res> get pagination;
+@override $SelectionStateCopyWith<$Res> get selection;@override $SortStateCopyWith<$Res> get sort;@override $FilterStateCopyWith<$Res> get filter;@override $GroupStateCopyWith<$Res> get group;@override $EditStateCopyWith<$Res> get edit;@override $PaginationStateCopyWith<$Res> get pagination;
 
 }
 /// @nodoc
@@ -363,13 +352,12 @@ class __$DataGridStateCopyWithImpl<T extends DataGridRow,$Res>
 
 /// Create a copy of DataGridState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? columns = null,Object? rowsById = null,Object? displayOrder = null,Object? viewport = null,Object? selection = null,Object? sort = null,Object? filter = null,Object? group = null,Object? edit = null,Object? pagination = null,Object? totalItems = null,Object? isLoading = null,Object? loadingMessage = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? columns = null,Object? rowsById = null,Object? displayOrder = null,Object? selection = null,Object? sort = null,Object? filter = null,Object? group = null,Object? edit = null,Object? pagination = null,Object? totalItems = null,Object? isLoading = null,Object? loadingMessage = freezed,}) {
   return _then(_DataGridState<T>(
 columns: null == columns ? _self._columns : columns // ignore: cast_nullable_to_non_nullable
 as List<DataGridColumn<T>>,rowsById: null == rowsById ? _self._rowsById : rowsById // ignore: cast_nullable_to_non_nullable
 as Map<double, T>,displayOrder: null == displayOrder ? _self._displayOrder : displayOrder // ignore: cast_nullable_to_non_nullable
-as List<double>,viewport: null == viewport ? _self.viewport : viewport // ignore: cast_nullable_to_non_nullable
-as ViewportState,selection: null == selection ? _self.selection : selection // ignore: cast_nullable_to_non_nullable
+as List<double>,selection: null == selection ? _self.selection : selection // ignore: cast_nullable_to_non_nullable
 as SelectionState,sort: null == sort ? _self.sort : sort // ignore: cast_nullable_to_non_nullable
 as SortState,filter: null == filter ? _self.filter : filter // ignore: cast_nullable_to_non_nullable
 as FilterState,group: null == group ? _self.group : group // ignore: cast_nullable_to_non_nullable
@@ -383,15 +371,6 @@ as String?,
 }
 
 /// Create a copy of DataGridState
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$ViewportStateCopyWith<$Res> get viewport {
-  
-  return $ViewportStateCopyWith<$Res>(_self.viewport, (value) {
-    return _then(_self.copyWith(viewport: value));
-  });
-}/// Create a copy of DataGridState
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
@@ -446,284 +425,6 @@ $PaginationStateCopyWith<$Res> get pagination {
     return _then(_self.copyWith(pagination: value));
   });
 }
-}
-
-/// @nodoc
-mixin _$ViewportState {
-
- double get scrollOffsetX; double get scrollOffsetY; double get viewportWidth; double get viewportHeight; int get firstVisibleRow; int get lastVisibleRow; int get firstVisibleColumn; int get lastVisibleColumn;
-/// Create a copy of ViewportState
-/// with the given fields replaced by the non-null parameter values.
-@JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-$ViewportStateCopyWith<ViewportState> get copyWith => _$ViewportStateCopyWithImpl<ViewportState>(this as ViewportState, _$identity);
-
-
-
-@override
-bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ViewportState&&(identical(other.scrollOffsetX, scrollOffsetX) || other.scrollOffsetX == scrollOffsetX)&&(identical(other.scrollOffsetY, scrollOffsetY) || other.scrollOffsetY == scrollOffsetY)&&(identical(other.viewportWidth, viewportWidth) || other.viewportWidth == viewportWidth)&&(identical(other.viewportHeight, viewportHeight) || other.viewportHeight == viewportHeight)&&(identical(other.firstVisibleRow, firstVisibleRow) || other.firstVisibleRow == firstVisibleRow)&&(identical(other.lastVisibleRow, lastVisibleRow) || other.lastVisibleRow == lastVisibleRow)&&(identical(other.firstVisibleColumn, firstVisibleColumn) || other.firstVisibleColumn == firstVisibleColumn)&&(identical(other.lastVisibleColumn, lastVisibleColumn) || other.lastVisibleColumn == lastVisibleColumn));
-}
-
-
-@override
-int get hashCode => Object.hash(runtimeType,scrollOffsetX,scrollOffsetY,viewportWidth,viewportHeight,firstVisibleRow,lastVisibleRow,firstVisibleColumn,lastVisibleColumn);
-
-@override
-String toString() {
-  return 'ViewportState(scrollOffsetX: $scrollOffsetX, scrollOffsetY: $scrollOffsetY, viewportWidth: $viewportWidth, viewportHeight: $viewportHeight, firstVisibleRow: $firstVisibleRow, lastVisibleRow: $lastVisibleRow, firstVisibleColumn: $firstVisibleColumn, lastVisibleColumn: $lastVisibleColumn)';
-}
-
-
-}
-
-/// @nodoc
-abstract mixin class $ViewportStateCopyWith<$Res>  {
-  factory $ViewportStateCopyWith(ViewportState value, $Res Function(ViewportState) _then) = _$ViewportStateCopyWithImpl;
-@useResult
-$Res call({
- double scrollOffsetX, double scrollOffsetY, double viewportWidth, double viewportHeight, int firstVisibleRow, int lastVisibleRow, int firstVisibleColumn, int lastVisibleColumn
-});
-
-
-
-
-}
-/// @nodoc
-class _$ViewportStateCopyWithImpl<$Res>
-    implements $ViewportStateCopyWith<$Res> {
-  _$ViewportStateCopyWithImpl(this._self, this._then);
-
-  final ViewportState _self;
-  final $Res Function(ViewportState) _then;
-
-/// Create a copy of ViewportState
-/// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? scrollOffsetX = null,Object? scrollOffsetY = null,Object? viewportWidth = null,Object? viewportHeight = null,Object? firstVisibleRow = null,Object? lastVisibleRow = null,Object? firstVisibleColumn = null,Object? lastVisibleColumn = null,}) {
-  return _then(_self.copyWith(
-scrollOffsetX: null == scrollOffsetX ? _self.scrollOffsetX : scrollOffsetX // ignore: cast_nullable_to_non_nullable
-as double,scrollOffsetY: null == scrollOffsetY ? _self.scrollOffsetY : scrollOffsetY // ignore: cast_nullable_to_non_nullable
-as double,viewportWidth: null == viewportWidth ? _self.viewportWidth : viewportWidth // ignore: cast_nullable_to_non_nullable
-as double,viewportHeight: null == viewportHeight ? _self.viewportHeight : viewportHeight // ignore: cast_nullable_to_non_nullable
-as double,firstVisibleRow: null == firstVisibleRow ? _self.firstVisibleRow : firstVisibleRow // ignore: cast_nullable_to_non_nullable
-as int,lastVisibleRow: null == lastVisibleRow ? _self.lastVisibleRow : lastVisibleRow // ignore: cast_nullable_to_non_nullable
-as int,firstVisibleColumn: null == firstVisibleColumn ? _self.firstVisibleColumn : firstVisibleColumn // ignore: cast_nullable_to_non_nullable
-as int,lastVisibleColumn: null == lastVisibleColumn ? _self.lastVisibleColumn : lastVisibleColumn // ignore: cast_nullable_to_non_nullable
-as int,
-  ));
-}
-
-}
-
-
-/// Adds pattern-matching-related methods to [ViewportState].
-extension ViewportStatePatterns on ViewportState {
-/// A variant of `map` that fallback to returning `orElse`.
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case final Subclass value:
-///     return ...;
-///   case _:
-///     return orElse();
-/// }
-/// ```
-
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _ViewportState value)?  $default,{required TResult orElse(),}){
-final _that = this;
-switch (_that) {
-case _ViewportState() when $default != null:
-return $default(_that);case _:
-  return orElse();
-
-}
-}
-/// A `switch`-like method, using callbacks.
-///
-/// Callbacks receives the raw object, upcasted.
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case final Subclass value:
-///     return ...;
-///   case final Subclass2 value:
-///     return ...;
-/// }
-/// ```
-
-@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _ViewportState value)  $default,){
-final _that = this;
-switch (_that) {
-case _ViewportState():
-return $default(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
-}
-/// A variant of `map` that fallback to returning `null`.
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case final Subclass value:
-///     return ...;
-///   case _:
-///     return null;
-/// }
-/// ```
-
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _ViewportState value)?  $default,){
-final _that = this;
-switch (_that) {
-case _ViewportState() when $default != null:
-return $default(_that);case _:
-  return null;
-
-}
-}
-/// A variant of `when` that fallback to an `orElse` callback.
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case Subclass(:final field):
-///     return ...;
-///   case _:
-///     return orElse();
-/// }
-/// ```
-
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( double scrollOffsetX,  double scrollOffsetY,  double viewportWidth,  double viewportHeight,  int firstVisibleRow,  int lastVisibleRow,  int firstVisibleColumn,  int lastVisibleColumn)?  $default,{required TResult orElse(),}) {final _that = this;
-switch (_that) {
-case _ViewportState() when $default != null:
-return $default(_that.scrollOffsetX,_that.scrollOffsetY,_that.viewportWidth,_that.viewportHeight,_that.firstVisibleRow,_that.lastVisibleRow,_that.firstVisibleColumn,_that.lastVisibleColumn);case _:
-  return orElse();
-
-}
-}
-/// A `switch`-like method, using callbacks.
-///
-/// As opposed to `map`, this offers destructuring.
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case Subclass(:final field):
-///     return ...;
-///   case Subclass2(:final field2):
-///     return ...;
-/// }
-/// ```
-
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( double scrollOffsetX,  double scrollOffsetY,  double viewportWidth,  double viewportHeight,  int firstVisibleRow,  int lastVisibleRow,  int firstVisibleColumn,  int lastVisibleColumn)  $default,) {final _that = this;
-switch (_that) {
-case _ViewportState():
-return $default(_that.scrollOffsetX,_that.scrollOffsetY,_that.viewportWidth,_that.viewportHeight,_that.firstVisibleRow,_that.lastVisibleRow,_that.firstVisibleColumn,_that.lastVisibleColumn);case _:
-  throw StateError('Unexpected subclass');
-
-}
-}
-/// A variant of `when` that fallback to returning `null`
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case Subclass(:final field):
-///     return ...;
-///   case _:
-///     return null;
-/// }
-/// ```
-
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( double scrollOffsetX,  double scrollOffsetY,  double viewportWidth,  double viewportHeight,  int firstVisibleRow,  int lastVisibleRow,  int firstVisibleColumn,  int lastVisibleColumn)?  $default,) {final _that = this;
-switch (_that) {
-case _ViewportState() when $default != null:
-return $default(_that.scrollOffsetX,_that.scrollOffsetY,_that.viewportWidth,_that.viewportHeight,_that.firstVisibleRow,_that.lastVisibleRow,_that.firstVisibleColumn,_that.lastVisibleColumn);case _:
-  return null;
-
-}
-}
-
-}
-
-/// @nodoc
-
-
-class _ViewportState implements ViewportState {
-  const _ViewportState({required this.scrollOffsetX, required this.scrollOffsetY, required this.viewportWidth, required this.viewportHeight, required this.firstVisibleRow, required this.lastVisibleRow, required this.firstVisibleColumn, required this.lastVisibleColumn});
-  
-
-@override final  double scrollOffsetX;
-@override final  double scrollOffsetY;
-@override final  double viewportWidth;
-@override final  double viewportHeight;
-@override final  int firstVisibleRow;
-@override final  int lastVisibleRow;
-@override final  int firstVisibleColumn;
-@override final  int lastVisibleColumn;
-
-/// Create a copy of ViewportState
-/// with the given fields replaced by the non-null parameter values.
-@override @JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-_$ViewportStateCopyWith<_ViewportState> get copyWith => __$ViewportStateCopyWithImpl<_ViewportState>(this, _$identity);
-
-
-
-@override
-bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ViewportState&&(identical(other.scrollOffsetX, scrollOffsetX) || other.scrollOffsetX == scrollOffsetX)&&(identical(other.scrollOffsetY, scrollOffsetY) || other.scrollOffsetY == scrollOffsetY)&&(identical(other.viewportWidth, viewportWidth) || other.viewportWidth == viewportWidth)&&(identical(other.viewportHeight, viewportHeight) || other.viewportHeight == viewportHeight)&&(identical(other.firstVisibleRow, firstVisibleRow) || other.firstVisibleRow == firstVisibleRow)&&(identical(other.lastVisibleRow, lastVisibleRow) || other.lastVisibleRow == lastVisibleRow)&&(identical(other.firstVisibleColumn, firstVisibleColumn) || other.firstVisibleColumn == firstVisibleColumn)&&(identical(other.lastVisibleColumn, lastVisibleColumn) || other.lastVisibleColumn == lastVisibleColumn));
-}
-
-
-@override
-int get hashCode => Object.hash(runtimeType,scrollOffsetX,scrollOffsetY,viewportWidth,viewportHeight,firstVisibleRow,lastVisibleRow,firstVisibleColumn,lastVisibleColumn);
-
-@override
-String toString() {
-  return 'ViewportState(scrollOffsetX: $scrollOffsetX, scrollOffsetY: $scrollOffsetY, viewportWidth: $viewportWidth, viewportHeight: $viewportHeight, firstVisibleRow: $firstVisibleRow, lastVisibleRow: $lastVisibleRow, firstVisibleColumn: $firstVisibleColumn, lastVisibleColumn: $lastVisibleColumn)';
-}
-
-
-}
-
-/// @nodoc
-abstract mixin class _$ViewportStateCopyWith<$Res> implements $ViewportStateCopyWith<$Res> {
-  factory _$ViewportStateCopyWith(_ViewportState value, $Res Function(_ViewportState) _then) = __$ViewportStateCopyWithImpl;
-@override @useResult
-$Res call({
- double scrollOffsetX, double scrollOffsetY, double viewportWidth, double viewportHeight, int firstVisibleRow, int lastVisibleRow, int firstVisibleColumn, int lastVisibleColumn
-});
-
-
-
-
-}
-/// @nodoc
-class __$ViewportStateCopyWithImpl<$Res>
-    implements _$ViewportStateCopyWith<$Res> {
-  __$ViewportStateCopyWithImpl(this._self, this._then);
-
-  final _ViewportState _self;
-  final $Res Function(_ViewportState) _then;
-
-/// Create a copy of ViewportState
-/// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? scrollOffsetX = null,Object? scrollOffsetY = null,Object? viewportWidth = null,Object? viewportHeight = null,Object? firstVisibleRow = null,Object? lastVisibleRow = null,Object? firstVisibleColumn = null,Object? lastVisibleColumn = null,}) {
-  return _then(_ViewportState(
-scrollOffsetX: null == scrollOffsetX ? _self.scrollOffsetX : scrollOffsetX // ignore: cast_nullable_to_non_nullable
-as double,scrollOffsetY: null == scrollOffsetY ? _self.scrollOffsetY : scrollOffsetY // ignore: cast_nullable_to_non_nullable
-as double,viewportWidth: null == viewportWidth ? _self.viewportWidth : viewportWidth // ignore: cast_nullable_to_non_nullable
-as double,viewportHeight: null == viewportHeight ? _self.viewportHeight : viewportHeight // ignore: cast_nullable_to_non_nullable
-as double,firstVisibleRow: null == firstVisibleRow ? _self.firstVisibleRow : firstVisibleRow // ignore: cast_nullable_to_non_nullable
-as int,lastVisibleRow: null == lastVisibleRow ? _self.lastVisibleRow : lastVisibleRow // ignore: cast_nullable_to_non_nullable
-as int,firstVisibleColumn: null == firstVisibleColumn ? _self.firstVisibleColumn : firstVisibleColumn // ignore: cast_nullable_to_non_nullable
-as int,lastVisibleColumn: null == lastVisibleColumn ? _self.lastVisibleColumn : lastVisibleColumn // ignore: cast_nullable_to_non_nullable
-as int,
-  ));
-}
-
-
 }
 
 /// @nodoc
