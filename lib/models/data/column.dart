@@ -1,5 +1,4 @@
 import 'package:flutter/widgets.dart';
-import 'package:flutter_data_grid/renderers/filter_renderer.dart';
 import 'package:flutter_data_grid/models/data/row.dart';
 
 /// Builder function for custom cell editor widgets.
@@ -53,8 +52,15 @@ class DataGridColumn<T extends DataGridRow> {
   /// Whether cells in this column can be edited.
   final bool editable;
 
-  /// Custom filter widget renderer for this column.
-  final FilterRenderer? filterRenderer;
+  /// Custom filter widget for this column.
+  ///
+  /// Wrapped in a [FilterScope] that provides the column, current filter state,
+  /// and onChange/onClear callbacks. Use `FilterScope.of(context)` inside the
+  /// widget to access filter data.
+  ///
+  /// If null, the grid's default filter widget ([DefaultFilterWidget]) is used.
+  /// Const widgets are especially efficient here.
+  final Widget? filterWidget;
 
   /// Custom editor builder for cell editing.
   final CellEditorBuilder? cellEditorBuilder;
@@ -92,7 +98,7 @@ class DataGridColumn<T extends DataGridRow> {
     this.sortable = true,
     this.filterable = true,
     this.editable = true,
-    this.filterRenderer,
+    this.filterWidget,
     this.cellEditorBuilder,
     this.cellWidget,
     this.cellFormatter,
@@ -115,7 +121,7 @@ class DataGridColumn<T extends DataGridRow> {
           sortable == other.sortable &&
           filterable == other.filterable &&
           editable == other.editable &&
-          filterRenderer == other.filterRenderer &&
+          filterWidget == other.filterWidget &&
           cellWidget == other.cellWidget;
 
   @override
@@ -129,7 +135,7 @@ class DataGridColumn<T extends DataGridRow> {
     sortable,
     filterable,
     editable,
-    filterRenderer,
+    filterWidget,
     cellWidget,
   );
 
@@ -143,7 +149,7 @@ class DataGridColumn<T extends DataGridRow> {
     bool? sortable,
     bool? filterable,
     bool? editable,
-    FilterRenderer? filterRenderer,
+    Widget? filterWidget,
     CellEditorBuilder? cellEditorBuilder,
     Widget? cellWidget,
     Function? cellFormatter,
@@ -161,7 +167,7 @@ class DataGridColumn<T extends DataGridRow> {
       sortable: sortable ?? this.sortable,
       filterable: filterable ?? this.filterable,
       editable: editable ?? this.editable,
-      filterRenderer: filterRenderer ?? this.filterRenderer,
+      filterWidget: filterWidget ?? this.filterWidget,
       cellEditorBuilder: cellEditorBuilder ?? this.cellEditorBuilder,
       cellWidget: cellWidget ?? this.cellWidget,
       cellFormatter: cellFormatter ?? this.cellFormatter,

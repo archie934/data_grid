@@ -4,13 +4,13 @@ import 'package:flutter_data_grid/models/data/row.dart';
 import 'package:flutter_data_grid/models/data/column.dart';
 import 'package:flutter_data_grid/models/events/grid_events.dart';
 import 'package:flutter_data_grid/widgets/viewport/data_grid_header_viewport.dart';
-import 'package:flutter_data_grid/renderers/filter_renderer.dart';
+import 'package:flutter_data_grid/widgets/filters/filter_scope.dart';
 import 'package:flutter_data_grid/theme/data_grid_theme.dart';
 
 class DataGridFilterRow<T extends DataGridRow> extends StatelessWidget {
-  final FilterRenderer defaultFilterRenderer;
+  final Widget defaultFilterWidget;
 
-  const DataGridFilterRow({super.key, required this.defaultFilterRenderer});
+  const DataGridFilterRow({super.key, required this.defaultFilterWidget});
 
   @override
   Widget build(BuildContext context) {
@@ -26,9 +26,7 @@ class DataGridFilterRow<T extends DataGridRow> extends StatelessWidget {
     }
 
     final columns = context.dataGridEffectiveColumns<T>()!;
-    final visibleColumns = columns
-        .where((c) => c.visible)
-        .toList();
+    final visibleColumns = columns.where((c) => c.visible).toList();
     final unpinnedFirst = [
       ...visibleColumns.where((c) => !c.pinned),
       ...visibleColumns.where((c) => c.pinned),
@@ -44,7 +42,7 @@ class DataGridFilterRow<T extends DataGridRow> extends StatelessWidget {
           _FilterCell<T>(
             key: ValueKey('filter_${column.id}'),
             column: column,
-            defaultFilterRenderer: defaultFilterRenderer,
+            defaultFilterWidget: defaultFilterWidget,
           ),
       ],
     );
@@ -53,12 +51,12 @@ class DataGridFilterRow<T extends DataGridRow> extends StatelessWidget {
 
 class _FilterCell<T extends DataGridRow> extends StatelessWidget {
   final DataGridColumn column;
-  final FilterRenderer defaultFilterRenderer;
+  final Widget defaultFilterWidget;
 
   const _FilterCell({
     super.key,
     required this.column,
-    required this.defaultFilterRenderer,
+    required this.defaultFilterWidget,
   });
 
   @override
@@ -77,24 +75,23 @@ class _FilterCell<T extends DataGridRow> extends StatelessWidget {
       );
     } else {
       final currentFilter = state.filter.columnFilters[column.id];
-      final renderer = column.filterRenderer ?? defaultFilterRenderer;
+      final effectiveWidget = column.filterWidget ?? defaultFilterWidget;
 
-      cell = renderer.buildFilter(
-        context,
-        column,
-        currentFilter,
-        (operator, value) {
+      cell = FilterScope(
+        column: column,
+        currentFilter: currentFilter,
+        onChange: (operator, value) {
           controller.addEvent(
             FilterEvent(columnId: column.id, operator: operator, value: value),
           );
         },
-        () {
+        onClear: () {
           controller.addEvent(ClearFilterEvent(columnId: column.id));
         },
+        child: effectiveWidget,
       );
     }
 
-    // Add pinned column styling
     if (column.pinned) {
       return Container(
         decoration: BoxDecoration(

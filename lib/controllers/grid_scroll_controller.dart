@@ -1,12 +1,10 @@
 import 'package:flutter/widgets.dart';
 import 'package:rxdart/rxdart.dart';
-import 'package:flutter_data_grid/models/events/grid_events.dart';
 
 class GridScrollController {
   final ScrollController horizontalController;
   final ScrollController verticalController;
 
-  final PublishSubject<ScrollEvent> _scrollEventSubject = PublishSubject();
   final BehaviorSubject<ScrollMetrics?> _horizontalMetricsSubject =
       BehaviorSubject.seeded(null);
   final BehaviorSubject<ScrollMetrics?> _verticalMetricsSubject =
@@ -20,7 +18,6 @@ class GridScrollController {
     _setupListeners();
   }
 
-  Stream<ScrollEvent> get scrollEvent$ => _scrollEventSubject.stream;
   Stream<ScrollMetrics?> get horizontalMetrics$ =>
       _horizontalMetricsSubject.stream;
   Stream<ScrollMetrics?> get verticalMetrics$ => _verticalMetricsSubject.stream;
@@ -38,21 +35,13 @@ class GridScrollController {
   void _onHorizontalScroll() {
     if (horizontalController.hasClients) {
       _horizontalMetricsSubject.add(horizontalController.position);
-      _emitScrollEvent();
     }
   }
 
   void _onVerticalScroll() {
     if (verticalController.hasClients) {
       _verticalMetricsSubject.add(verticalController.position);
-      _emitScrollEvent();
     }
-  }
-
-  void _emitScrollEvent() {
-    _scrollEventSubject.add(
-      ScrollEvent(offsetX: horizontalOffset, offsetY: verticalOffset),
-    );
   }
 
   Future<void> scrollToRow(
@@ -113,7 +102,6 @@ class GridScrollController {
     verticalController.removeListener(_onVerticalScroll);
     horizontalController.dispose();
     verticalController.dispose();
-    _scrollEventSubject.close();
     _horizontalMetricsSubject.close();
     _verticalMetricsSubject.close();
   }

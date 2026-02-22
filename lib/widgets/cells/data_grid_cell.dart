@@ -1,20 +1,45 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_data_grid/controllers/data_grid_controller.dart';
 import 'package:flutter_data_grid/models/data/row.dart';
 import 'package:flutter_data_grid/models/data/column.dart';
+import 'package:flutter_data_grid/models/state/grid_state.dart';
 import 'package:flutter_data_grid/models/events/selection_events.dart';
 import 'package:flutter_data_grid/models/enums/selection_mode.dart';
 import 'package:flutter_data_grid/widgets/data_grid_inherited.dart';
 import 'package:flutter_data_grid/theme/data_grid_theme.dart';
 import 'package:flutter_data_grid/widgets/cells/cell_scope.dart';
 
+/// Snapshot of the selection/edit state that is specific to one cell.
+/// Used to gate rebuilds: only when THIS cell's derived state changes
+/// does [_DataGridCellState] call [setState].
+class _CellDisplayState {
+  final bool isSelected;
+  final bool isEditing;
+  final SelectionMode selectionMode;
+
+  const _CellDisplayState({required this.isSelected, required this.isEditing, required this.selectionMode});
+
+  factory _CellDisplayState.from(DataGridState state, double rowId, int columnId) {
+    return _CellDisplayState(isSelected: state.selection.isRowSelected(rowId), isEditing: state.edit.isCellEditing(rowId, columnId), selectionMode: state.selection.mode);
+  }
+
+  @override
+  bool operator ==(Object other) => other is _CellDisplayState && isSelected == other.isSelected && isEditing == other.isEditing && selectionMode == other.selectionMode;
+
+  @override
+  int get hashCode => Object.hash(isSelected, isEditing, selectionMode);
+}
+
 /// Cell widget whose content is always a stable widget instance wrapped in
 /// [CellScope]. The child widget (either [DataGridColumn.cellWidget] or the
 /// built-in [_DefaultTextCell]) is created once and never changes identity,
 /// so Flutter preserves the entire element subtree across rebuilds.
-/// [CellScope.updateShouldNotify] gates descendant rebuilds when the
-/// underlying row data or selection state changes.
+///
+/// Selection and edit state are tracked via a row/cell-scoped stream
+/// subscription so only the cells belonging to the affected row rebuild
+/// when selection or edit state changes.
 class DataGridCell<T extends DataGridRow> extends StatefulWidget {
   final T row;
   final double rowId;
@@ -22,14 +47,7 @@ class DataGridCell<T extends DataGridRow> extends StatefulWidget {
   final int rowIndex;
   final bool isPinned;
 
-  const DataGridCell({
-    super.key,
-    required this.row,
-    required this.rowId,
-    required this.column,
-    required this.rowIndex,
-    this.isPinned = false,
-  });
+  const DataGridCell({super.key, required this.row, required this.rowId, required this.column, required this.rowIndex, this.isPinned = false});
 
   @override
   State<DataGridCell<T>> createState() => _DataGridCellState<T>();
@@ -38,55 +56,95 @@ class DataGridCell<T extends DataGridRow> extends StatefulWidget {
 class _DataGridCellState<T extends DataGridRow> extends State<DataGridCell<T>> {
   late Widget _cellWidget = widget.column.cellWidget ?? _DefaultTextCell<T>();
 
+  StreamSubscription<_CellDisplayState>? _subscription;
+  DataGridController<T>? _subscribedController;
+  late _CellDisplayState _displayState;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final controller = context.dataGridController<T>();
+    if (!identical(controller, _subscribedController)) {
+      _cancelSubscription();
+      _subscribedController = controller;
+      if (controller != null) {
+        _displayState = _CellDisplayState.from(controller.state, widget.rowId, widget.column.id);
+        _subscribe(controller);
+      }
+    }
+  }
+
   @override
   void didUpdateWidget(covariant DataGridCell<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (!identical(oldWidget.column.cellWidget, widget.column.cellWidget)) {
       _cellWidget = widget.column.cellWidget ?? _DefaultTextCell<T>();
     }
+    // Re-subscribe if the cell now represents a different row or column.
+    // With ValueKey this shouldn't happen, but guard defensively.
+    if (oldWidget.rowId != widget.rowId || oldWidget.column.id != widget.column.id) {
+      final controller = _subscribedController;
+      if (controller != null) {
+        _cancelSubscription();
+        _displayState = _CellDisplayState.from(controller.state, widget.rowId, widget.column.id);
+        _subscribe(controller);
+      }
+    }
+  }
+
+  void _subscribe(DataGridController<T> controller) {
+    _subscription = controller.state$
+        .map((s) => _CellDisplayState.from(s, widget.rowId, widget.column.id))
+        .distinct()
+        .skip(1) // Skip the BehaviorSubject seed — _displayState is already set from controller.state
+        .listen((ds) {
+          if (mounted) setState(() => _displayState = ds);
+        });
+  }
+
+  void _cancelSubscription() {
+    _subscription?.cancel();
+    _subscription = null;
+  }
+
+  @override
+  void dispose() {
+    _cancelSubscription();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = DataGridTheme.of(context);
+    // Reading controller via DataGridControllerScope never triggers a rebuild
+    // on state changes — it only rebuilds if the controller reference itself
+    // is replaced, which never happens in normal usage.
     final controller = context.dataGridController<T>()!;
-    final state = context.dataGridState<T>({DataGridAspect.selection, DataGridAspect.edit})!;
-    final isSelected = state.selection.isRowSelected(widget.rowId);
-    final isEditing = state.edit.isCellEditing(widget.rowId, widget.column.id);
+    final ds = _displayState;
 
-    if (isEditing) {
-      return _EditingCell<T>(
-        row: widget.row,
-        rowId: widget.rowId,
-        column: widget.column,
-        rowIndex: widget.rowIndex,
-        isPinned: widget.isPinned,
-        editingValue: state.edit.editingValue,
-      );
+    if (ds.isEditing) {
+      // Read editingValue directly from the synchronous BehaviorSubject value
+      // rather than tracking it in _CellDisplayState, so that typing into the
+      // editor does not cause extra cell rebuilds.
+      // Fall back to _lastDisplayedValue when editingValue is null (i.e. the
+      // state was seeded without calling valueAccessor in the event handler).
+      final editingValue = _subscribedController!.state.edit.editingValue;
+      return _EditingCell<T>(row: widget.row, rowId: widget.rowId, column: widget.column, rowIndex: widget.rowIndex, isPinned: widget.isPinned, editingValue: editingValue);
     }
 
+    final value = widget.column.valueAccessor?.call(widget.row);
+
     return _CellContainer(
-      decoration: theme.cellDecorations.forCell(
-        isEven: widget.rowIndex % 2 == 0,
-        isSelected: isSelected,
-        isPinned: widget.isPinned,
-      ),
-      onTap: state.selection.mode != SelectionMode.none
-          ? () => controller.addEvent(SelectRowEvent(
-                rowId: widget.rowId,
-                multiSelect: state.selection.mode == SelectionMode.multiple,
-              ))
-          : null,
-      onDoubleTap: widget.column.editable
-          ? () => controller.startEditCell(widget.rowId, widget.column.id)
-          : null,
+      decoration: theme.cellDecorations.forCell(isEven: widget.rowIndex % 2 == 0, isSelected: ds.isSelected, isPinned: widget.isPinned),
+      onTap: ds.selectionMode != SelectionMode.none ? () => controller.addEvent(SelectRowEvent(rowId: widget.rowId, multiSelect: ds.selectionMode == SelectionMode.multiple)) : null,
+      onDoubleTap: widget.column.editable ? () => controller.startEditCell(widget.rowId, widget.column.id) : null,
       child: CellScope<T>(
         row: widget.row,
         column: widget.column,
         rowIndex: widget.rowIndex,
-        isSelected: isSelected,
+        isSelected: ds.isSelected,
         isPinned: widget.isPinned,
-        value: widget.column.valueAccessor?.call(widget.row),
+        value: value,
         controller: controller,
         child: _cellWidget,
       ),

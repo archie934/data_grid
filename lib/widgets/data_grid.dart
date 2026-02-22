@@ -11,8 +11,7 @@ import 'package:flutter_data_grid/widgets/data_grid_body.dart';
 import 'package:flutter_data_grid/widgets/data_grid_inherited.dart';
 import 'package:flutter_data_grid/widgets/data_grid_pagination.dart';
 import 'package:flutter_data_grid/widgets/overlays/loading_overlay.dart';
-import 'package:flutter_data_grid/renderers/filter_renderer.dart';
-import 'package:flutter_data_grid/renderers/default_filter_renderer.dart';
+import 'package:flutter_data_grid/widgets/filters/default_filter_widget.dart';
 import 'package:flutter_data_grid/theme/data_grid_theme.dart';
 import 'package:flutter_data_grid/theme/data_grid_theme_data.dart';
 import 'package:rxdart/rxdart.dart';
@@ -44,8 +43,11 @@ class DataGrid<T extends DataGridRow> extends StatefulWidget {
   /// Height of each data row. Defaults to theme value if not specified.
   final double? rowHeight;
 
-  /// Custom filter renderer for advanced filter widget customization.
-  final FilterRenderer? filterRenderer;
+  /// Default filter widget used for all filterable columns.
+  ///
+  /// Per-column overrides can be set via [DataGridColumn.filterWidget].
+  /// If null, [DefaultFilterWidget] is used.
+  final Widget? filterWidget;
 
   /// Whether to show the loading overlay (default: true)
   final bool showLoadingOverlay;
@@ -82,7 +84,7 @@ class DataGrid<T extends DataGridRow> extends StatefulWidget {
     this.scrollController,
     this.headerHeight,
     this.rowHeight,
-    this.filterRenderer,
+    this.filterWidget,
     this.showLoadingOverlay = true,
     this.loadingOverlayBuilder,
     this.loadingBackdropColor,
@@ -99,15 +101,14 @@ class DataGrid<T extends DataGridRow> extends StatefulWidget {
 
 class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
   late GridScrollController _scrollController;
-  late FilterRenderer _filterRenderer;
+  late Widget _filterWidget;
   late DataGridThemeData _themeData;
-  Size? _lastViewportSize;
 
   @override
   void initState() {
     super.initState();
     _scrollController = widget.scrollController ?? GridScrollController();
-    _filterRenderer = widget.filterRenderer ?? const DefaultFilterRenderer();
+    _filterWidget = widget.filterWidget ?? const DefaultFilterWidget();
     _themeData = widget.theme ?? DataGridThemeData.defaultTheme();
   }
 
@@ -116,18 +117,6 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
     super.didUpdateWidget(oldWidget);
     if (!identical(widget.theme, oldWidget.theme)) {
       _themeData = widget.theme ?? DataGridThemeData.defaultTheme();
-    }
-  }
-
-  void _notifyViewportResize(double width, double height) {
-    final newSize = Size(width, height);
-    if (_lastViewportSize != newSize) {
-      _lastViewportSize = newSize;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          widget.controller.addEvent(ViewportResizeEvent(width: width, height: height));
-        }
-      });
     }
   }
 
@@ -219,23 +208,18 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
                     ),
                   );
 
-                  _notifyViewportResize(constraints.maxWidth, bodyHeight);
-
                   return Semantics(
                     label: 'Data grid with $rowCount rows and $columnCount columns',
                     child: Stack(
                       children: [
                         Column(
                           children: [
-                            DataGridHeader<T>(defaultFilterRenderer: _filterRenderer, headerHeight: effectiveHeaderHeight),
+                            DataGridHeader<T>(defaultFilterWidget: _filterWidget, headerHeight: effectiveHeaderHeight),
                             bodyWidget,
                             if (widget.showPagination && state.pagination.enabled) widget.paginationBuilder != null ? widget.paginationBuilder!(context, state) : DataGridPagination<T>(),
                           ],
                         ),
-                        if (state.isLoading && widget.showLoadingOverlay)
-                          widget.loadingOverlayBuilder != null
-                              ? widget.loadingOverlayBuilder!(context, state.loadingMessage)
-                              : DataGridLoadingOverlay(message: state.loadingMessage, backdropColor: widget.loadingBackdropColor, indicatorColor: widget.loadingIndicatorColor),
+                        DataGridLoadingScope<T>(loadingOverlayBuilder: widget.loadingOverlayBuilder, backdropColor: widget.loadingBackdropColor, indicatorColor: widget.loadingIndicatorColor),
                       ],
                     ),
                   );

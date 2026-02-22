@@ -107,25 +107,11 @@ class SelectAllRowsEvent extends DataGridEvent {
       return null;
     }
 
-    final Set<double> visibleRowIds;
-
-    if (rowIds != null) {
-      visibleRowIds = rowIds!;
-    } else {
-      visibleRowIds = <double>{};
-      final viewport = context.state.viewport;
-      for (
-        int i = viewport.firstVisibleRow;
-        i <= viewport.lastVisibleRow && i < context.state.displayOrder.length;
-        i++
-      ) {
-        visibleRowIds.add(context.state.displayOrder[i]);
-      }
-    }
+    final selectedRowIds = rowIds ?? context.state.displayOrder.toSet();
 
     return context.state.copyWith(
       selection: context.state.selection.copyWith(
-        selectedRowIds: visibleRowIds,
+        selectedRowIds: selectedRowIds,
       ),
     );
   }

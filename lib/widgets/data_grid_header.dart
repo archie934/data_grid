@@ -4,20 +4,18 @@ import 'package:flutter_data_grid/models/data/column.dart';
 import 'package:flutter_data_grid/models/state/grid_state.dart';
 import 'package:flutter_data_grid/models/events/grid_events.dart';
 import 'package:flutter_data_grid/widgets/cells/data_grid_header_cell.dart';
-import 'package:flutter_data_grid/widgets/cells/data_grid_checkbox_cell.dart';
 import 'package:flutter_data_grid/widgets/data_grid_filter_row.dart';
 import 'package:flutter_data_grid/widgets/data_grid_inherited.dart';
 import 'package:flutter_data_grid/widgets/viewport/data_grid_header_viewport.dart';
-import 'package:flutter_data_grid/renderers/filter_renderer.dart';
 import 'package:flutter_data_grid/theme/data_grid_theme.dart';
 
 class DataGridHeader<T extends DataGridRow> extends StatelessWidget {
-  final FilterRenderer defaultFilterRenderer;
+  final Widget defaultFilterWidget;
   final double headerHeight;
 
   const DataGridHeader({
     super.key,
-    required this.defaultFilterRenderer,
+    required this.defaultFilterWidget,
     required this.headerHeight,
   });
 
@@ -37,7 +35,7 @@ class DataGridHeader<T extends DataGridRow> extends StatelessWidget {
           SizedBox(
             height: theme.dimensions.filterRowHeight,
             child: DataGridFilterRow<T>(
-              defaultFilterRenderer: defaultFilterRenderer,
+              defaultFilterWidget: defaultFilterWidget,
             ),
           ),
       ],
@@ -99,7 +97,7 @@ class _HeaderCellWrapper<T extends DataGridRow> extends StatelessWidget {
 
     Widget cell;
     if (column.id == kSelectionColumnId) {
-      cell = DataGridCheckboxHeaderCell<T>();
+      cell = const SizedBox.expand();
     } else {
       cell = DataGridHeaderCell(
         column: column,

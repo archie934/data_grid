@@ -8,11 +8,6 @@ export 'models/data/row.dart';
 export 'models/state/grid_state.dart';
 export 'models/events/grid_events.dart';
 
-// Renderers
-export 'renderers/render_context.dart';
-export 'renderers/row_renderer.dart';
-export 'renderers/filter_renderer.dart';
-
 // Theme
 export 'theme/data_grid_theme.dart';
 export 'theme/data_grid_theme_data.dart';
@@ -29,6 +24,10 @@ export 'widgets/data_grid_pagination.dart';
 export 'widgets/cells/cell_scope.dart';
 export 'widgets/cells/data_grid_cell.dart';
 export 'widgets/cells/data_grid_header_cell.dart';
+
+// Filter widgets (for customization)
+export 'widgets/filters/filter_scope.dart';
+export 'widgets/filters/default_filter_widget.dart';
 
 // Overlays (for customization)
 export 'widgets/overlays/loading_overlay.dart';

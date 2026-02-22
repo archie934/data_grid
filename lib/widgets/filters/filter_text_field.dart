@@ -3,43 +3,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter_data_grid/models/data/column.dart';
 import 'package:flutter_data_grid/models/state/grid_state.dart';
 import 'package:flutter_data_grid/models/enums/filter_operator.dart';
-import 'package:flutter_data_grid/renderers/filter_renderer.dart';
 import 'package:flutter_data_grid/theme/data_grid_theme.dart';
 
-/// Default filter renderer using a simple text input with "contains" operator.
-class DefaultFilterRenderer extends FilterRenderer {
-  final Duration debounce;
-
-  const DefaultFilterRenderer({
-    this.debounce = const Duration(milliseconds: 300),
-  });
-
-  @override
-  Widget buildFilter(
-    BuildContext context,
-    DataGridColumn column,
-    ColumnFilter? currentFilter,
-    void Function(FilterOperator operator, dynamic value) onChange,
-    void Function() onClear,
-  ) {
-    return _FilterTextField(
-      column: column,
-      currentFilter: currentFilter,
-      onChange: onChange,
-      onClear: onClear,
-      debounce: debounce,
-    );
-  }
-}
-
-class _FilterTextField extends StatefulWidget {
+/// A debounced text input used as the default filter UI for a column.
+///
+/// Fires [onChange] with [FilterOperator.contains] while the user types,
+/// or [onClear] when the field is emptied. Not intended for direct use —
+/// instantiated by [DefaultFilterWidget] via [FilterScope].
+class FilterTextField extends StatefulWidget {
   final DataGridColumn column;
   final ColumnFilter? currentFilter;
   final void Function(FilterOperator operator, dynamic value) onChange;
   final void Function() onClear;
   final Duration debounce;
 
-  const _FilterTextField({
+  const FilterTextField({
+    super.key,
     required this.column,
     required this.currentFilter,
     required this.onChange,
@@ -48,10 +27,10 @@ class _FilterTextField extends StatefulWidget {
   });
 
   @override
-  State<_FilterTextField> createState() => _FilterTextFieldState();
+  State<FilterTextField> createState() => _FilterTextFieldState();
 }
 
-class _FilterTextFieldState extends State<_FilterTextField> {
+class _FilterTextFieldState extends State<FilterTextField> {
   late TextEditingController _controller;
   Timer? _debounceTimer;
 
@@ -64,7 +43,7 @@ class _FilterTextFieldState extends State<_FilterTextField> {
   }
 
   @override
-  void didUpdateWidget(_FilterTextField oldWidget) {
+  void didUpdateWidget(FilterTextField oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.currentFilter?.value != oldWidget.currentFilter?.value) {
       _controller.text = widget.currentFilter?.value?.toString() ?? '';
