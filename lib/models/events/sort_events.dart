@@ -5,6 +5,7 @@ import 'package:flutter_data_grid/models/events/base_event.dart';
 import 'package:flutter_data_grid/models/events/event_context.dart';
 import 'package:flutter_data_grid/models/enums/sort_direction.dart';
 
+/// Applies or changes the sort on a column.
 class SortEvent extends DataGridEvent {
   final int columnId;
   final SortDirection? direction;
@@ -51,6 +52,7 @@ class SortEvent extends DataGridEvent {
   }
 }
 
+/// Internal event dispatched when an async sort operation completes.
 class SortCompleteEvent<T extends DataGridRow> extends DataGridEvent {
   final DataGridState<T> newState;
 

@@ -1,3 +1,19 @@
+## 0.0.13 - 2026-02-22
+
+* Docs: Added dartdoc comments to all public API members for improved pub.dev documentation score
+* Docs: Documented all event classes, state models, controller methods, and widget properties
+
+## 0.0.12 - 2026-02-22
+
+* **Breaking**: Removed `ViewportState` from `DataGridState` — Flutter's `TwoDimensionalScrollView` handles viewport tracking internally
+* **Breaking**: Removed `ViewportDelegate`, `DefaultViewportDelegate`, and `ViewportCalculator`
+* **Breaking**: Removed `ScrollEvent` and `ViewportResizeEvent`
+* **Breaking**: Removed `FilterRenderer`, `RowRenderer`, and `RenderContext` — replaced by `filterWidget` + `FilterScope`
+* Performance: Cells now use stream-scoped subscriptions instead of `InheritedModel` — only affected cells rebuild on selection/edit changes
+* Performance: Loading overlay wrapped in `DataGridLoadingScope` to avoid unrelated rebuilds
+* Added `FilterScope` inherited widget and `DefaultFilterWidget` for const-friendly filter rendering
+* Moved filter widgets to `widgets/filters/` directory
+
 ## 0.0.11 - 2026-02-21
 
 * Performance: Converted `DataGridCell` from `StatelessWidget` to `StatefulWidget` with content caching — cell renderers are only re-called when the row data, column, or selection state for that specific cell changes; unrelated state changes reuse the cached widget

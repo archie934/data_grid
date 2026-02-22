@@ -3,6 +3,7 @@ import 'package:flutter_data_grid/models/state/grid_state.dart';
 import 'package:flutter_data_grid/models/events/base_event.dart';
 import 'package:flutter_data_grid/models/events/event_context.dart';
 
+/// Groups rows by the specified column.
 class GroupByColumnEvent extends DataGridEvent {
   final int columnId;
 
@@ -22,6 +23,7 @@ class GroupByColumnEvent extends DataGridEvent {
   }
 }
 
+/// Removes grouping for the specified column.
 class UngroupColumnEvent extends DataGridEvent {
   final int columnId;
 
@@ -38,6 +40,7 @@ class UngroupColumnEvent extends DataGridEvent {
   }
 }
 
+/// Toggles the expanded/collapsed state of a row group.
 class ToggleGroupExpansionEvent extends DataGridEvent {
   final String groupKey;
 

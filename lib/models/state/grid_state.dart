@@ -8,6 +8,10 @@ import 'package:flutter_data_grid/models/enums/filter_operator.dart';
 
 part 'grid_state.freezed.dart';
 
+/// Immutable snapshot of the entire data grid state.
+///
+/// Includes row data, column definitions, selection, sort, filter, group,
+/// edit, and pagination sub-states.
 @freezed
 abstract class DataGridState<T extends DataGridRow> with _$DataGridState<T> {
   const factory DataGridState({
@@ -27,6 +31,7 @@ abstract class DataGridState<T extends DataGridRow> with _$DataGridState<T> {
 
   const DataGridState._();
 
+  /// Creates an empty initial state with default sub-states.
   factory DataGridState.initial() => DataGridState<T>(
     columns: [],
     rowsById: {},
@@ -40,9 +45,14 @@ abstract class DataGridState<T extends DataGridRow> with _$DataGridState<T> {
     totalItems: 0,
   );
 
+  /// Number of rows currently visible (after filtering/pagination).
   int get visibleRowCount => displayOrder.length;
+
+  /// Materialised list of visible rows in display order.
   List<T> get visibleRows => displayOrder.map((id) => rowsById[id]!).toList();
 
+  /// Columns including the auto-generated selection checkbox column
+  /// when multi-select mode is active.
   List<DataGridColumn<T>> get effectiveColumns {
     if (selection.mode == SelectionMode.multiple) {
       final selectionColumn = DataGridColumn<T>.selection(pinned: true);
@@ -51,29 +61,35 @@ abstract class DataGridState<T extends DataGridRow> with _$DataGridState<T> {
     return columns;
   }
 
+  /// Whether any form of row selection is enabled.
   bool get isSelectionEnabled => selection.mode != SelectionMode.none;
 
+  /// 1-based index of the first item on the current page.
   int get currentPageStart {
     if (!pagination.enabled) return 0;
     return (pagination.currentPage - 1) * pagination.pageSize + 1;
   }
 
+  /// 1-based index of the last item on the current page.
   int get currentPageEnd {
     if (!pagination.enabled) return totalItems;
     return math.min(pagination.currentPage * pagination.pageSize, totalItems);
   }
 
+  /// Whether a next page is available.
   bool get hasNextPage {
     if (!pagination.enabled) return false;
     return pagination.currentPage < pagination.totalPages(totalItems);
   }
 
+  /// Whether a previous page is available.
   bool get hasPreviousPage {
     if (!pagination.enabled) return false;
     return pagination.currentPage > 1;
   }
 }
 
+/// Row and cell selection state.
 @freezed
 abstract class SelectionState with _$SelectionState {
   const factory SelectionState({
@@ -85,27 +101,35 @@ abstract class SelectionState with _$SelectionState {
 
   const SelectionState._();
 
+  /// Creates an initial selection state with single-select mode and no selection.
   factory SelectionState.initial() => const SelectionState(
     selectedRowIds: {},
     selectedCellIds: {},
     mode: SelectionMode.single,
   );
 
+  /// Returns `true` if the row with [rowId] is currently selected.
   bool isRowSelected(double rowId) => selectedRowIds.contains(rowId);
+
+  /// Returns `true` if the cell identified by [cellId] is currently selected.
   bool isCellSelected(String cellId) => selectedCellIds.contains(cellId);
 }
 
+/// Current sort configuration.
 @freezed
 abstract class SortState with _$SortState {
   const factory SortState({SortColumn? sortColumn}) = _SortState;
 
   const SortState._();
 
+  /// Creates an initial state with no active sort.
   factory SortState.initial() => const SortState();
 
+  /// Whether any column sort is active.
   bool get hasSort => sortColumn != null;
 }
 
+/// Identifies a sorted column and its direction.
 @freezed
 abstract class SortColumn with _$SortColumn {
   const factory SortColumn({
@@ -114,6 +138,7 @@ abstract class SortColumn with _$SortColumn {
   }) = _SortColumn;
 }
 
+/// Active column filters, keyed by column ID.
 @freezed
 abstract class FilterState with _$FilterState {
   const factory FilterState({required Map<int, ColumnFilter> columnFilters}) =
@@ -121,11 +146,14 @@ abstract class FilterState with _$FilterState {
 
   const FilterState._();
 
+  /// Creates an initial state with no filters applied.
   factory FilterState.initial() => const FilterState(columnFilters: {});
 
+  /// Whether any column filter is active.
   bool get hasFilters => columnFilters.isNotEmpty;
 }
 
+/// A single column filter with an operator and comparison value.
 @freezed
 abstract class ColumnFilter with _$ColumnFilter {
   const factory ColumnFilter({
@@ -135,6 +163,7 @@ abstract class ColumnFilter with _$ColumnFilter {
   }) = _ColumnFilter;
 }
 
+/// Row grouping state.
 @freezed
 abstract class GroupState with _$GroupState {
   const factory GroupState({
@@ -144,13 +173,18 @@ abstract class GroupState with _$GroupState {
 
   const GroupState._();
 
+  /// Creates an initial state with no groups.
   factory GroupState.initial() =>
       const GroupState(groupedColumnIds: [], expandedGroups: {});
 
+  /// Whether any column grouping is active.
   bool get hasGroups => groupedColumnIds.isNotEmpty;
+
+  /// Returns `true` if the group identified by [groupKey] is expanded.
   bool isGroupExpanded(String groupKey) => expandedGroups[groupKey] ?? true;
 }
 
+/// Inline cell editing state.
 @freezed
 abstract class EditState with _$EditState {
   const factory EditState({String? editingCellId, dynamic editingValue}) =
@@ -158,17 +192,22 @@ abstract class EditState with _$EditState {
 
   const EditState._();
 
+  /// Creates an initial state with no active edit.
   factory EditState.initial() => const EditState();
 
+  /// Whether a cell is currently being edited.
   bool get isEditing => editingCellId != null;
 
+  /// Returns `true` if the cell at [rowId] / [columnId] is being edited.
   bool isCellEditing(double rowId, int columnId) {
     return editingCellId == '${rowId}_$columnId';
   }
 
+  /// Builds a composite cell ID string from [rowId] and [columnId].
   String createCellId(double rowId, int columnId) => '${rowId}_$columnId';
 }
 
+/// Pagination configuration and position.
 @freezed
 abstract class PaginationState with _$PaginationState {
   const factory PaginationState({
@@ -180,18 +219,22 @@ abstract class PaginationState with _$PaginationState {
 
   const PaginationState._();
 
+  /// Creates an initial state with pagination disabled, page 1, 50 rows/page.
   factory PaginationState.initial() => const PaginationState();
 
+  /// Calculates the total number of pages for [totalItems].
   int totalPages(int totalItems) {
     if (totalItems == 0) return 1;
     return math.max(1, (totalItems / pageSize).ceil());
   }
 
+  /// Returns the 0-based start index for the current page.
   int startIndex(int totalItems) {
     if (!enabled) return 0;
     return (currentPage - 1) * pageSize;
   }
 
+  /// Returns the exclusive end index for the current page.
   int endIndex(int totalItems) {
     if (!enabled) return totalItems;
     return math.min(startIndex(totalItems) + pageSize, totalItems);

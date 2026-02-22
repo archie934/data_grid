@@ -4,6 +4,7 @@ import 'package:flutter_data_grid/models/events/base_event.dart';
 import 'package:flutter_data_grid/models/events/event_context.dart';
 import 'package:flutter_data_grid/models/enums/selection_mode.dart';
 
+/// Moves the focused row up by one position.
 class NavigateUpEvent extends DataGridEvent {
   @override
   DataGridState<T>? apply<T extends DataGridRow>(EventContext<T> context) {
@@ -27,6 +28,7 @@ class NavigateUpEvent extends DataGridEvent {
   }
 }
 
+/// Moves the focused row down by one position.
 class NavigateDownEvent extends DataGridEvent {
   @override
   DataGridState<T>? apply<T extends DataGridRow>(EventContext<T> context) {
@@ -59,6 +61,7 @@ class NavigateDownEvent extends DataGridEvent {
   }
 }
 
+/// Moves the focused column left by one position.
 class NavigateLeftEvent extends DataGridEvent {
   @override
   DataGridState<T>? apply<T extends DataGridRow>(EventContext<T> context) {
@@ -66,6 +69,7 @@ class NavigateLeftEvent extends DataGridEvent {
   }
 }
 
+/// Moves the focused column right by one position.
 class NavigateRightEvent extends DataGridEvent {
   @override
   DataGridState<T>? apply<T extends DataGridRow>(EventContext<T> context) {
@@ -73,6 +77,7 @@ class NavigateRightEvent extends DataGridEvent {
   }
 }
 
+/// Selects all currently visible rows.
 class SelectAllVisibleEvent extends DataGridEvent {
   @override
   DataGridState<T>? apply<T extends DataGridRow>(EventContext<T> context) {

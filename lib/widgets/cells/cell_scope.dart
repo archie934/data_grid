@@ -33,17 +33,28 @@ import 'package:flutter_data_grid/models/data/row.dart';
 /// }
 /// ```
 class CellScope<T extends DataGridRow> extends InheritedWidget {
+  /// The typed row object for this cell.
   final T row;
+
+  /// The column configuration for this cell.
   final DataGridColumn<T> column;
+
+  /// Zero-based visible row index.
   final int rowIndex;
+
+  /// Whether the row containing this cell is selected.
   final bool isSelected;
+
+  /// Whether the column containing this cell is pinned.
   final bool isPinned;
 
   /// Pre-computed value from [DataGridColumn.valueAccessor], if any.
   final dynamic value;
 
+  /// The grid controller for dispatching events.
   final DataGridController<T> controller;
 
+  /// Creates a [CellScope] providing cell data to descendants.
   const CellScope({
     super.key,
     required this.row,
@@ -56,12 +67,14 @@ class CellScope<T extends DataGridRow> extends InheritedWidget {
     required super.child,
   });
 
+  /// Returns the nearest [CellScope] ancestor, throwing if none exists.
   static CellScope<T> of<T extends DataGridRow>(BuildContext context) {
     final scope = context.dependOnInheritedWidgetOfExactType<CellScope<T>>();
     assert(scope != null, 'No CellScope<$T> found in context');
     return scope!;
   }
 
+  /// Returns the nearest [CellScope] ancestor, or null if none exists.
   static CellScope<T>? maybeOf<T extends DataGridRow>(BuildContext context) {
     return context.dependOnInheritedWidgetOfExactType<CellScope<T>>();
   }

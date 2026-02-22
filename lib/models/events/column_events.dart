@@ -3,6 +3,7 @@ import 'package:flutter_data_grid/models/state/grid_state.dart';
 import 'package:flutter_data_grid/models/events/base_event.dart';
 import 'package:flutter_data_grid/models/events/event_context.dart';
 
+/// Resizes a column to the specified width.
 class ColumnResizeEvent extends DataGridEvent {
   final int columnId;
   final double newWidth;
@@ -21,6 +22,7 @@ class ColumnResizeEvent extends DataGridEvent {
   }
 }
 
+/// Moves a column from [oldIndex] to [newIndex].
 class ColumnReorderEvent extends DataGridEvent {
   final int oldIndex;
   final int newIndex;

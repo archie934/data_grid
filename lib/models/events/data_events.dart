@@ -4,6 +4,7 @@ import 'package:flutter_data_grid/models/state/grid_state.dart';
 import 'package:flutter_data_grid/models/events/base_event.dart';
 import 'package:flutter_data_grid/models/events/event_context.dart';
 
+/// Loads a new set of rows into the grid, optionally appending to existing data.
 class LoadDataEvent<T> extends DataGridEvent {
   final List<T> rows;
   final bool append;
@@ -62,6 +63,7 @@ class LoadDataEvent<T> extends DataGridEvent {
   }
 }
 
+/// Triggers a data refresh by setting the loading flag.
 class RefreshDataEvent extends DataGridEvent {
   @override
   DataGridState<T>? apply<T extends DataGridRow>(EventContext<T> context) {
@@ -69,6 +71,7 @@ class RefreshDataEvent extends DataGridEvent {
   }
 }
 
+/// Explicitly sets the loading state and optional message.
 class SetLoadingEvent extends DataGridEvent {
   final bool isLoading;
   final String? message;
@@ -84,6 +87,7 @@ class SetLoadingEvent extends DataGridEvent {
   }
 }
 
+/// Sets the total item count (used for server-side pagination).
 class SetTotalItemsEvent extends DataGridEvent {
   final int totalItems;
 
@@ -95,6 +99,7 @@ class SetTotalItemsEvent extends DataGridEvent {
   }
 }
 
+/// Inserts a single row, optionally at a specific position.
 class InsertRowEvent extends DataGridEvent {
   final DataGridRow row;
   final int? position;
@@ -146,6 +151,7 @@ class InsertRowEvent extends DataGridEvent {
   }
 }
 
+/// Inserts multiple rows at the end of the grid.
 class InsertRowsEvent extends DataGridEvent {
   final List<DataGridRow> rows;
 
@@ -193,6 +199,7 @@ class InsertRowsEvent extends DataGridEvent {
   }
 }
 
+/// Deletes a single row by its ID.
 class DeleteRowEvent extends DataGridEvent {
   final double rowId;
 
@@ -236,6 +243,7 @@ class DeleteRowEvent extends DataGridEvent {
   }
 }
 
+/// Deletes multiple rows by their IDs.
 class DeleteRowsEvent extends DataGridEvent {
   final Set<double> rowIds;
 
@@ -282,6 +290,7 @@ class DeleteRowsEvent extends DataGridEvent {
   }
 }
 
+/// Replaces an entire row with a new instance.
 class UpdateRowEvent extends DataGridEvent {
   final double rowId;
   final DataGridRow newRow;
@@ -325,6 +334,7 @@ class UpdateRowEvent extends DataGridEvent {
   }
 }
 
+/// Updates a single cell value on an existing row.
 class UpdateCellEvent extends DataGridEvent {
   final double rowId;
   final int columnId;

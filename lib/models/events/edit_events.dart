@@ -4,6 +4,7 @@ import 'package:flutter_data_grid/models/events/base_event.dart';
 import 'package:flutter_data_grid/models/events/event_context.dart';
 import 'package:flutter_data_grid/models/events/data_events.dart';
 
+/// Begins inline editing for a specific cell.
 class StartCellEditEvent extends DataGridEvent {
   final double rowId;
   final int columnId;
@@ -66,6 +67,7 @@ class StartCellEditEvent extends DataGridEvent {
   }
 }
 
+/// Updates the in-progress editing value without committing.
 class UpdateCellEditValueEvent extends DataGridEvent {
   final dynamic value;
 
@@ -83,6 +85,7 @@ class UpdateCellEditValueEvent extends DataGridEvent {
   }
 }
 
+/// Commits the current cell edit, persisting the value.
 class CommitCellEditEvent extends DataGridEvent {
   CommitCellEditEvent();
 
@@ -106,6 +109,7 @@ class CommitCellEditEvent extends DataGridEvent {
   }
 }
 
+/// Cancels the current cell edit, discarding changes.
 class CancelCellEditEvent extends DataGridEvent {
   @override
   DataGridState<T>? apply<T extends DataGridRow>(EventContext<T> context) {

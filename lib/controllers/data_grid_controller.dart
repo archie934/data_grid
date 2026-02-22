@@ -303,112 +303,139 @@ class DataGridController<T extends DataGridRow> {
     }
   }
 
+  /// Replaces the current column definitions.
   void setColumns(List<DataGridColumn<T>> columns) {
     _updateStateWithInterceptors(state.copyWith(columns: columns), null);
   }
 
+  /// Loads [rows] into the grid, replacing existing data.
   void setRows(List<T> rows) {
     addEvent(LoadDataEvent(rows: rows));
   }
 
+  /// Sets the total item count for server-side pagination.
   void setTotalItems(int totalItems) {
     addEvent(SetTotalItemsEvent(totalItems: totalItems));
   }
 
+  /// Inserts a single [row], optionally at [position].
   void insertRow(T row, {int? position}) {
     addEvent(InsertRowEvent(row: row, position: position));
   }
 
+  /// Inserts multiple [rows] at the end of the grid.
   void insertRows(List<T> rows) {
     addEvent(InsertRowsEvent(rows: rows));
   }
 
+  /// Deletes the row identified by [rowId].
   void deleteRow(double rowId) {
     addEvent(DeleteRowEvent(rowId: rowId));
   }
 
+  /// Deletes all rows whose IDs are in [rowIds].
   void deleteRows(Set<double> rowIds) {
     addEvent(DeleteRowsEvent(rowIds: rowIds));
   }
 
+  /// Replaces the row at [rowId] with [newRow].
   void updateRow(double rowId, T newRow) {
     addEvent(UpdateRowEvent(rowId: rowId, newRow: newRow));
   }
 
+  /// Updates a single cell value at [rowId] / [columnId].
   void updateCell(double rowId, int columnId, dynamic value) {
     addEvent(UpdateCellEvent(rowId: rowId, columnId: columnId, value: value));
   }
 
+  /// Changes the row selection mode.
   void setSelectionMode(SelectionMode mode) {
     addEvent(SetSelectionModeEvent(mode: mode));
   }
 
+  /// Enables or disables multi-row selection.
   void enableMultiSelect(bool enable) {
     setSelectionMode(enable ? SelectionMode.multiple : SelectionMode.single);
   }
 
+  /// Disables row selection entirely.
   void disableSelection() {
     setSelectionMode(SelectionMode.none);
   }
 
+  /// Begins inline editing for the cell at [rowId] / [columnId].
   void startEditCell(double rowId, int columnId) {
     addEvent(StartCellEditEvent(rowId: rowId, columnId: columnId));
   }
 
+  /// Updates the in-progress editing value without committing.
   void updateCellEditValue(dynamic value) {
     addEvent(UpdateCellEditValueEvent(value: value));
   }
 
+  /// Commits the current cell edit, persisting the value.
   void commitCellEdit() {
     addEvent(CommitCellEditEvent());
   }
 
+  /// Cancels the current cell edit, discarding changes.
   void cancelCellEdit() {
     addEvent(CancelCellEditEvent());
   }
 
+  /// Navigates to the given [page] number (1-based).
   void setPage(int page) {
     addEvent(SetPageEvent(page: page));
   }
 
+  /// Changes the number of rows displayed per page.
   void setPageSize(int pageSize) {
     addEvent(SetPageSizeEvent(pageSize: pageSize));
   }
 
+  /// Navigates to the next page.
   void nextPage() {
     addEvent(NextPageEvent());
   }
 
+  /// Navigates to the previous page.
   void previousPage() {
     addEvent(PreviousPageEvent());
   }
 
+  /// Navigates to the first page.
   void firstPage() {
     addEvent(FirstPageEvent());
   }
 
+  /// Navigates to the last page.
   void lastPage() {
     addEvent(LastPageEvent());
   }
 
+  /// Enables or disables pagination.
   void enablePagination(bool enabled) {
     addEvent(EnablePaginationEvent(enabled: enabled));
   }
 
+  /// Enables or disables server-side pagination mode.
   void setServerSidePagination(bool serverSide) {
     addEvent(SetServerSidePaginationEvent(serverSide: serverSide));
   }
 
+  /// Registers [rowId] as currently rendered in the viewport.
   void registerRenderedRow(double rowId) {
     final updated = Set<double>.from(_renderedRowIds.value)..add(rowId);
     _renderedRowIds.add(updated);
   }
 
+  /// Unregisters [rowId] when it leaves the viewport.
   void unregisterRenderedRow(double rowId) {
     final updated = Set<double>.from(_renderedRowIds.value)..remove(rowId);
     _renderedRowIds.add(updated);
   }
 
+  /// Releases all resources held by this controller.
   void dispose() {
     _sortDelegate.dispose();
     _filterDelegate.dispose();

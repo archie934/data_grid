@@ -125,11 +125,14 @@ class DataGridCellDecorations {
     required bool isPinned,
   }) {
     if (isPinned) {
-      if (isSelected)
+      if (isSelected) {
         return isEven ? evenRowPinnedSelected : oddRowPinnedSelected;
+      }
       return isEven ? evenRowPinned : oddRowPinned;
     }
-    if (isSelected) return isEven ? evenRowSelected : oddRowSelected;
+    if (isSelected) {
+      return isEven ? evenRowSelected : oddRowSelected;
+    }
     return isEven ? evenRow : oddRow;
   }
 

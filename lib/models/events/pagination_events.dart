@@ -4,6 +4,7 @@ import 'package:flutter_data_grid/models/state/grid_state.dart';
 import 'package:flutter_data_grid/models/events/base_event.dart';
 import 'package:flutter_data_grid/models/events/event_context.dart';
 
+/// Navigates to a specific page number.
 class SetPageEvent extends DataGridEvent {
   final int page;
 
@@ -48,6 +49,7 @@ class SetPageEvent extends DataGridEvent {
   }
 }
 
+/// Changes the number of rows displayed per page.
 class SetPageSizeEvent extends DataGridEvent {
   final int pageSize;
 
@@ -90,6 +92,7 @@ class SetPageSizeEvent extends DataGridEvent {
   }
 }
 
+/// Navigates to the next page.
 class NextPageEvent extends DataGridEvent {
   @override
   DataGridState<T>? apply<T extends DataGridRow>(EventContext<T> context) {
@@ -124,6 +127,7 @@ class NextPageEvent extends DataGridEvent {
   }
 }
 
+/// Navigates to the previous page.
 class PreviousPageEvent extends DataGridEvent {
   @override
   DataGridState<T>? apply<T extends DataGridRow>(EventContext<T> context) {
@@ -158,6 +162,7 @@ class PreviousPageEvent extends DataGridEvent {
   }
 }
 
+/// Navigates to the first page.
 class FirstPageEvent extends DataGridEvent {
   @override
   DataGridState<T>? apply<T extends DataGridRow>(EventContext<T> context) {
@@ -191,6 +196,7 @@ class FirstPageEvent extends DataGridEvent {
   }
 }
 
+/// Navigates to the last page.
 class LastPageEvent extends DataGridEvent {
   @override
   DataGridState<T>? apply<T extends DataGridRow>(EventContext<T> context) {
@@ -228,6 +234,7 @@ class LastPageEvent extends DataGridEvent {
   }
 }
 
+/// Enables or disables pagination.
 class EnablePaginationEvent extends DataGridEvent {
   final bool enabled;
 
@@ -271,6 +278,7 @@ class EnablePaginationEvent extends DataGridEvent {
   }
 }
 
+/// Enables or disables server-side pagination mode.
 class SetServerSidePaginationEvent extends DataGridEvent {
   final bool serverSide;
 

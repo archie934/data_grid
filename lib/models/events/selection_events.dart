@@ -4,6 +4,7 @@ import 'package:flutter_data_grid/models/events/base_event.dart';
 import 'package:flutter_data_grid/models/events/event_context.dart';
 import 'package:flutter_data_grid/models/enums/selection_mode.dart';
 
+/// Selects or toggles a single row.
 class SelectRowEvent extends DataGridEvent {
   final double rowId;
   final bool multiSelect;
@@ -48,6 +49,7 @@ class SelectRowEvent extends DataGridEvent {
   }
 }
 
+/// Selects a contiguous range of rows between two row IDs.
 class SelectRowsRangeEvent extends DataGridEvent {
   final double startRowId;
   final double endRowId;
@@ -83,6 +85,7 @@ class SelectRowsRangeEvent extends DataGridEvent {
   }
 }
 
+/// Clears all row and cell selections.
 class ClearSelectionEvent extends DataGridEvent {
   @override
   DataGridState<T>? apply<T extends DataGridRow>(EventContext<T> context) {
@@ -96,6 +99,7 @@ class ClearSelectionEvent extends DataGridEvent {
   }
 }
 
+/// Selects all rows, or a specific set of row IDs if provided.
 class SelectAllRowsEvent extends DataGridEvent {
   final Set<double>? rowIds;
 
@@ -117,6 +121,7 @@ class SelectAllRowsEvent extends DataGridEvent {
   }
 }
 
+/// Changes the selection mode (none, single, or multiple).
 class SetSelectionModeEvent extends DataGridEvent {
   final SelectionMode mode;
 

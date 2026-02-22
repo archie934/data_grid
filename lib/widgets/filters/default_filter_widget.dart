@@ -14,6 +14,7 @@ import 'package:flutter_data_grid/widgets/filters/filter_text_field.dart';
 /// )
 /// ```
 class DefaultFilterWidget extends StatelessWidget {
+  /// How long to wait after the last keystroke before applying the filter.
   final Duration debounce;
 
   const DefaultFilterWidget({

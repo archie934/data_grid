@@ -139,6 +139,7 @@ class DataGridColumn<T extends DataGridRow> {
     cellWidget,
   );
 
+  /// Returns a copy of this column with the given fields replaced.
   DataGridColumn<T> copyWith({
     int? id,
     String? title,

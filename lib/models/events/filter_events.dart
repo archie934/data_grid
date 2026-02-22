@@ -5,6 +5,7 @@ import 'package:flutter_data_grid/models/events/base_event.dart';
 import 'package:flutter_data_grid/models/events/event_context.dart';
 import 'package:flutter_data_grid/models/enums/filter_operator.dart';
 
+/// Applies a filter on a column with the given operator and value.
 class FilterEvent extends DataGridEvent {
   final int columnId;
   final FilterOperator operator;
@@ -89,6 +90,7 @@ class FilterEvent extends DataGridEvent {
   }
 }
 
+/// Clears the filter on a specific column, or all filters if [columnId] is null.
 class ClearFilterEvent extends DataGridEvent {
   final int? columnId;
 

@@ -3,6 +3,9 @@ import 'package:flutter_data_grid/models/data/row.dart';
 import 'package:flutter_data_grid/models/state/grid_state.dart';
 import 'package:flutter_data_grid/models/events/event_context.dart';
 
+/// Base class for all data grid events.
+///
+/// Subclass this to create custom events that transform the grid state.
 abstract class DataGridEvent {
   const DataGridEvent();
 

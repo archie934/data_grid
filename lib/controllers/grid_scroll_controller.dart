@@ -1,8 +1,13 @@
 import 'package:flutter/widgets.dart';
 import 'package:rxdart/rxdart.dart';
 
+/// Manages horizontal and vertical scroll controllers for the data grid,
+/// exposing reactive streams for scroll metric changes.
 class GridScrollController {
+  /// The scroll controller driving horizontal movement.
   final ScrollController horizontalController;
+
+  /// The scroll controller driving vertical movement.
   final ScrollController verticalController;
 
   final BehaviorSubject<ScrollMetrics?> _horizontalMetricsSubject =
@@ -10,6 +15,7 @@ class GridScrollController {
   final BehaviorSubject<ScrollMetrics?> _verticalMetricsSubject =
       BehaviorSubject.seeded(null);
 
+  /// Creates a [GridScrollController] with optional pre-existing controllers.
   GridScrollController({
     ScrollController? horizontal,
     ScrollController? vertical,
@@ -18,12 +24,18 @@ class GridScrollController {
     _setupListeners();
   }
 
+  /// Stream of horizontal scroll metric updates.
   Stream<ScrollMetrics?> get horizontalMetrics$ =>
       _horizontalMetricsSubject.stream;
+
+  /// Stream of vertical scroll metric updates.
   Stream<ScrollMetrics?> get verticalMetrics$ => _verticalMetricsSubject.stream;
 
+  /// Current horizontal scroll offset, or 0 if no clients are attached.
   double get horizontalOffset =>
       horizontalController.hasClients ? horizontalController.offset : 0;
+
+  /// Current vertical scroll offset, or 0 if no clients are attached.
   double get verticalOffset =>
       verticalController.hasClients ? verticalController.offset : 0;
 
@@ -44,6 +56,7 @@ class GridScrollController {
     }
   }
 
+  /// Animates the vertical scroll to bring [rowIndex] into view.
   Future<void> scrollToRow(
     int rowIndex, {
     required double rowHeight,
@@ -60,6 +73,7 @@ class GridScrollController {
     );
   }
 
+  /// Animates the horizontal scroll to bring [columnIndex] into view.
   Future<void> scrollToColumn(
     int columnIndex, {
     required List<double> columnWidths,
@@ -80,12 +94,14 @@ class GridScrollController {
     );
   }
 
+  /// Instantly scrolls vertically to [rowIndex] without animation.
   void jumpToRow(int rowIndex, {required double rowHeight}) {
     if (!verticalController.hasClients) return;
     final offset = rowIndex * rowHeight;
     verticalController.jumpTo(offset);
   }
 
+  /// Instantly scrolls horizontally to [columnIndex] without animation.
   void jumpToColumn(int columnIndex, {required List<double> columnWidths}) {
     if (!horizontalController.hasClients) return;
 
@@ -97,6 +113,7 @@ class GridScrollController {
     horizontalController.jumpTo(offset);
   }
 
+  /// Disposes both scroll controllers and closes metric streams.
   void dispose() {
     horizontalController.removeListener(_onHorizontalScroll);
     verticalController.removeListener(_onVerticalScroll);

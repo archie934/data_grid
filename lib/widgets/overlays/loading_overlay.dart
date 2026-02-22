@@ -8,9 +8,14 @@ import 'package:flutter_data_grid/theme/data_grid_theme.dart';
 /// Uses [InheritedModel] with [DataGridAspect.loading] to avoid
 /// unnecessary rebuilds when unrelated grid state changes.
 class DataGridLoadingScope<T extends DataGridRow> extends StatelessWidget {
+  /// Custom builder for the loading overlay. If null, uses [DataGridLoadingOverlay].
   final Widget Function(BuildContext context, String? message)?
   loadingOverlayBuilder;
+
+  /// Backdrop color behind the loading indicator.
   final Color? backdropColor;
+
+  /// Color of the circular progress indicator.
   final Color? indicatorColor;
 
   const DataGridLoadingScope({
@@ -40,8 +45,13 @@ class DataGridLoadingScope<T extends DataGridRow> extends StatelessWidget {
 /// Shows a centered card with a circular progress indicator and optional message.
 /// Used by DataGrid when performing operations like sorting large datasets.
 class DataGridLoadingOverlay extends StatelessWidget {
+  /// Optional message displayed below the progress indicator.
   final String? message;
+
+  /// Backdrop color behind the loading card.
   final Color? backdropColor;
+
+  /// Color of the circular progress indicator.
   final Color? indicatorColor;
 
   const DataGridLoadingOverlay({
