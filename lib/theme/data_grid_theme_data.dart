@@ -74,50 +74,50 @@ class DataGridCellDecorations {
   final BoxDecoration checkboxOdd;
 
   DataGridCellDecorations._(DataGridColors colors, DataGridBorders borders)
-      : evenRow = BoxDecoration(
-          color: colors.evenRowColor,
-          border: borders.cellBorder,
-        ),
-        oddRow = BoxDecoration(
-          color: colors.oddRowColor,
-          border: borders.cellBorder,
-        ),
-        evenRowSelected = BoxDecoration(
-          color: colors.selectionColor,
-          border: borders.cellBorder,
-        ),
-        oddRowSelected = BoxDecoration(
-          color: colors.selectionColor,
-          border: borders.cellBorder,
-        ),
-        evenRowPinned = BoxDecoration(
-          color: colors.evenRowColor,
-          border: borders.pinnedBorder,
-          boxShadow: borders.pinnedShadow,
-        ),
-        oddRowPinned = BoxDecoration(
-          color: colors.oddRowColor,
-          border: borders.pinnedBorder,
-          boxShadow: borders.pinnedShadow,
-        ),
-        evenRowPinnedSelected = BoxDecoration(
-          color: colors.selectionColor,
-          border: borders.pinnedBorder,
-          boxShadow: borders.pinnedShadow,
-        ),
-        oddRowPinnedSelected = BoxDecoration(
-          color: colors.selectionColor,
-          border: borders.pinnedBorder,
-          boxShadow: borders.pinnedShadow,
-        ),
-        checkboxEven = BoxDecoration(
-          color: colors.evenRowColor,
-          border: borders.checkboxCellBorder,
-        ),
-        checkboxOdd = BoxDecoration(
-          color: colors.oddRowColor,
-          border: borders.checkboxCellBorder,
-        );
+    : evenRow = BoxDecoration(
+        color: colors.evenRowColor,
+        border: borders.cellBorder,
+      ),
+      oddRow = BoxDecoration(
+        color: colors.oddRowColor,
+        border: borders.cellBorder,
+      ),
+      evenRowSelected = BoxDecoration(
+        color: colors.selectionColor,
+        border: borders.cellBorder,
+      ),
+      oddRowSelected = BoxDecoration(
+        color: colors.selectionColor,
+        border: borders.cellBorder,
+      ),
+      evenRowPinned = BoxDecoration(
+        color: colors.evenRowColor,
+        border: borders.pinnedBorder,
+        boxShadow: borders.pinnedShadow,
+      ),
+      oddRowPinned = BoxDecoration(
+        color: colors.oddRowColor,
+        border: borders.pinnedBorder,
+        boxShadow: borders.pinnedShadow,
+      ),
+      evenRowPinnedSelected = BoxDecoration(
+        color: colors.selectionColor,
+        border: borders.pinnedBorder,
+        boxShadow: borders.pinnedShadow,
+      ),
+      oddRowPinnedSelected = BoxDecoration(
+        color: colors.selectionColor,
+        border: borders.pinnedBorder,
+        boxShadow: borders.pinnedShadow,
+      ),
+      checkboxEven = BoxDecoration(
+        color: colors.evenRowColor,
+        border: borders.checkboxCellBorder,
+      ),
+      checkboxOdd = BoxDecoration(
+        color: colors.oddRowColor,
+        border: borders.checkboxCellBorder,
+      );
 
   BoxDecoration forCell({
     required bool isEven,
@@ -125,7 +125,8 @@ class DataGridCellDecorations {
     required bool isPinned,
   }) {
     if (isPinned) {
-      if (isSelected) return isEven ? evenRowPinnedSelected : oddRowPinnedSelected;
+      if (isSelected)
+        return isEven ? evenRowPinnedSelected : oddRowPinnedSelected;
       return isEven ? evenRowPinned : oddRowPinned;
     }
     if (isSelected) return isEven ? evenRowSelected : oddRowSelected;

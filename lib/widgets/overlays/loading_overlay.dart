@@ -8,7 +8,8 @@ import 'package:flutter_data_grid/theme/data_grid_theme.dart';
 /// Uses [InheritedModel] with [DataGridAspect.loading] to avoid
 /// unnecessary rebuilds when unrelated grid state changes.
 class DataGridLoadingScope<T extends DataGridRow> extends StatelessWidget {
-  final Widget Function(BuildContext context, String? message)? loadingOverlayBuilder;
+  final Widget Function(BuildContext context, String? message)?
+  loadingOverlayBuilder;
   final Color? backdropColor;
   final Color? indicatorColor;
 

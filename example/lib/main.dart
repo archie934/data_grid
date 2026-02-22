@@ -41,14 +41,23 @@ class _MainAppState extends State<MainApp> {
     final actionsWidget = ActionsCellWidget(onDelete: _deleteRow);
     final columns = createColumns(actionsWidget);
 
-    controller = DataGridController<ProductRow>(initialColumns: columns, initialRows: _allRows, rowHeight: 48.0, onLoadPage: _loadPage, onGetTotalCount: _getTotalCount);
+    controller = DataGridController<ProductRow>(
+      initialColumns: columns,
+      initialRows: _allRows,
+      rowHeight: 48.0,
+      onLoadPage: _loadPage,
+      onGetTotalCount: _getTotalCount,
+    );
 
     controller.enablePagination(true);
     _setupPageListener();
   }
 
   void _setupPageListener() {
-    _pageSubscription = controller.state$.map((s) => s.pagination.currentPage).distinct().listen(_onPageChange);
+    _pageSubscription = controller.state$
+        .map((s) => s.pagination.currentPage)
+        .distinct()
+        .listen(_onPageChange);
   }
 
   Future<void> _onPageChange(int page) async {
@@ -62,7 +71,9 @@ class _MainAppState extends State<MainApp> {
   }
 
   Future<List<ProductRow>> _loadPage(int page, int pageSize) async {
-    controller.addEvent(SetLoadingEvent(isLoading: true, message: 'Loading page $page...'));
+    controller.addEvent(
+      SetLoadingEvent(isLoading: true, message: 'Loading page $page...'),
+    );
     await Future.delayed(const Duration(seconds: 1));
 
     final start = (page - 1) * pageSize;
@@ -111,9 +122,16 @@ class _MainAppState extends State<MainApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Data Grid Demo',
-      theme: ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue), useMaterial3: true),
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        useMaterial3: true,
+      ),
       home: Scaffold(
-        appBar: AppBar(backgroundColor: Theme.of(context).colorScheme.inversePrimary, title: const Text('Flutter Data Grid'), actions: [_buildToolbar()]),
+        appBar: AppBar(
+          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+          title: const Text('Flutter Data Grid'),
+          actions: [_buildToolbar()],
+        ),
         body: DataGrid<ProductRow>(controller: controller, cacheExtent: 0),
       ),
     );
@@ -125,7 +143,14 @@ class _MainAppState extends State<MainApp> {
       initialData: controller.state.selection.mode,
       builder: (context, snapshot) {
         return Row(
-          children: [_buildSelectionModeSelector(snapshot.data!), const SizedBox(width: 16), _buildPaginationToggle(), const SizedBox(width: 8), _buildServerSideToggle(), const SizedBox(width: 16)],
+          children: [
+            _buildSelectionModeSelector(snapshot.data!),
+            const SizedBox(width: 16),
+            _buildPaginationToggle(),
+            const SizedBox(width: 8),
+            _buildServerSideToggle(),
+            const SizedBox(width: 16),
+          ],
         );
       },
     );
@@ -156,7 +181,10 @@ class _MainAppState extends State<MainApp> {
     return Row(
       children: [
         const Text('Server'),
-        Switch(value: _serverSidePagination, onChanged: _paginationEnabled ? _toggleServerSide : null),
+        Switch(
+          value: _serverSidePagination,
+          onChanged: _paginationEnabled ? _toggleServerSide : null,
+        ),
       ],
     );
   }

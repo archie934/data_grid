@@ -19,14 +19,30 @@ class _CellDisplayState {
   final bool isEditing;
   final SelectionMode selectionMode;
 
-  const _CellDisplayState({required this.isSelected, required this.isEditing, required this.selectionMode});
+  const _CellDisplayState({
+    required this.isSelected,
+    required this.isEditing,
+    required this.selectionMode,
+  });
 
-  factory _CellDisplayState.from(DataGridState state, double rowId, int columnId) {
-    return _CellDisplayState(isSelected: state.selection.isRowSelected(rowId), isEditing: state.edit.isCellEditing(rowId, columnId), selectionMode: state.selection.mode);
+  factory _CellDisplayState.from(
+    DataGridState state,
+    double rowId,
+    int columnId,
+  ) {
+    return _CellDisplayState(
+      isSelected: state.selection.isRowSelected(rowId),
+      isEditing: state.edit.isCellEditing(rowId, columnId),
+      selectionMode: state.selection.mode,
+    );
   }
 
   @override
-  bool operator ==(Object other) => other is _CellDisplayState && isSelected == other.isSelected && isEditing == other.isEditing && selectionMode == other.selectionMode;
+  bool operator ==(Object other) =>
+      other is _CellDisplayState &&
+      isSelected == other.isSelected &&
+      isEditing == other.isEditing &&
+      selectionMode == other.selectionMode;
 
   @override
   int get hashCode => Object.hash(isSelected, isEditing, selectionMode);
@@ -47,7 +63,14 @@ class DataGridCell<T extends DataGridRow> extends StatefulWidget {
   final int rowIndex;
   final bool isPinned;
 
-  const DataGridCell({super.key, required this.row, required this.rowId, required this.column, required this.rowIndex, this.isPinned = false});
+  const DataGridCell({
+    super.key,
+    required this.row,
+    required this.rowId,
+    required this.column,
+    required this.rowIndex,
+    this.isPinned = false,
+  });
 
   @override
   State<DataGridCell<T>> createState() => _DataGridCellState<T>();
@@ -68,7 +91,11 @@ class _DataGridCellState<T extends DataGridRow> extends State<DataGridCell<T>> {
       _cancelSubscription();
       _subscribedController = controller;
       if (controller != null) {
-        _displayState = _CellDisplayState.from(controller.state, widget.rowId, widget.column.id);
+        _displayState = _CellDisplayState.from(
+          controller.state,
+          widget.rowId,
+          widget.column.id,
+        );
         _subscribe(controller);
       }
     }
@@ -82,11 +109,16 @@ class _DataGridCellState<T extends DataGridRow> extends State<DataGridCell<T>> {
     }
     // Re-subscribe if the cell now represents a different row or column.
     // With ValueKey this shouldn't happen, but guard defensively.
-    if (oldWidget.rowId != widget.rowId || oldWidget.column.id != widget.column.id) {
+    if (oldWidget.rowId != widget.rowId ||
+        oldWidget.column.id != widget.column.id) {
       final controller = _subscribedController;
       if (controller != null) {
         _cancelSubscription();
-        _displayState = _CellDisplayState.from(controller.state, widget.rowId, widget.column.id);
+        _displayState = _CellDisplayState.from(
+          controller.state,
+          widget.rowId,
+          widget.column.id,
+        );
         _subscribe(controller);
       }
     }
@@ -96,7 +128,9 @@ class _DataGridCellState<T extends DataGridRow> extends State<DataGridCell<T>> {
     _subscription = controller.state$
         .map((s) => _CellDisplayState.from(s, widget.rowId, widget.column.id))
         .distinct()
-        .skip(1) // Skip the BehaviorSubject seed — _displayState is already set from controller.state
+        .skip(
+          1,
+        ) // Skip the BehaviorSubject seed — _displayState is already set from controller.state
         .listen((ds) {
           if (mounted) setState(() => _displayState = ds);
         });
@@ -129,15 +163,35 @@ class _DataGridCellState<T extends DataGridRow> extends State<DataGridCell<T>> {
       // Fall back to _lastDisplayedValue when editingValue is null (i.e. the
       // state was seeded without calling valueAccessor in the event handler).
       final editingValue = _subscribedController!.state.edit.editingValue;
-      return _EditingCell<T>(row: widget.row, rowId: widget.rowId, column: widget.column, rowIndex: widget.rowIndex, isPinned: widget.isPinned, editingValue: editingValue);
+      return _EditingCell<T>(
+        row: widget.row,
+        rowId: widget.rowId,
+        column: widget.column,
+        rowIndex: widget.rowIndex,
+        isPinned: widget.isPinned,
+        editingValue: editingValue,
+      );
     }
 
     final value = widget.column.valueAccessor?.call(widget.row);
 
     return _CellContainer(
-      decoration: theme.cellDecorations.forCell(isEven: widget.rowIndex % 2 == 0, isSelected: ds.isSelected, isPinned: widget.isPinned),
-      onTap: ds.selectionMode != SelectionMode.none ? () => controller.addEvent(SelectRowEvent(rowId: widget.rowId, multiSelect: ds.selectionMode == SelectionMode.multiple)) : null,
-      onDoubleTap: widget.column.editable ? () => controller.startEditCell(widget.rowId, widget.column.id) : null,
+      decoration: theme.cellDecorations.forCell(
+        isEven: widget.rowIndex % 2 == 0,
+        isSelected: ds.isSelected,
+        isPinned: widget.isPinned,
+      ),
+      onTap: ds.selectionMode != SelectionMode.none
+          ? () => controller.addEvent(
+              SelectRowEvent(
+                rowId: widget.rowId,
+                multiSelect: ds.selectionMode == SelectionMode.multiple,
+              ),
+            )
+          : null,
+      onDoubleTap: widget.column.editable
+          ? () => controller.startEditCell(widget.rowId, widget.column.id)
+          : null,
       child: CellScope<T>(
         row: widget.row,
         column: widget.column,
@@ -167,7 +221,10 @@ class _DefaultTextCell<T extends DataGridRow> extends StatelessWidget {
       padding: theme.padding.cellPadding,
       child: Align(
         alignment: Alignment.centerLeft,
-        child: Text(scope.value?.toString() ?? '', overflow: TextOverflow.ellipsis),
+        child: Text(
+          scope.value?.toString() ?? '',
+          overflow: TextOverflow.ellipsis,
+        ),
       ),
     );
   }
@@ -179,7 +236,12 @@ class _CellContainer extends StatelessWidget {
   final VoidCallback? onDoubleTap;
   final Widget? child;
 
-  const _CellContainer({required this.decoration, this.onTap, this.onDoubleTap, this.child});
+  const _CellContainer({
+    required this.decoration,
+    this.onTap,
+    this.onDoubleTap,
+    this.child,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -200,7 +262,14 @@ class _EditingCell<T extends DataGridRow> extends StatefulWidget {
   final bool isPinned;
   final dynamic editingValue;
 
-  const _EditingCell({required this.row, required this.rowId, required this.column, required this.rowIndex, required this.isPinned, required this.editingValue});
+  const _EditingCell({
+    required this.row,
+    required this.rowId,
+    required this.column,
+    required this.rowIndex,
+    required this.isPinned,
+    required this.editingValue,
+  });
 
   @override
   State<_EditingCell<T>> createState() => _EditingCellState<T>();
@@ -226,7 +295,9 @@ class _EditingCellState<T extends DataGridRow> extends State<_EditingCell<T>> {
 
   void _onFocusChange() {
     final controller = context.dataGridController<T>();
-    if (controller != null && !_focusNode.hasFocus && controller.state.edit.isCellEditing(widget.rowId, widget.column.id)) {
+    if (controller != null &&
+        !_focusNode.hasFocus &&
+        controller.state.edit.isCellEditing(widget.rowId, widget.column.id)) {
       controller.updateCellEditValue(_editController.text);
       controller.commitCellEdit();
     }
@@ -237,9 +308,19 @@ class _EditingCellState<T extends DataGridRow> extends State<_EditingCell<T>> {
     final theme = DataGridTheme.of(context);
 
     return Container(
-      decoration: BoxDecoration(color: widget.rowIndex % 2 == 0 ? theme.colors.evenRowColor : theme.colors.oddRowColor, border: theme.borders.editingBorder),
+      decoration: BoxDecoration(
+        color: widget.rowIndex % 2 == 0
+            ? theme.colors.evenRowColor
+            : theme.colors.oddRowColor,
+        border: theme.borders.editingBorder,
+      ),
       alignment: Alignment.center,
-      child: _CellEditor<T>(column: widget.column, value: widget.editingValue, editController: _editController, focusNode: _focusNode),
+      child: _CellEditor<T>(
+        column: widget.column,
+        value: widget.editingValue,
+        editController: _editController,
+        focusNode: _focusNode,
+      ),
     );
   }
 }
@@ -250,7 +331,12 @@ class _CellEditor<T extends DataGridRow> extends StatefulWidget {
   final TextEditingController editController;
   final FocusNode focusNode;
 
-  const _CellEditor({required this.column, required this.value, required this.editController, required this.focusNode});
+  const _CellEditor({
+    required this.column,
+    required this.value,
+    required this.editController,
+    required this.focusNode,
+  });
 
   @override
   State<_CellEditor<T>> createState() => _CellEditorState<T>();
@@ -273,7 +359,10 @@ class _CellEditorState<T extends DataGridRow> extends State<_CellEditor<T>> {
   void _initializeController() {
     if (_initialized) return;
     widget.editController.text = widget.value?.toString() ?? '';
-    widget.editController.selection = TextSelection(baseOffset: 0, extentOffset: widget.editController.text.length);
+    widget.editController.selection = TextSelection(
+      baseOffset: 0,
+      extentOffset: widget.editController.text.length,
+    );
     _initialized = true;
   }
 
@@ -288,12 +377,17 @@ class _CellEditorState<T extends DataGridRow> extends State<_CellEditor<T>> {
     final controller = context.dataGridController<T>()!;
 
     if (widget.column.cellEditorBuilder != null) {
-      return widget.column.cellEditorBuilder!(context, widget.value, (newValue) => controller.updateCellEditValue(newValue));
+      return widget.column.cellEditorBuilder!(
+        context,
+        widget.value,
+        (newValue) => controller.updateCellEditValue(newValue),
+      );
     }
 
     return Focus(
       onKeyEvent: (node, event) {
-        if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.escape) {
+        if (event is KeyDownEvent &&
+            event.logicalKey == LogicalKeyboardKey.escape) {
           controller.cancelCellEdit();
           return KeyEventResult.handled;
         }
@@ -303,7 +397,11 @@ class _CellEditorState<T extends DataGridRow> extends State<_CellEditor<T>> {
         key: const ValueKey('cell_editor_textfield'),
         controller: widget.editController,
         focusNode: widget.focusNode,
-        decoration: InputDecoration(border: InputBorder.none, contentPadding: theme.padding.editorPadding, isDense: true),
+        decoration: InputDecoration(
+          border: InputBorder.none,
+          contentPadding: theme.padding.editorPadding,
+          isDense: true,
+        ),
         onSubmitted: (_) => _commitEdit(controller),
       ),
     );

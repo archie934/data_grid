@@ -53,11 +53,8 @@ class DataGridStateScope<T extends DataGridRow>
   /// Pre-computed effective columns (cached once per state change).
   final List<DataGridColumn<T>> effectiveColumns;
 
-  DataGridStateScope({
-    super.key,
-    required this.state,
-    required super.child,
-  }) : effectiveColumns = state.effectiveColumns;
+  DataGridStateScope({super.key, required this.state, required super.child})
+    : effectiveColumns = state.effectiveColumns;
 
   @override
   bool updateShouldNotify(DataGridStateScope<T> oldWidget) {
@@ -122,10 +119,7 @@ class DataGridInherited<T extends DataGridRow> extends StatelessWidget {
     return DataGridControllerScope<T>(
       controller: controller,
       scrollController: scrollController,
-      child: DataGridStateScope<T>(
-        state: state,
-        child: child,
-      ),
+      child: DataGridStateScope<T>(state: state, child: child),
     );
   }
 }
@@ -147,13 +141,14 @@ extension DataGridContext on BuildContext {
     Set<DataGridAspect>? aspects,
   ]) {
     if (aspects == null || aspects.isEmpty) {
-      return InheritedModel.inheritFrom<DataGridStateScope<T>>(this)
-          ?.state;
+      return InheritedModel.inheritFrom<DataGridStateScope<T>>(this)?.state;
     }
     DataGridStateScope<T>? scope;
     for (final aspect in aspects) {
       scope = InheritedModel.inheritFrom<DataGridStateScope<T>>(
-          this, aspect: aspect);
+        this,
+        aspect: aspect,
+      );
     }
     return scope?.state;
   }
@@ -161,7 +156,8 @@ extension DataGridContext on BuildContext {
   /// Depends on the [DataGridAspect.columns] aspect only.
   List<DataGridColumn<T>>? dataGridEffectiveColumns<T extends DataGridRow>() {
     return InheritedModel.inheritFrom<DataGridStateScope<T>>(
-            this, aspect: DataGridAspect.columns)
-        ?.effectiveColumns;
+      this,
+      aspect: DataGridAspect.columns,
+    )?.effectiveColumns;
   }
 }

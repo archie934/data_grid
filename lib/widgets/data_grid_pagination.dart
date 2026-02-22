@@ -13,7 +13,10 @@ class DataGridPagination<T extends DataGridRow> extends StatelessWidget {
     // Subscribe only to pagination and data aspects. Previously this widget
     // used a StreamBuilder on the full state stream, causing it to rebuild on
     // every state change (selection, edit, sort, etc.).
-    final state = context.dataGridState<T>({DataGridAspect.pagination, DataGridAspect.data})!;
+    final state = context.dataGridState<T>({
+      DataGridAspect.pagination,
+      DataGridAspect.data,
+    })!;
 
     if (!state.pagination.enabled) return const SizedBox.shrink();
 
@@ -56,22 +59,15 @@ class DataGridPagination<T extends DataGridRow> extends StatelessWidget {
                 : null,
             tooltip: 'Previous page',
           ),
-          Text(
-            'Page $currentPage of $totalPages',
-            style: const TextStyle(),
-          ),
+          Text('Page $currentPage of $totalPages', style: const TextStyle()),
           IconButton(
             icon: const Icon(Icons.chevron_right),
-            onPressed: state.hasNextPage
-                ? () => controller.nextPage()
-                : null,
+            onPressed: state.hasNextPage ? () => controller.nextPage() : null,
             tooltip: 'Next page',
           ),
           IconButton(
             icon: const Icon(Icons.last_page),
-            onPressed: state.hasNextPage
-                ? () => controller.lastPage()
-                : null,
+            onPressed: state.hasNextPage ? () => controller.lastPage() : null,
             tooltip: 'Last page',
           ),
           const SizedBox(width: 16),

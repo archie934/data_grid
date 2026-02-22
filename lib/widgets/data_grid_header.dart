@@ -48,16 +48,15 @@ class _HeaderRow<T extends DataGridRow> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final state = context.dataGridState<T>(
-      {DataGridAspect.columns, DataGridAspect.sort},
-    )!;
+    final state = context.dataGridState<T>({
+      DataGridAspect.columns,
+      DataGridAspect.sort,
+    })!;
     final scrollController = context.gridScrollController<T>()!;
     final theme = DataGridTheme.of(context);
 
     final columns = context.dataGridEffectiveColumns<T>()!;
-    final visibleColumns = columns
-        .where((c) => c.visible)
-        .toList();
+    final visibleColumns = columns.where((c) => c.visible).toList();
     final unpinnedFirst = [
       ...visibleColumns.where((c) => !c.pinned),
       ...visibleColumns.where((c) => c.pinned),

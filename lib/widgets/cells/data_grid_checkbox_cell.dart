@@ -24,7 +24,10 @@ class DataGridCheckboxCell<T extends DataGridRow> extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = DataGridTheme.of(context);
     final controller = context.dataGridController<T>()!;
-    final isSelected = context.dataGridState<T>({DataGridAspect.selection})!.selection.isRowSelected(rowId);
+    final isSelected = context
+        .dataGridState<T>({DataGridAspect.selection})!
+        .selection
+        .isRowSelected(rowId);
 
     return GestureDetector(
       onTap: () =>

@@ -6,7 +6,8 @@ import 'package:flutter_data_grid/models/data/row.dart';
 import 'package:flutter_data_grid/widgets/viewport/data_grid_viewport.dart';
 import 'package:flutter_data_grid/widgets/viewport/data_grid_viewport_delegate.dart';
 
-class DataGridScrollView<T extends DataGridRow> extends TwoDimensionalScrollView {
+class DataGridScrollView<T extends DataGridRow>
+    extends TwoDimensionalScrollView {
   final List<DataGridColumn<T>> columns;
   final int rowCount;
   final double rowHeight;
@@ -22,10 +23,20 @@ class DataGridScrollView<T extends DataGridRow> extends TwoDimensionalScrollView
     super.cacheExtent,
     super.verticalDetails = const ScrollableDetails.vertical(),
     super.horizontalDetails = const ScrollableDetails.horizontal(),
-  }) : super(mainAxis: Axis.vertical, diagonalDragBehavior: DiagonalDragBehavior.none, dragStartBehavior: DragStartBehavior.start, clipBehavior: Clip.hardEdge, delegate: delegate);
+  }) : super(
+         mainAxis: Axis.vertical,
+         diagonalDragBehavior: DiagonalDragBehavior.none,
+         dragStartBehavior: DragStartBehavior.start,
+         clipBehavior: Clip.hardEdge,
+         delegate: delegate,
+       );
 
   @override
-  Widget buildViewport(BuildContext context, ViewportOffset verticalOffset, ViewportOffset horizontalOffset) {
+  Widget buildViewport(
+    BuildContext context,
+    ViewportOffset verticalOffset,
+    ViewportOffset horizontalOffset,
+  ) {
     return DataGridViewport(
       verticalOffset: verticalOffset,
       verticalAxisDirection: AxisDirection.down,

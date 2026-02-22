@@ -53,7 +53,9 @@ class StartCellEditEvent extends DataGridEvent {
       }
     }
 
-    final currentValue = column.valueAccessor != null ? column.valueAccessor!(row) : null;
+    final currentValue = column.valueAccessor != null
+        ? column.valueAccessor!(row)
+        : null;
 
     return newState.copyWith(
       edit: newState.edit.copyWith(

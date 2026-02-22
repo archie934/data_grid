@@ -12,7 +12,12 @@ class TestRow extends DataGridRow {
   final int age;
   final String email;
 
-  TestRow({required double id, required this.name, required this.age, required this.email}) {
+  TestRow({
+    required double id,
+    required this.name,
+    required this.age,
+    required this.email,
+  }) {
     this.id = id;
   }
 }
@@ -25,9 +30,24 @@ void main() {
 
     setUp(() {
       columns = [
-        DataGridColumn<TestRow>(id: 1, title: 'Name', width: 150, valueAccessor: (row) => row.name),
-        DataGridColumn<TestRow>(id: 2, title: 'Age', width: 100, valueAccessor: (row) => row.age),
-        DataGridColumn<TestRow>(id: 3, title: 'Email', width: 200, valueAccessor: (row) => row.email),
+        DataGridColumn<TestRow>(
+          id: 1,
+          title: 'Name',
+          width: 150,
+          valueAccessor: (row) => row.name,
+        ),
+        DataGridColumn<TestRow>(
+          id: 2,
+          title: 'Age',
+          width: 100,
+          valueAccessor: (row) => row.age,
+        ),
+        DataGridColumn<TestRow>(
+          id: 3,
+          title: 'Email',
+          width: 200,
+          valueAccessor: (row) => row.email,
+        ),
       ];
 
       rows = [
@@ -36,7 +56,10 @@ void main() {
         TestRow(id: 3, name: 'Charlie', age: 35, email: 'charlie@test.com'),
       ];
 
-      controller = DataGridController<TestRow>(initialColumns: columns, initialRows: rows);
+      controller = DataGridController<TestRow>(
+        initialColumns: columns,
+        initialRows: rows,
+      );
     });
 
     tearDown(() {
@@ -114,7 +137,10 @@ void main() {
     });
 
     testWidgets('handles empty grid', (tester) async {
-      final emptyController = DataGridController<TestRow>(initialColumns: columns, initialRows: []);
+      final emptyController = DataGridController<TestRow>(
+        initialColumns: columns,
+        initialRows: [],
+      );
 
       await tester.pumpWidget(
         MaterialApp(
@@ -135,11 +161,16 @@ void main() {
     });
 
     testWidgets('grid updates when new rows are loaded', (tester) async {
-      final dynamicController = DataGridController<TestRow>(initialColumns: columns, initialRows: []);
+      final dynamicController = DataGridController<TestRow>(
+        initialColumns: columns,
+        initialRows: [],
+      );
 
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(body: DataGrid<TestRow>(controller: dynamicController)),
+          home: Scaffold(
+            body: DataGrid<TestRow>(controller: dynamicController),
+          ),
         ),
       );
 
@@ -164,7 +195,10 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: DataGrid<TestRow>(controller: controller, headerHeight: customHeaderHeight),
+            body: DataGrid<TestRow>(
+              controller: controller,
+              headerHeight: customHeaderHeight,
+            ),
           ),
         ),
       );
@@ -181,7 +215,10 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: DataGrid<TestRow>(controller: controller, rowHeight: customRowHeight),
+            body: DataGrid<TestRow>(
+              controller: controller,
+              rowHeight: customRowHeight,
+            ),
           ),
         ),
       );

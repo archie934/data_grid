@@ -12,7 +12,12 @@ class _DataGridScrollBehavior extends MaterialScrollBehavior {
   const _DataGridScrollBehavior();
 
   @override
-  Set<PointerDeviceKind> get dragDevices => {PointerDeviceKind.touch, PointerDeviceKind.mouse, PointerDeviceKind.stylus, PointerDeviceKind.trackpad};
+  Set<PointerDeviceKind> get dragDevices => {
+    PointerDeviceKind.touch,
+    PointerDeviceKind.mouse,
+    PointerDeviceKind.stylus,
+    PointerDeviceKind.trackpad,
+  };
 }
 
 /// Custom scroll physics with more momentum for smoother horizontal scrolling
@@ -25,8 +30,13 @@ class _SmoothScrollPhysics extends ClampingScrollPhysics {
   }
 
   @override
-  Simulation? createBallisticSimulation(ScrollMetrics position, double velocity) {
-    if ((velocity.abs() < toleranceFor(position).velocity) || (velocity > 0.0 && position.pixels >= position.maxScrollExtent) || (velocity < 0.0 && position.pixels <= position.minScrollExtent)) {
+  Simulation? createBallisticSimulation(
+    ScrollMetrics position,
+    double velocity,
+  ) {
+    if ((velocity.abs() < toleranceFor(position).velocity) ||
+        (velocity > 0.0 && position.pixels >= position.maxScrollExtent) ||
+        (velocity < 0.0 && position.pixels <= position.minScrollExtent)) {
       return null;
     }
     return ClampingScrollSimulation(
@@ -41,7 +51,11 @@ class DataGridBody<T extends DataGridRow> extends StatefulWidget {
   final double rowHeight;
   final double cacheExtent;
 
-  const DataGridBody({super.key, required this.rowHeight, required this.cacheExtent});
+  const DataGridBody({
+    super.key,
+    required this.rowHeight,
+    required this.cacheExtent,
+  });
 
   @override
   State<DataGridBody<T>> createState() => _DataGridBodyState<T>();
@@ -58,7 +72,9 @@ class _DataGridBodyState<T extends DataGridRow> extends State<DataGridBody<T>> {
     final columns = context.dataGridEffectiveColumns<T>()!;
     final scrollController = context.gridScrollController<T>()!;
     final scrollbarWidth = theme.dimensions.scrollbarWidth;
-    final pinnedWidth = columns.where((col) => col.pinned && col.visible).fold<double>(0.0, (sum, col) => sum + col.width);
+    final pinnedWidth = columns
+        .where((col) => col.pinned && col.visible)
+        .fold<double>(0.0, (sum, col) => sum + col.width);
 
     if (state.displayOrder.isEmpty) {
       return const SizedBox.expand();
@@ -76,7 +92,9 @@ class _DataGridBodyState<T extends DataGridRow> extends State<DataGridBody<T>> {
         children: [
           Positioned.fill(
             child: ScrollConfiguration(
-              behavior: const _DataGridScrollBehavior().copyWith(scrollbars: false),
+              behavior: const _DataGridScrollBehavior().copyWith(
+                scrollbars: false,
+              ),
               child: DataGridScrollView<T>(
                 columns: columns,
                 rowCount: state.displayOrder.length,
@@ -84,8 +102,13 @@ class _DataGridBodyState<T extends DataGridRow> extends State<DataGridBody<T>> {
                 cacheExtent: widget.cacheExtent,
                 pinnedMaskColor: theme.colors.evenRowColor,
                 delegate: delegate,
-                verticalDetails: ScrollableDetails.vertical(controller: scrollController.verticalController),
-                horizontalDetails: ScrollableDetails.horizontal(controller: scrollController.horizontalController, physics: const _SmoothScrollPhysics()),
+                verticalDetails: ScrollableDetails.vertical(
+                  controller: scrollController.verticalController,
+                ),
+                horizontalDetails: ScrollableDetails.horizontal(
+                  controller: scrollController.horizontalController,
+                  physics: const _SmoothScrollPhysics(),
+                ),
               ),
             ),
           ),
@@ -101,16 +124,23 @@ class _DataGridBodyState<T extends DataGridRow> extends State<DataGridBody<T>> {
                   if (!scrollController.verticalController.hasClients) {
                     return const SizedBox();
                   }
-                  final positions = scrollController.verticalController.positions;
+                  final positions =
+                      scrollController.verticalController.positions;
                   if (positions.length != 1) {
                     return const SizedBox();
                   }
                   final position = positions.first;
-                  if (!position.hasContentDimensions || !position.hasPixels || !position.hasViewportDimension) {
+                  if (!position.hasContentDimensions ||
+                      !position.hasPixels ||
+                      !position.hasViewportDimension) {
                     return const SizedBox();
                   }
                   final hasVerticalScroll = position.maxScrollExtent > 0;
-                  return hasVerticalScroll ? CustomVerticalScrollbar(controller: scrollController.verticalController) : const SizedBox();
+                  return hasVerticalScroll
+                      ? CustomVerticalScrollbar(
+                          controller: scrollController.verticalController,
+                        )
+                      : const SizedBox();
                 } catch (_) {
                   return const SizedBox();
                 }
@@ -129,16 +159,23 @@ class _DataGridBodyState<T extends DataGridRow> extends State<DataGridBody<T>> {
                   if (!scrollController.horizontalController.hasClients) {
                     return const SizedBox();
                   }
-                  final positions = scrollController.horizontalController.positions;
+                  final positions =
+                      scrollController.horizontalController.positions;
                   if (positions.length != 1) {
                     return const SizedBox();
                   }
                   final position = positions.first;
-                  if (!position.hasContentDimensions || !position.hasPixels || !position.hasViewportDimension) {
+                  if (!position.hasContentDimensions ||
+                      !position.hasPixels ||
+                      !position.hasViewportDimension) {
                     return const SizedBox();
                   }
                   final hasHorizontalScroll = position.maxScrollExtent > 0;
-                  return hasHorizontalScroll ? CustomHorizontalScrollbar(controller: scrollController.horizontalController) : const SizedBox();
+                  return hasHorizontalScroll
+                      ? CustomHorizontalScrollbar(
+                          controller: scrollController.horizontalController,
+                        )
+                      : const SizedBox();
                 } catch (_) {
                   return const SizedBox();
                 }
