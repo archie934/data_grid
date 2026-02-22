@@ -1,6 +1,5 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_data_grid/renderers/filter_renderer.dart';
-import 'package:flutter_data_grid/renderers/cell_renderer.dart';
 import 'package:flutter_data_grid/models/data/row.dart';
 
 /// Builder function for custom cell editor widgets.
@@ -60,8 +59,15 @@ class DataGridColumn<T extends DataGridRow> {
   /// Custom editor builder for cell editing.
   final CellEditorBuilder? cellEditorBuilder;
 
-  /// Custom cell renderer for this column.
-  final CellRenderer? cellRenderer;
+  /// Widget to render for cells in this column.
+  ///
+  /// Wrapped in a [CellScope] that provides row data, column, selection state,
+  /// etc. Use `CellScope.of<T>(context)` inside the widget to access cell data.
+  ///
+  /// Because the same widget instance is reused across rebuilds, Flutter
+  /// preserves element identity and only rebuilds descendants that actually
+  /// read from [CellScope]. Const widgets are especially efficient here.
+  final Widget? cellWidget;
 
   /// Formatter function to format cell display values.
   final Function? cellFormatter;
@@ -88,7 +94,7 @@ class DataGridColumn<T extends DataGridRow> {
     this.editable = true,
     this.filterRenderer,
     this.cellEditorBuilder,
-    this.cellRenderer,
+    this.cellWidget,
     this.cellFormatter,
     this.valueAccessor,
     this.cellValueSetter,
@@ -110,7 +116,7 @@ class DataGridColumn<T extends DataGridRow> {
           filterable == other.filterable &&
           editable == other.editable &&
           filterRenderer == other.filterRenderer &&
-          cellRenderer == other.cellRenderer;
+          cellWidget == other.cellWidget;
 
   @override
   int get hashCode => Object.hash(
@@ -124,7 +130,7 @@ class DataGridColumn<T extends DataGridRow> {
     filterable,
     editable,
     filterRenderer,
-    cellRenderer,
+    cellWidget,
   );
 
   DataGridColumn<T> copyWith({
@@ -139,7 +145,7 @@ class DataGridColumn<T extends DataGridRow> {
     bool? editable,
     FilterRenderer? filterRenderer,
     CellEditorBuilder? cellEditorBuilder,
-    CellRenderer? cellRenderer,
+    Widget? cellWidget,
     Function? cellFormatter,
     dynamic Function(T)? valueAccessor,
     void Function(T row, dynamic value)? cellValueSetter,
@@ -157,7 +163,7 @@ class DataGridColumn<T extends DataGridRow> {
       editable: editable ?? this.editable,
       filterRenderer: filterRenderer ?? this.filterRenderer,
       cellEditorBuilder: cellEditorBuilder ?? this.cellEditorBuilder,
-      cellRenderer: cellRenderer ?? this.cellRenderer,
+      cellWidget: cellWidget ?? this.cellWidget,
       cellFormatter: cellFormatter ?? this.cellFormatter,
       valueAccessor: valueAccessor ?? this.valueAccessor,
       cellValueSetter: cellValueSetter ?? this.cellValueSetter,

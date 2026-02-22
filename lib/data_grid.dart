@@ -9,7 +9,6 @@ export 'models/state/grid_state.dart';
 export 'models/events/grid_events.dart';
 
 // Renderers
-export 'renderers/cell_renderer.dart';
 export 'renderers/render_context.dart';
 export 'renderers/row_renderer.dart';
 export 'renderers/filter_renderer.dart';
@@ -27,6 +26,7 @@ export 'widgets/data_grid_inherited.dart';
 export 'widgets/data_grid_pagination.dart';
 
 // Cell widgets (for customization)
+export 'widgets/cells/cell_scope.dart';
 export 'widgets/cells/data_grid_cell.dart';
 export 'widgets/cells/data_grid_header_cell.dart';
 

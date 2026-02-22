@@ -29,20 +29,3 @@ class RowRenderContext<T extends DataGridRow> {
     required this.isHovered,
   });
 }
-
-/// Context provided to cell renderers.
-class CellRenderContext<T extends DataGridRow> {
-  final DataGridController<T> controller;
-  final bool isSelected;
-  final bool isHovered;
-  final bool isPinned;
-  final int rowIndex;
-
-  const CellRenderContext({
-    required this.controller,
-    required this.isSelected,
-    required this.isHovered,
-    required this.isPinned,
-    required this.rowIndex,
-  });
-}

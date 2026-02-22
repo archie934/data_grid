@@ -5,8 +5,7 @@ import 'package:flutter_data_grid/widgets/viewport/data_grid_viewport_delegate.d
 
 /// The render object that performs the actual layout of the 2D grid.
 /// This implements the lazy rendering logic that only builds visible cells.
-class RenderDataGridViewport<T extends DataGridRow>
-    extends RenderTwoDimensionalViewport {
+class RenderDataGridViewport<T extends DataGridRow> extends RenderTwoDimensionalViewport {
   // Track children separately for layered painting
   final List<RenderBox> _unpinnedChildren = [];
   final List<RenderBox> _pinnedChildren = [];
@@ -110,35 +109,21 @@ class RenderDataGridViewport<T extends DataGridRow>
     final unpinnedWidth = _cachedUnpinnedWidth;
 
     // Visible row range (what the user sees)
-    final int firstVisibleRow = (verticalScrollOffset / _rowHeight)
-        .floor()
-        .clamp(0, _rowCount);
+    final int firstVisibleRow = (verticalScrollOffset / _rowHeight).floor().clamp(0, _rowCount);
     final int visibleRowCount = (viewportHeight / _rowHeight).ceil() + 1;
-    final int lastVisibleRow = (firstVisibleRow + visibleRowCount).clamp(
-      0,
-      _rowCount,
-    );
+    final int lastVisibleRow = (firstVisibleRow + visibleRowCount).clamp(0, _rowCount);
 
     // Expand by buffer rows above and below for pre-rendering
     final int bufferRows = (effectiveCacheExtent / _rowHeight).ceil();
-    final int firstBufferedRow = (firstVisibleRow - bufferRows).clamp(
-      0,
-      _rowCount,
-    );
-    final int lastBufferedRow = (lastVisibleRow + bufferRows).clamp(
-      0,
-      _rowCount,
-    );
+    final int firstBufferedRow = (firstVisibleRow - bufferRows).clamp(0, _rowCount);
+    final int lastBufferedRow = (lastVisibleRow + bufferRows).clamp(0, _rowCount);
 
-    final double startingYOffset =
-        (firstBufferedRow * _rowHeight) - verticalScrollOffset;
+    final double startingYOffset = (firstBufferedRow * _rowHeight) - verticalScrollOffset;
 
     // Visible unpinned column range with horizontal buffer
     final double scrollableViewportWidth = viewportWidth - pinnedWidth;
-    final double bufferedScrollStart =
-        (horizontalScrollOffset - effectiveCacheExtent).clamp(0.0, double.infinity);
-    final double bufferedScrollEnd =
-        horizontalScrollOffset + scrollableViewportWidth + effectiveCacheExtent;
+    final double bufferedScrollStart = (horizontalScrollOffset - effectiveCacheExtent).clamp(0.0, double.infinity);
+    final double bufferedScrollEnd = horizontalScrollOffset + scrollableViewportWidth + effectiveCacheExtent;
 
     int firstVisibleUnpinnedIdx = -1;
     int lastVisibleUnpinnedIdx = unpinnedIndices.length;
@@ -148,11 +133,9 @@ class RenderDataGridViewport<T extends DataGridRow>
     for (int i = 0; i < unpinnedIndices.length; i++) {
       final colWidth = _columns[unpinnedIndices[i]].width;
 
-      if (accumulatedUnpinnedWidth + colWidth > bufferedScrollStart &&
-          firstVisibleUnpinnedIdx == -1) {
+      if (accumulatedUnpinnedWidth + colWidth > bufferedScrollStart && firstVisibleUnpinnedIdx == -1) {
         firstVisibleUnpinnedIdx = i;
-        firstUnpinnedColumnOffset =
-            accumulatedUnpinnedWidth - horizontalScrollOffset;
+        firstUnpinnedColumnOffset = accumulatedUnpinnedWidth - horizontalScrollOffset;
       }
       accumulatedUnpinnedWidth += colWidth;
 
@@ -201,9 +184,7 @@ class RenderDataGridViewport<T extends DataGridRow>
         final child = buildOrObtainChildFor(vicinity);
 
         if (child != null) {
-          child.layout(
-            BoxConstraints.tight(Size(_columns[colIndex].width, _rowHeight)),
-          );
+          child.layout(BoxConstraints.tight(Size(_columns[colIndex].width, _rowHeight)));
           parentDataOf(child).layoutOffset = Offset(xOffset, yOffset);
           _pinnedChildren.add(child);
         }
@@ -214,15 +195,9 @@ class RenderDataGridViewport<T extends DataGridRow>
     }
 
     final totalHeight = _rowCount * _rowHeight;
-    verticalOffset.applyContentDimensions(
-      0,
-      (totalHeight - viewportHeight).clamp(0, double.infinity),
-    );
+    verticalOffset.applyContentDimensions(0, (totalHeight - viewportHeight).clamp(0, double.infinity));
 
-    final horizontalMaxScroll = (unpinnedWidth - scrollableViewportWidth).clamp(
-      0.0,
-      double.infinity,
-    );
+    final horizontalMaxScroll = (unpinnedWidth - scrollableViewportWidth).clamp(0.0, double.infinity);
     horizontalOffset.applyContentDimensions(0, horizontalMaxScroll);
   }
 
@@ -233,10 +208,7 @@ class RenderDataGridViewport<T extends DataGridRow>
   void paint(PaintingContext context, Offset offset) {
     if (_columns.isEmpty || _rowCount == 0) return;
 
-    context.pushClipRect(needsCompositing, offset, Offset.zero & size, (
-      context,
-      offset,
-    ) {
+    context.pushClipRect(needsCompositing, offset, Offset.zero & size, (context, offset) {
       // Layer 1: Paint unpinned cells
       for (final child in _unpinnedChildren) {
         context.paintChild(child, offset + parentDataOf(child).layoutOffset!);
@@ -246,10 +218,7 @@ class RenderDataGridViewport<T extends DataGridRow>
       if (_pinnedWidth > 0) {
         _maskPaint ??= Paint();
         _maskPaint!.color = _pinnedMaskColor;
-        context.canvas.drawRect(
-          Rect.fromLTWH(offset.dx, offset.dy, _pinnedWidth, size.height),
-          _maskPaint!,
-        );
+        context.canvas.drawRect(Rect.fromLTWH(offset.dx, offset.dy, _pinnedWidth, size.height), _maskPaint!);
       }
 
       // Layer 3: Paint pinned cells on top

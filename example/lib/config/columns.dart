@@ -3,7 +3,7 @@ import '../models/product_row.dart';
 import '../renderers/cell_renderers.dart';
 
 List<DataGridColumn<ProductRow>> createColumns(
-  ActionsCellRenderer actionsRenderer,
+  ActionsCellWidget actionsWidget,
 ) {
   return [
     DataGridColumn<ProductRow>(
@@ -15,7 +15,7 @@ List<DataGridColumn<ProductRow>> createColumns(
       sortable: false,
       filterable: false,
       resizable: false,
-      cellRenderer: actionsRenderer,
+      cellWidget: actionsWidget,
     ),
     DataGridColumn<ProductRow>(
       id: 0,
@@ -53,7 +53,7 @@ List<DataGridColumn<ProductRow>> createColumns(
       title: 'Price',
       width: 100,
       editable: true,
-      cellRenderer: const RedCellRenderer(),
+      cellWidget: const RedPriceCell(),
       valueAccessor: (row) => '\$${row.price.toStringAsFixed(2)}',
       cellValueSetter: (row, value) {
         final cleanValue = value.toString().replaceAll('\$', '').trim();

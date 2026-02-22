@@ -11,11 +11,11 @@ import 'package:flutter_data_grid/widgets/data_grid_body.dart';
 import 'package:flutter_data_grid/widgets/data_grid_inherited.dart';
 import 'package:flutter_data_grid/widgets/data_grid_pagination.dart';
 import 'package:flutter_data_grid/widgets/overlays/loading_overlay.dart';
-import 'package:flutter_data_grid/renderers/cell_renderer.dart';
 import 'package:flutter_data_grid/renderers/filter_renderer.dart';
 import 'package:flutter_data_grid/renderers/default_filter_renderer.dart';
 import 'package:flutter_data_grid/theme/data_grid_theme.dart';
 import 'package:flutter_data_grid/theme/data_grid_theme_data.dart';
+import 'package:rxdart/rxdart.dart';
 
 /// A high-performance, virtualized data grid widget for displaying tabular data.
 ///
@@ -44,9 +44,6 @@ class DataGrid<T extends DataGridRow> extends StatefulWidget {
   /// Height of each data row. Defaults to theme value if not specified.
   final double? rowHeight;
 
-  /// Custom cell renderer for advanced cell customization.
-  final CellRenderer<T>? cellRenderer;
-
   /// Custom filter renderer for advanced filter widget customization.
   final FilterRenderer? filterRenderer;
 
@@ -54,8 +51,7 @@ class DataGrid<T extends DataGridRow> extends StatefulWidget {
   final bool showLoadingOverlay;
 
   /// Custom loading overlay builder. If null, uses default overlay.
-  final Widget Function(BuildContext context, String? message)?
-  loadingOverlayBuilder;
+  final Widget Function(BuildContext context, String? message)? loadingOverlayBuilder;
 
   /// Backdrop color for the loading overlay (default: black with 30% opacity)
   final Color? loadingBackdropColor;
@@ -71,8 +67,7 @@ class DataGrid<T extends DataGridRow> extends StatefulWidget {
   final bool showPagination;
 
   /// Custom pagination widget builder. If null, uses default pagination widget.
-  final Widget Function(BuildContext context, DataGridState<T> state)?
-  paginationBuilder;
+  final Widget Function(BuildContext context, DataGridState<T> state)? paginationBuilder;
 
   /// Cache extent for the scroll view. Controls how many pixels of content
   /// are pre-rendered beyond the visible viewport in each direction.
@@ -87,7 +82,6 @@ class DataGrid<T extends DataGridRow> extends StatefulWidget {
     this.scrollController,
     this.headerHeight,
     this.rowHeight,
-    this.cellRenderer,
     this.filterRenderer,
     this.showLoadingOverlay = true,
     this.loadingOverlayBuilder,
@@ -106,6 +100,7 @@ class DataGrid<T extends DataGridRow> extends StatefulWidget {
 class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
   late GridScrollController _scrollController;
   late FilterRenderer _filterRenderer;
+  late DataGridThemeData _themeData;
   Size? _lastViewportSize;
 
   @override
@@ -113,8 +108,15 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
     super.initState();
     _scrollController = widget.scrollController ?? GridScrollController();
     _filterRenderer = widget.filterRenderer ?? const DefaultFilterRenderer();
-    // Scroll events removed - viewport handles scroll internally via ViewportOffset
-    // The previous subscription caused redundant state updates and full widget rebuilds
+    _themeData = widget.theme ?? DataGridThemeData.defaultTheme();
+  }
+
+  @override
+  void didUpdateWidget(covariant DataGrid<T> oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!identical(widget.theme, oldWidget.theme)) {
+      _themeData = widget.theme ?? DataGridThemeData.defaultTheme();
+    }
   }
 
   void _notifyViewportResize(double width, double height) {
@@ -123,9 +125,7 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
       _lastViewportSize = newSize;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
-          widget.controller.addEvent(
-            ViewportResizeEvent(width: width, height: height),
-          );
+          widget.controller.addEvent(ViewportResizeEvent(width: width, height: height));
         }
       });
     }
@@ -161,9 +161,7 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
     } else if (event.logicalKey == LogicalKeyboardKey.escape) {
       widget.controller.addEvent(ClearSelectionEvent());
       return KeyEventResult.handled;
-    } else if (event.logicalKey == LogicalKeyboardKey.keyA &&
-        (HardwareKeyboard.instance.isControlPressed ||
-            HardwareKeyboard.instance.isMetaPressed)) {
+    } else if (event.logicalKey == LogicalKeyboardKey.keyA && (HardwareKeyboard.instance.isControlPressed || HardwareKeyboard.instance.isMetaPressed)) {
       widget.controller.addEvent(SelectAllVisibleEvent());
       return KeyEventResult.handled;
     }
@@ -173,16 +171,13 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
 
   @override
   Widget build(BuildContext context) {
-    final themeData = widget.theme ?? DataGridThemeData.defaultTheme();
-    final effectiveHeaderHeight =
-        widget.headerHeight ?? themeData.dimensions.headerHeight;
-    final effectiveRowHeight =
-        widget.rowHeight ?? themeData.dimensions.rowHeight;
+    final effectiveHeaderHeight = widget.headerHeight ?? _themeData.dimensions.headerHeight;
+    final effectiveRowHeight = widget.rowHeight ?? _themeData.dimensions.rowHeight;
 
     return DataGridTheme(
-      data: themeData,
+      data: _themeData,
       child: StreamBuilder<DataGridState<T>>(
-        stream: widget.controller.state$,
+        stream: widget.controller.state$.debounceTime((const Duration(milliseconds: 16))),
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
@@ -201,31 +196,16 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
               onKeyEvent: (node, event) => _handleKeyEvent(event),
               child: LayoutBuilder(
                 builder: (context, constraints) {
-                  final paginationHeight =
-                      (widget.showPagination && state.pagination.enabled)
-                      ? 56.0
-                      : 0.0;
-                  final hasFilterableColumns = state.columns.any(
-                    (col) => col.filterable && col.visible,
-                  );
-                  final filterRowHeight = hasFilterableColumns
-                      ? themeData.dimensions.filterRowHeight
-                      : 0.0;
-                  final availableHeight =
-                      constraints.maxHeight -
-                      effectiveHeaderHeight -
-                      filterRowHeight -
-                      paginationHeight;
+                  final paginationHeight = (widget.showPagination && state.pagination.enabled) ? 56.0 : 0.0;
+                  final hasFilterableColumns = state.columns.any((col) => col.filterable && col.visible);
+                  final filterRowHeight = hasFilterableColumns ? _themeData.dimensions.filterRowHeight : 0.0;
+                  final availableHeight = constraints.maxHeight - effectiveHeaderHeight - filterRowHeight - paginationHeight;
 
                   final double bodyHeight;
 
-                  if (state.pagination.enabled &&
-                      state.displayOrder.isNotEmpty) {
-                    final requiredHeight =
-                        state.pagination.pageSize * effectiveRowHeight;
-                    bodyHeight = requiredHeight <= availableHeight
-                        ? requiredHeight
-                        : availableHeight;
+                  if (state.pagination.enabled && state.displayOrder.isNotEmpty) {
+                    final requiredHeight = state.pagination.pageSize * effectiveRowHeight;
+                    bodyHeight = requiredHeight <= availableHeight ? requiredHeight : availableHeight;
                   } else {
                     bodyHeight = availableHeight;
                   }
@@ -235,47 +215,27 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
                   final bodyWidget = Expanded(
                     child: SizedBox(
                       height: bodyHeight,
-                      child: DataGridBody<T>(
-                        rowHeight: effectiveRowHeight,
-                        cacheExtent: kDebugMode
-                            ? widget.cacheExtent.clamp(0, 500.0)
-                            : widget.cacheExtent,
-                      ),
+                      child: DataGridBody<T>(rowHeight: effectiveRowHeight, cacheExtent: kDebugMode ? widget.cacheExtent.clamp(0, 500.0) : widget.cacheExtent),
                     ),
                   );
 
                   _notifyViewportResize(constraints.maxWidth, bodyHeight);
 
                   return Semantics(
-                    label:
-                        'Data grid with $rowCount rows and $columnCount columns',
+                    label: 'Data grid with $rowCount rows and $columnCount columns',
                     child: Stack(
                       children: [
                         Column(
                           children: [
-                            DataGridHeader<T>(
-                              defaultFilterRenderer: _filterRenderer,
-                              headerHeight: effectiveHeaderHeight,
-                            ),
+                            DataGridHeader<T>(defaultFilterRenderer: _filterRenderer, headerHeight: effectiveHeaderHeight),
                             bodyWidget,
-                            if (widget.showPagination &&
-                                state.pagination.enabled)
-                              widget.paginationBuilder != null
-                                  ? widget.paginationBuilder!(context, state)
-                                  : DataGridPagination<T>(),
+                            if (widget.showPagination && state.pagination.enabled) widget.paginationBuilder != null ? widget.paginationBuilder!(context, state) : DataGridPagination<T>(),
                           ],
                         ),
                         if (state.isLoading && widget.showLoadingOverlay)
                           widget.loadingOverlayBuilder != null
-                              ? widget.loadingOverlayBuilder!(
-                                  context,
-                                  state.loadingMessage,
-                                )
-                              : DataGridLoadingOverlay(
-                                  message: state.loadingMessage,
-                                  backdropColor: widget.loadingBackdropColor,
-                                  indicatorColor: widget.loadingIndicatorColor,
-                                ),
+                              ? widget.loadingOverlayBuilder!(context, state.loadingMessage)
+                              : DataGridLoadingOverlay(message: state.loadingMessage, backdropColor: widget.loadingBackdropColor, indicatorColor: widget.loadingIndicatorColor),
                       ],
                     ),
                   );

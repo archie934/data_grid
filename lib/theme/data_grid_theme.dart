@@ -19,6 +19,6 @@ class DataGridTheme extends InheritedWidget {
 
   @override
   bool updateShouldNotify(DataGridTheme oldWidget) {
-    return true;
+    return !identical(data, oldWidget.data);
   }
 }
