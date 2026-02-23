@@ -132,7 +132,11 @@ class _MainAppState extends State<MainApp> {
           title: const Text('Flutter Data Grid'),
           actions: [_buildToolbar()],
         ),
-        body: DataGrid<ProductRow>(controller: controller, cacheExtent: 0),
+        body: DataGrid<ProductRow>(
+          controller: controller,
+          cacheExtent: 0,
+          renderer: DataGridRendererType.customLayout,
+        ),
       ),
     );
   }

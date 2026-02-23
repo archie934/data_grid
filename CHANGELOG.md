@@ -1,3 +1,11 @@
+## 0.0.14 - 2026-02-23
+
+* Added `DataGridRendererType` enum with `twoDimensional` and `customLayout` rendering strategies
+* Added `renderer` parameter to `DataGrid` widget to choose between rendering strategies
+* Added `CustomLayoutGridBody` — an alternative renderer using `CustomMultiChildLayout` with pointer-based scrolling, giving full control over scroll behaviour and per-axis rebuild optimisation
+* Refactored custom layout into focused widgets: `GridUnpinnedQuadrant`, `GridPinnedQuadrant`, `GridCell`, `OffsetScrollbar`, `ExternalScrollPosition`, and `GridLayoutDelegate`
+* Changed default `cacheExtent` from 2000.0 to 1000.0
+
 ## 0.0.13 - 2026-02-22
 
 * Docs: Added dartdoc comments to all public API members for improved pub.dev documentation score

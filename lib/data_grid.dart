@@ -5,6 +5,7 @@ export 'controllers/grid_scroll_controller.dart';
 // Models
 export 'models/data/column.dart';
 export 'models/data/row.dart';
+export 'models/enums/grid_renderer.dart';
 export 'models/state/grid_state.dart';
 export 'models/events/grid_events.dart';
 
@@ -41,3 +42,7 @@ export 'widgets/scroll/scrollbar_tracker.dart';
 export 'widgets/viewport/data_grid_viewport.dart';
 export 'widgets/viewport/data_grid_viewport_delegate.dart';
 export 'widgets/viewport/data_grid_viewport_render.dart';
+
+// Custom layout renderer (alternative to TwoDimensionalScrollView)
+export 'widgets/custom_layout/custom_layout_grid_body.dart';
+export 'widgets/custom_layout/grid_layout_delegate.dart';

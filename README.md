@@ -9,6 +9,7 @@ A high-performance, reactive data grid for Flutter with comprehensive features i
 ## ✨ Features
 
 ### Core Functionality
+- ✅ **Dual Rendering Engines** - Choose between `TwoDimensionalScrollView` or `CustomMultiChildLayout`
 - ✅ **Virtualized Rendering** - Only visible rows/columns rendered for smooth 60fps scrolling
 - ✅ **Column Management** - Resize, pin, hide/show, reorder columns
 - ✅ **Column Sorting** - Single-column sorting with ascending/descending/clear cycle
@@ -31,7 +32,7 @@ Add this to your package's `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  flutter_data_grid: ^0.0.13
+  flutter_data_grid: ^0.0.14
 ```
 
 Then run:
@@ -96,7 +97,9 @@ Consider waiting for v1.0 if you need:
 │  └──────────────┘        └──────────────┘      │
 │  ┌──────────────────────────────────────┐      │
 │  │         Virtualized Body             │      │
-│  │  (TwoDimensionalScrollView)          │      │
+│  │  CustomMultiChildLayout (default)    │      │
+│  │  — or —                              │      │
+│  │  TwoDimensionalScrollView (optional) │      │
 │  └──────────────────────────────────────┘      │
 └────────────┬────────────────────────────────────┘
              │
@@ -133,6 +136,7 @@ lib/
 │   │   └── grid_state.dart          # Freezed state models
 │   ├── enums/
 │   │   ├── filter_operator.dart     # Filter operators
+│   │   ├── grid_renderer.dart       # Renderer type (twoDimensional / customLayout)
 │   │   ├── selection_mode.dart      # Selection modes
 │   │   └── sort_direction.dart      # Sort directions
 │   └── events/
@@ -165,13 +169,22 @@ lib/
 ├── widgets/
 │   ├── data_grid.dart               # Main widget
 │   ├── data_grid_header.dart        # Header row
-│   ├── data_grid_body.dart          # Virtualized body
+│   ├── data_grid_body.dart          # Virtualized body (TwoDimensional)
 │   ├── data_grid_pagination.dart    # Pagination controls
 │   ├── cells/
 │   │   ├── data_grid_cell.dart      # Standard cell
 │   │   ├── data_grid_header_cell.dart # Header cell
 │   │   ├── data_grid_checkbox_cell.dart # Selection checkbox
 │   │   └── cell_scope.dart          # Per-cell InheritedWidget (CellScope)
+│   ├── custom_layout/               # CustomMultiChildLayout renderer
+│   │   ├── custom_layout_grid_body.dart  # Body widget + scroll handling
+│   │   ├── grid_unpinned_quadrant.dart   # Scrollable column region
+│   │   ├── grid_pinned_quadrant.dart     # Fixed column region
+│   │   ├── grid_cell.dart                # Cell dispatch widget
+│   │   ├── grid_layout_delegate.dart     # Layout delegate
+│   │   ├── layout_grid_cell.dart         # LayoutId wrapper
+│   │   ├── offset_scrollbar.dart         # Custom scrollbar
+│   │   └── external_scroll_position.dart # ScrollPosition adapter
 │   ├── filters/
 │   │   ├── filter_scope.dart        # Per-column filter InheritedWidget
 │   │   ├── default_filter_widget.dart # Default text-based filter
@@ -408,6 +421,24 @@ Widget build(BuildContext context) {
   );
 }
 ```
+
+### 5. Choose a Renderer (Optional)
+
+The grid ships with two rendering strategies. Pass the `renderer` parameter to switch:
+
+```dart
+DataGrid<Person>(
+  controller: controller,
+  renderer: DataGridRendererType.customLayout, // default
+)
+```
+
+| Renderer | Description |
+|---|---|
+| `customLayout` (default) | Uses `CustomMultiChildLayout` with raw pointer-based scrolling via `Listener`. Manages its own scroll offsets with `ValueNotifier`, giving full control over scroll behaviour and per-axis rebuild optimisation (pinned columns only rebuild on vertical scroll). |
+| `twoDimensional` | Uses Flutter's `TwoDimensionalScrollView` with a custom `RenderObject`. Leverages the framework's built-in two-axis viewport and scroll physics, with native scrollbar integration and accessibility support. |
+
+Both renderers share the same header, pagination, theming, and controller — only the body rendering differs.
 
 ## 📖 Detailed Usage
 
@@ -1063,7 +1094,7 @@ See LICENSE file.
 
 ## 🙏 Acknowledgments
 
-- Built with Flutter's **TwoDimensionalScrollView** for efficient virtualization
+- Built with Flutter's **TwoDimensionalScrollView** and **CustomMultiChildLayout** for efficient virtualization
 - Uses **RxDart** for reactive state management
 - Uses **Freezed** for immutable state models
 - Inspired by data grid implementations in AG Grid, Handsontable, and Excel

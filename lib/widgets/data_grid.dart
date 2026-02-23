@@ -4,10 +4,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_data_grid/controllers/data_grid_controller.dart';
 import 'package:flutter_data_grid/controllers/grid_scroll_controller.dart';
 import 'package:flutter_data_grid/models/data/row.dart';
+import 'package:flutter_data_grid/models/enums/grid_renderer.dart';
 import 'package:flutter_data_grid/models/state/grid_state.dart';
 import 'package:flutter_data_grid/models/events/grid_events.dart';
 import 'package:flutter_data_grid/widgets/data_grid_header.dart';
 import 'package:flutter_data_grid/widgets/data_grid_body.dart';
+import 'package:flutter_data_grid/widgets/custom_layout/custom_layout_grid_body.dart';
 import 'package:flutter_data_grid/widgets/data_grid_inherited.dart';
 import 'package:flutter_data_grid/widgets/data_grid_pagination.dart';
 import 'package:flutter_data_grid/widgets/overlays/loading_overlay.dart';
@@ -79,6 +81,15 @@ class DataGrid<T extends DataGridRow> extends StatefulWidget {
   /// Automatically capped to 500.0 in debug mode to keep debug builds usable.
   final double cacheExtent;
 
+  /// Which rendering strategy to use for the grid body.
+  ///
+  /// [DataGridRendererType.customLayout] (default) uses [CustomMultiChildLayout]
+  /// with raw pointer-based scrolling via [Listener].
+  ///
+  /// [DataGridRendererType.twoDimensional] uses Flutter's
+  /// [TwoDimensionalScrollView] with a custom [RenderObject].
+  final DataGridRendererType renderer;
+
   /// Creates a [DataGrid] widget.
   const DataGrid({
     super.key,
@@ -94,7 +105,8 @@ class DataGrid<T extends DataGridRow> extends StatefulWidget {
     this.theme,
     this.showPagination = true,
     this.paginationBuilder,
-    this.cacheExtent = 2000.0,
+    this.cacheExtent = 1000.0,
+    this.renderer = DataGridRendererType.customLayout,
   });
 
   @override
@@ -222,18 +234,24 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
                     bodyHeight = availableHeight;
                   }
 
-                  // Always use Expanded to maintain consistent widget type
-                  // This prevents scroll controller attachment issues during rebuilds
-                  final bodyWidget = Expanded(
-                    child: SizedBox(
-                      height: bodyHeight,
-                      child: DataGridBody<T>(
+                  final Widget bodyChild;
+                  switch (widget.renderer) {
+                    case DataGridRendererType.twoDimensional:
+                      bodyChild = DataGridBody<T>(
                         rowHeight: effectiveRowHeight,
                         cacheExtent: kDebugMode
                             ? widget.cacheExtent.clamp(0, 500.0)
                             : widget.cacheExtent,
-                      ),
-                    ),
+                      );
+                    case DataGridRendererType.customLayout:
+                      bodyChild = CustomLayoutGridBody<T>(
+                        rowHeight: effectiveRowHeight,
+                        cacheExtent: widget.cacheExtent,
+                      );
+                  }
+
+                  final bodyWidget = Expanded(
+                    child: SizedBox(height: bodyHeight, child: bodyChild),
                   );
 
                   return Semantics(
