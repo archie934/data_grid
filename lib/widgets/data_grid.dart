@@ -77,7 +77,7 @@ class DataGrid<T extends DataGridRow> extends StatefulWidget {
 
   /// Cache extent for the scroll view. Controls how many pixels of content
   /// are pre-rendered beyond the visible viewport in each direction.
-  /// Defaults to 2000.0 (~40 extra rows at default row height).
+  /// Defaults to 1000.0 (~40 extra rows at default row height).
   /// Automatically capped to 500.0 in debug mode to keep debug builds usable.
   final double cacheExtent;
 
