@@ -229,12 +229,11 @@ void main() {
         ),
       );
 
-      final resizeHandle = find.descendant(
-        of: find.byType(GestureDetector),
-        matching: find.byType(MouseRegion),
+      // Find the resize MouseRegion by its cursor and drag within it.
+      // Dragging on the MouseRegion's hit area reaches the GestureDetector inside.
+      final resizeHandle = find.byWidgetPredicate(
+        (w) => w is MouseRegion && w.cursor == SystemMouseCursors.resizeColumn,
       );
-
-      expect(resizeHandle, findsOneWidget);
 
       await tester.drag(resizeHandle, const Offset(50, 0));
       await tester.pump();
@@ -263,12 +262,10 @@ void main() {
         ),
       );
 
-      final mouseRegion = tester.widget<MouseRegion>(
-        find.descendant(
-          of: find.byType(GestureDetector),
-          matching: find.byType(MouseRegion),
-        ),
-      );
+      // MouseRegion is now the parent of GestureDetector; find it by cursor.
+      final mouseRegion = tester
+          .widgetList<MouseRegion>(find.byType(MouseRegion))
+          .firstWhere((r) => r.cursor == SystemMouseCursors.resizeColumn);
 
       expect(mouseRegion.cursor, SystemMouseCursors.resizeColumn);
     });

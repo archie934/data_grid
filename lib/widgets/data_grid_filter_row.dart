@@ -70,7 +70,9 @@ class _FilterCell<T extends DataGridRow> extends StatelessWidget {
       cell = Container(
         decoration: BoxDecoration(
           color: theme.colors.filterBackgroundColor,
-          border: theme.borders.filterBorder,
+          border: column.pinned
+              ? Border(bottom: theme.borders.filterBorder.bottom)
+              : theme.borders.filterBorder,
         ),
       );
     } else {
@@ -80,6 +82,9 @@ class _FilterCell<T extends DataGridRow> extends StatelessWidget {
       cell = FilterScope(
         column: column,
         currentFilter: currentFilter,
+        borderOverride: column.pinned
+            ? Border(bottom: theme.borders.filterBorder.bottom)
+            : null,
         onChange: (operator, value) {
           controller.addEvent(
             FilterEvent(columnId: column.id, operator: operator, value: value),

@@ -13,7 +13,15 @@ class DataGridHeaderCell extends StatefulWidget {
   final DataGridColumn column;
   final SortState sortState;
   final Function(SortDirection?) onSort;
-  final Function(double delta) onResize;
+
+  /// Called during a drag with the new **absolute** target width (already
+  /// clamped to [columnMinWidth]..[columnMaxWidth]).
+  final Function(double newWidth) onResize;
+
+  /// When provided, overrides the default [DataGridBorders.headerBorder]
+  /// for this cell's container decoration (e.g. to suppress the right border
+  /// on pinned columns where the outer wrapper already draws it).
+  final Border? borderOverride;
 
   const DataGridHeaderCell({
     super.key,
@@ -21,6 +29,7 @@ class DataGridHeaderCell extends StatefulWidget {
     required this.sortState,
     required this.onSort,
     required this.onResize,
+    this.borderOverride,
   });
 
   @override
@@ -29,7 +38,27 @@ class DataGridHeaderCell extends StatefulWidget {
 
 class _DataGridHeaderCellState extends State<DataGridHeaderCell> {
   bool _isResizing = false;
-  double _resizeStartX = 0;
+  bool _isHovering = false;
+
+  /// Locally-tracked width so every drag-update delta is applied to the
+  /// most-recent value rather than a potentially stale rebuild value.
+  late double _currentWidth;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentWidth = widget.column.width;
+  }
+
+  @override
+  void didUpdateWidget(DataGridHeaderCell oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Sync from the widget tree only when the user is not actively dragging;
+    // during a drag we own the width value.
+    if (!_isResizing) {
+      _currentWidth = widget.column.width;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +88,7 @@ class _DataGridHeaderCellState extends State<DataGridHeaderCell> {
       child: Container(
         decoration: BoxDecoration(
           color: theme.colors.headerColor,
-          border: theme.borders.headerBorder,
+          border: widget.borderOverride ?? theme.borders.headerBorder,
         ),
         child: Stack(
           children: [
@@ -104,30 +133,47 @@ class _DataGridHeaderCellState extends State<DataGridHeaderCell> {
               right: 0,
               top: 0,
               bottom: 0,
-              child: GestureDetector(
-                onHorizontalDragStart: (details) {
-                  setState(() {
-                    _isResizing = true;
-                    _resizeStartX = details.globalPosition.dx;
-                  });
-                },
-                onHorizontalDragUpdate: (details) {
-                  if (_isResizing) {
-                    final delta = details.globalPosition.dx - _resizeStartX;
-                    widget.onResize(delta);
-                    _resizeStartX = details.globalPosition.dx;
-                  }
-                },
-                onHorizontalDragEnd: (details) {
-                  setState(() => _isResizing = false);
-                },
-                child: MouseRegion(
-                  cursor: SystemMouseCursors.resizeColumn,
-                  child: Container(
-                    width: theme.dimensions.resizeHandleWidth,
-                    color: _isResizing
-                        ? theme.colors.resizeHandleActiveColor
-                        : Colors.transparent,
+              child: MouseRegion(
+                cursor: SystemMouseCursors.resizeColumn,
+                onEnter: (_) => setState(() => _isHovering = true),
+                onExit: (_) => setState(() => _isHovering = false),
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onHorizontalDragStart: (_) {
+                    setState(() => _isResizing = true);
+                  },
+                  onHorizontalDragUpdate: (details) {
+                    if (_isResizing) {
+                      final theme = DataGridTheme.of(context);
+                      // Clamp per-event delta to prevent jarring jumps from
+                      // coalesced or late-arriving pointer events.
+                      final delta = details.delta.dx.clamp(-80.0, 80.0);
+                      _currentWidth = (_currentWidth + delta).clamp(
+                        theme.dimensions.columnMinWidth,
+                        theme.dimensions.columnMaxWidth,
+                      );
+                      widget.onResize(_currentWidth);
+                    }
+                  },
+                  onHorizontalDragEnd: (_) {
+                    setState(() => _isResizing = false);
+                  },
+                  // Use a wider hit area (16 px) than the visual indicator so
+                  // the handle is easy to grab without pixel-perfect aiming.
+                  child: SizedBox(
+                    width: 16.0,
+                    child: Center(
+                      child: Container(
+                        width: theme.dimensions.resizeHandleWidth,
+                        color: _isResizing
+                            ? theme.colors.resizeHandleActiveColor
+                            : _isHovering
+                            ? theme.colors.resizeHandleActiveColor.withValues(
+                                alpha: 0.45,
+                              )
+                            : Colors.transparent,
+                      ),
+                    ),
                   ),
                 ),
               ),

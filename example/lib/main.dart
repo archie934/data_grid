@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_data_grid/data_grid.dart';
 import 'package:flutter_data_grid/models/enums/selection_mode.dart';
+import 'package:flutter_data_grid_example/config/theme.dart';
 
 import 'models/product_row.dart';
 import 'config/columns.dart';
@@ -134,6 +135,7 @@ class _MainAppState extends State<MainApp> {
         ),
         body: DataGrid<ProductRow>(
           controller: controller,
+          theme: purpleTheme,
           cacheExtent: 0,
           renderer: DataGridRendererType.customLayout,
         ),

@@ -1,4 +1,4 @@
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_data_grid/models/data/column.dart';
 import 'package:flutter_data_grid/models/state/grid_state.dart';
 import 'package:flutter_data_grid/models/enums/filter_operator.dart';
@@ -47,6 +47,10 @@ class FilterScope extends InheritedWidget {
   /// Called when the user clears the filter.
   final void Function() onClear;
 
+  /// When set, filter widgets inside this scope should use this border instead
+  /// of the theme default (e.g. to suppress the right border on pinned columns).
+  final Border? borderOverride;
+
   const FilterScope({
     super.key,
     required this.column,
@@ -54,6 +58,7 @@ class FilterScope extends InheritedWidget {
     required this.onChange,
     required this.onClear,
     required super.child,
+    this.borderOverride,
   });
 
   /// Returns the nearest [FilterScope] ancestor.
@@ -72,6 +77,8 @@ class FilterScope extends InheritedWidget {
 
   @override
   bool updateShouldNotify(FilterScope old) {
-    return currentFilter != old.currentFilter || column != old.column;
+    return currentFilter != old.currentFilter ||
+        column != old.column ||
+        borderOverride != old.borderOverride;
   }
 }

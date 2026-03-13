@@ -98,19 +98,25 @@ class _HeaderCellWrapper<T extends DataGridRow> extends StatelessWidget {
     if (column.id == kSelectionColumnId) {
       cell = const SizedBox.expand();
     } else {
+      // For pinned columns suppress the inner right border — the outer
+      // wrapper Container already draws pinnedBorder on the right edge.
+      final effectiveBorder = column.pinned
+          ? Border(
+              bottom: theme.borders.headerBorder.bottom,
+            )
+          : null;
+
       cell = DataGridHeaderCell(
         column: column,
         sortState: sortState,
+        borderOverride: effectiveBorder,
         onSort: (direction) {
           controller.addEvent(
             SortEvent(columnId: column.id, direction: direction),
           );
         },
-        onResize: (delta) {
-          final newWidth = (column.width + delta).clamp(
-            theme.dimensions.columnMinWidth,
-            theme.dimensions.columnMaxWidth,
-          );
+        // newWidth is already clamped by the cell — just dispatch the event.
+        onResize: (newWidth) {
           controller.addEvent(
             ColumnResizeEvent(columnId: column.id, newWidth: newWidth),
           );

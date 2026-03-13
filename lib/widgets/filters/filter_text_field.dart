@@ -4,6 +4,7 @@ import 'package:flutter_data_grid/models/data/column.dart';
 import 'package:flutter_data_grid/models/state/grid_state.dart';
 import 'package:flutter_data_grid/models/enums/filter_operator.dart';
 import 'package:flutter_data_grid/theme/data_grid_theme.dart';
+import 'package:flutter_data_grid/widgets/filters/filter_scope.dart';
 
 /// A debounced text input used as the default filter UI for a column.
 ///
@@ -79,7 +80,9 @@ class _FilterTextFieldState extends State<FilterTextField> {
     return Container(
       decoration: BoxDecoration(
         color: colorScheme.surface,
-        border: gridTheme.borders.filterBorder,
+        border:
+            FilterScope.maybeOf(context)?.borderOverride ??
+            gridTheme.borders.filterBorder,
       ),
       padding: gridTheme.padding.filterPadding,
       child: TextField(

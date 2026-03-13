@@ -16,6 +16,17 @@ class ExternalScrollPosition extends ScrollPositionWithSingleContext {
     if (pixels != value) forcePixels(value);
   }
 
+  /// When this position is driven externally (no real viewport / notification
+  /// context) use [syncPixels] so we never dereference a null notificationContext.
+  @override
+  void jumpTo(double value) {
+    if (context.notificationContext == null) {
+      syncPixels(value);
+    } else {
+      super.jumpTo(value);
+    }
+  }
+
   @override
   double get minScrollExtent =>
       hasContentDimensions ? super.minScrollExtent : 0.0;

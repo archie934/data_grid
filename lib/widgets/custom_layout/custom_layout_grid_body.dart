@@ -9,6 +9,7 @@ import 'package:flutter_data_grid/widgets/custom_layout/external_scroll_position
 import 'package:flutter_data_grid/widgets/custom_layout/grid_pinned_quadrant.dart';
 import 'package:flutter_data_grid/widgets/custom_layout/grid_unpinned_quadrant.dart';
 import 'package:flutter_data_grid/widgets/custom_layout/offset_scrollbar.dart';
+import 'package:flutter_data_grid/controllers/grid_scroll_controller.dart';
 import 'package:flutter_data_grid/widgets/data_grid_inherited.dart';
 
 class CustomLayoutGridBody<T extends DataGridRow> extends StatefulWidget {
@@ -44,6 +45,10 @@ class _CustomLayoutGridBodyState<T extends DataGridRow>
   /// [ScrollController] so the header/filter row can read its offset.
   late final ExternalScrollPosition _hScrollPosition;
 
+  /// Cached reference so dispose() doesn't look up an InheritedWidget on a
+  /// deactivated element (which Flutter forbids and causes test failures).
+  GridScrollController? _cachedScrollController;
+
   @override
   void initState() {
     super.initState();
@@ -59,6 +64,7 @@ class _CustomLayoutGridBodyState<T extends DataGridRow>
   void didChangeDependencies() {
     super.didChangeDependencies();
     final controller = context.gridScrollController<T>();
+    _cachedScrollController = controller;
     if (controller != null &&
         !controller.horizontalController.positions.contains(_hScrollPosition)) {
       controller.horizontalController.attach(_hScrollPosition);
@@ -72,7 +78,7 @@ class _CustomLayoutGridBodyState<T extends DataGridRow>
   @override
   void dispose() {
     _hOffset.removeListener(_pushHorizontalOffset);
-    final controller = context.gridScrollController<T>();
+    final controller = _cachedScrollController;
     if (controller != null &&
         controller.horizontalController.positions.contains(_hScrollPosition)) {
       controller.horizontalController.detach(_hScrollPosition);
