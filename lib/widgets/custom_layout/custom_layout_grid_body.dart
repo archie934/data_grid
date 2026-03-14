@@ -34,9 +34,24 @@ class _CustomLayoutGridBodyState<T extends DataGridRow>
   late final ValueNotifier<double> _hOffset = ValueNotifier(0.0);
   late final ValueNotifier<double> _vOffset = ValueNotifier(0.0);
 
+  // -- Drag state -----------------------------------------------------------
   Offset? _dragStart;
   double _dragStartH = 0;
   double _dragStartV = 0;
+
+  // -- Pan-zoom (trackpad) state --------------------------------------------
+  Offset? _panZoomStartOffset;
+
+  // -- Axis lock (prevents accidental cross-axis scroll) --------------------
+  // Null = not yet decided; set once cumulative delta exceeds the threshold.
+  Axis? _scrollLockedAxis;
+  static const double _axisLockThreshold = 10.0;
+
+  // -- Ballistic animation state --------------------------------------------
+  VelocityTracker? _velocityTrackerH;
+  VelocityTracker? _velocityTrackerV;
+  AnimationController? _ballisticH;
+  AnimationController? _ballisticV;
 
   double _maxHScroll = 0;
   double _maxVScroll = 0;
@@ -86,6 +101,7 @@ class _CustomLayoutGridBodyState<T extends DataGridRow>
     _hScrollPosition.dispose();
     _hOffset.dispose();
     _vOffset.dispose();
+    _cancelBallistic();
     super.dispose();
   }
 
@@ -118,10 +134,62 @@ class _CustomLayoutGridBodyState<T extends DataGridRow>
   @override
   void saveOffset(double offset) {}
 
+  // -- Ballistic helpers -----------------------------------------------------
+
+  void _cancelBallistic() {
+    final h = _ballisticH;
+    _ballisticH = null;
+    h?.stop();
+    h?.dispose();
+
+    final v = _ballisticV;
+    _ballisticV = null;
+    v?.stop();
+    v?.dispose();
+  }
+
+  void _startBallistic() {
+    final velH = _velocityTrackerH?.getVelocity().pixelsPerSecond.dx ?? 0;
+    final velV = _velocityTrackerV?.getVelocity().pixelsPerSecond.dy ?? 0;
+    _velocityTrackerH = null;
+    _velocityTrackerV = null;
+    _animateAxis(velH, _hOffset, () => _maxHScroll, (c) => _ballisticH = c);
+    _animateAxis(velV, _vOffset, () => _maxVScroll, (c) => _ballisticV = c);
+  }
+
+  void _animateAxis(
+    double velocity,
+    ValueNotifier<double> offset,
+    double Function() maxScroll,
+    void Function(AnimationController) store,
+  ) {
+    const frictionTolerance = 50.0;
+    if (velocity.abs() < frictionTolerance) return;
+    final ctrl = AnimationController.unbounded(vsync: this);
+    store(ctrl);
+    final sim = ClampingScrollSimulation(
+      position: offset.value,
+      velocity: velocity,
+      friction: 0.015,
+    );
+    ctrl.addListener(() {
+      final raw = ctrl.value;
+      final max = maxScroll();
+      if (raw <= 0.0 || raw >= max) {
+        offset.value = raw.clamp(0.0, max);
+        ctrl.stop();
+      } else {
+        offset.value = raw;
+      }
+    });
+    ctrl.animateWith(sim);
+  }
+
   // -- Pointer event handlers ------------------------------------------------
 
   void _onPointerSignal(PointerSignalEvent event) {
     if (event is PointerScrollEvent) {
+      _cancelBallistic();
       final dy = event.scrollDelta.dy;
       final dx = event.scrollDelta.dx;
 
@@ -139,28 +207,93 @@ class _CustomLayoutGridBodyState<T extends DataGridRow>
   }
 
   void _onPointerDown(PointerDownEvent event) {
+    _cancelBallistic();
     _dragStart = event.position;
     _dragStartH = _hOffset.value;
     _dragStartV = _vOffset.value;
+    _scrollLockedAxis = null;
+    _velocityTrackerH = VelocityTracker.withKind(event.kind);
+    _velocityTrackerV = VelocityTracker.withKind(event.kind);
   }
 
   void _onPointerMove(PointerMoveEvent event) {
     final start = _dragStart;
     if (start == null) return;
 
-    if (event.kind == PointerDeviceKind.mouse) return;
+    if (event.kind != PointerDeviceKind.touch &&
+        event.kind != PointerDeviceKind.trackpad &&
+        event.kind != PointerDeviceKind.mouse) {
+      return;
+    }
 
     final delta = start - event.position;
-    _hOffset.value = (_dragStartH + delta.dx).clamp(0.0, _maxHScroll);
-    _vOffset.value = (_dragStartV + delta.dy).clamp(0.0, _maxVScroll);
+
+    _scrollLockedAxis ??= _resolveAxis(delta.dx, delta.dy);
+    final locked = _scrollLockedAxis;
+
+    if (locked != Axis.vertical) {
+      _hOffset.value = (_dragStartH + delta.dx).clamp(0.0, _maxHScroll);
+    }
+    if (locked != Axis.horizontal) {
+      _vOffset.value = (_dragStartV + delta.dy).clamp(0.0, _maxVScroll);
+    }
+    _velocityTrackerH?.addPosition(event.timeStamp, Offset(_hOffset.value, 0));
+    _velocityTrackerV?.addPosition(event.timeStamp, Offset(0, _vOffset.value));
   }
 
   void _onPointerUp(PointerUpEvent event) {
     _dragStart = null;
+    _scrollLockedAxis = null;
+    _startBallistic();
   }
 
   void _onPointerCancel(PointerCancelEvent event) {
     _dragStart = null;
+    _scrollLockedAxis = null;
+    _velocityTrackerH = null;
+    _velocityTrackerV = null;
+  }
+
+  // -- Pan-zoom (trackpad two-finger scroll) handlers -----------------------
+
+  void _onPointerPanZoomStart(PointerPanZoomStartEvent event) {
+    _cancelBallistic();
+    _panZoomStartOffset = Offset(_hOffset.value, _vOffset.value);
+    _scrollLockedAxis = null;
+    _velocityTrackerH = VelocityTracker.withKind(PointerDeviceKind.trackpad);
+    _velocityTrackerV = VelocityTracker.withKind(PointerDeviceKind.trackpad);
+  }
+
+  void _onPointerPanZoomUpdate(PointerPanZoomUpdateEvent event) {
+    final start = _panZoomStartOffset;
+    if (start == null) return;
+
+    _scrollLockedAxis ??= _resolveAxis(event.pan.dx, event.pan.dy);
+    final locked = _scrollLockedAxis;
+
+    if (locked != Axis.vertical) {
+      _hOffset.value = (start.dx - event.pan.dx).clamp(0.0, _maxHScroll);
+    }
+    if (locked != Axis.horizontal) {
+      _vOffset.value = (start.dy - event.pan.dy).clamp(0.0, _maxVScroll);
+    }
+    _velocityTrackerH?.addPosition(event.timeStamp, Offset(_hOffset.value, 0));
+    _velocityTrackerV?.addPosition(event.timeStamp, Offset(0, _vOffset.value));
+  }
+
+  void _onPointerPanZoomEnd(PointerPanZoomEndEvent event) {
+    _panZoomStartOffset = null;
+    _scrollLockedAxis = null;
+    _startBallistic();
+  }
+
+  /// Returns the dominant axis once movement exceeds [_axisLockThreshold],
+  /// or null if the gesture hasn't travelled far enough yet to decide.
+  Axis? _resolveAxis(double dx, double dy) {
+    final absDx = dx.abs();
+    final absDy = dy.abs();
+    if (absDx < _axisLockThreshold && absDy < _axisLockThreshold) return null;
+    return absDx >= absDy ? Axis.horizontal : Axis.vertical;
   }
 
   // -- Build -----------------------------------------------------------------
@@ -231,6 +364,9 @@ class _CustomLayoutGridBodyState<T extends DataGridRow>
             onPointerMove: _onPointerMove,
             onPointerUp: _onPointerUp,
             onPointerCancel: _onPointerCancel,
+            onPointerPanZoomStart: _onPointerPanZoomStart,
+            onPointerPanZoomUpdate: _onPointerPanZoomUpdate,
+            onPointerPanZoomEnd: _onPointerPanZoomEnd,
             child: Stack(
               children: [
                 Positioned.fill(

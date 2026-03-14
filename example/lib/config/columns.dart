@@ -2,35 +2,17 @@ import 'package:flutter_data_grid/data_grid.dart';
 import '../models/product_row.dart';
 import '../renderers/cell_renderers.dart';
 
-List<DataGridColumn<ProductRow>> createColumns(
-  ActionsCellWidget actionsWidget,
-) {
+List<DataGridColumn<ProductRow>> createColumns(ActionsCellWidget actionsWidget) {
   return [
-    DataGridColumn<ProductRow>(
-      id: -2,
-      title: '',
-      width: 50,
-      pinned: true,
-      editable: false,
-      sortable: false,
-      filterable: false,
-      resizable: false,
-      cellWidget: actionsWidget,
-    ),
-    DataGridColumn<ProductRow>(
-      id: 0,
-      title: 'ID',
-      width: 80,
-      editable: false,
-      valueAccessor: (row) => row.id.toInt().toString(),
-    ),
+    DataGridColumn<ProductRow>(id: -2, title: '', width: 50, pinned: true, editable: false, sortable: false, filterable: false, resizable: false, cellWidget: actionsWidget),
+    DataGridColumn<ProductRow>(id: 0, title: 'ID', width: 80, pinned: true, editable: false, valueAccessor: (row) => row.id.toInt().toString()),
     DataGridColumn<ProductRow>(
       id: 1,
       title: 'Name',
       width: 200,
+      pinned: true,
       editable: true,
-      valueAccessor: (row) =>
-          row.name.isEmpty ? 'Item ${row.id.toInt()}' : row.name,
+      valueAccessor: (row) => row.name.isEmpty ? 'Item ${row.id.toInt()}' : row.name,
       cellValueSetter: (row, value) => row.name = value.toString(),
     ),
     DataGridColumn<ProductRow>(
@@ -66,23 +48,16 @@ List<DataGridColumn<ProductRow>> createColumns(
         return parsed != null && parsed >= 0;
       },
     ),
-    DataGridColumn<ProductRow>(
-      id: 4,
-      title: 'Total',
-      width: 100,
-      editable: false,
-      valueAccessor: (row) => '\$${row.total.toStringAsFixed(2)}',
-    ),
+    DataGridColumn<ProductRow>(id: 4, title: 'Total', width: 100, editable: false, valueAccessor: (row) => '\$${row.total.toStringAsFixed(2)}'),
     ...List.generate(50, (index) {
       final columnId = index + 5;
       return DataGridColumn<ProductRow>(
         id: columnId,
         title: 'Extra ${index + 1}',
         width: 120,
-        pinned: index < 2,
+        pinned: false,
         editable: true,
-        valueAccessor: (row) =>
-            row.extraData[columnId]?.toString() ?? 'Data ${row.id.toInt()}',
+        valueAccessor: (row) => row.extraData[columnId]?.toString() ?? 'Data ${row.id.toInt()}',
         cellValueSetter: (row, value) => row.extraData[columnId] = value,
       );
     }),
