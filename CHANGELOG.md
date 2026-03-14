@@ -1,4 +1,4 @@
-## 0.0.15 - 2026-03-14
+## 0.0.16 - 2026-03-14
 
 * Fixed `CustomLayoutGridBody` touchpad and pointer device scrolling compatibility
 * Added trackpad two-finger scroll support via `PointerPanZoom` events
