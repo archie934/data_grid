@@ -1,3 +1,12 @@
+## 0.0.15 - 2026-03-14
+
+* Fixed `CustomLayoutGridBody` touchpad and pointer device scrolling compatibility
+* Added trackpad two-finger scroll support via `PointerPanZoom` events
+* Added ballistic (momentum) scrolling with `ClampingScrollSimulation` on gesture end
+* Added axis locking to prevent unintentional cross-axis scroll during imprecise gestures
+* Fixed mouse drag-to-scroll (was silently ignored)
+* Fixed ballistic animation stopping cleanly at scroll boundaries instead of overshooting
+
 ## 0.0.14 - 2026-02-23
 
 * Added `DataGridRendererType` enum with `twoDimensional` and `customLayout` rendering strategies
