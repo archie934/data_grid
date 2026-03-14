@@ -31,7 +31,7 @@ Add this to your package's `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  flutter_data_grid: ^0.0.17
+  flutter_data_grid: ^0.0.18
 ```
 
 Then run:

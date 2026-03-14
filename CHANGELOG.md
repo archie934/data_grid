@@ -1,3 +1,7 @@
+## 0.0.18 - 2026-03-14
+
+* Updated README to remove all references to the removed `TwoDimensionalScrollView` renderer
+
 ## 0.0.17 - 2026-03-14
 
 * **Breaking**: Removed `DataGridRendererType` enum and `renderer` parameter from `DataGrid` — only the `CustomMultiChildLayout` renderer is now supported
