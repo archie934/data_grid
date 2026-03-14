@@ -8,7 +8,8 @@ import 'package:flutter_data_grid/theme/data_grid_theme.dart';
 import 'package:flutter_data_grid/widgets/custom_layout/external_scroll_position.dart';
 import 'package:flutter_data_grid/widgets/custom_layout/grid_pinned_quadrant.dart';
 import 'package:flutter_data_grid/widgets/custom_layout/grid_unpinned_quadrant.dart';
-import 'package:flutter_data_grid/widgets/custom_layout/offset_scrollbar.dart';
+import 'package:flutter_data_grid/widgets/scroll/vertical_scrollbar.dart';
+import 'package:flutter_data_grid/widgets/scroll/horizontal_scrollbar.dart';
 import 'package:flutter_data_grid/controllers/grid_scroll_controller.dart';
 import 'package:flutter_data_grid/widgets/data_grid_inherited.dart';
 
@@ -43,7 +44,6 @@ class _CustomLayoutGridBodyState<T extends DataGridRow>
   Offset? _panZoomStartOffset;
 
   // -- Axis lock (prevents accidental cross-axis scroll) --------------------
-  // Null = not yet decided; set once cumulative delta exceeds the threshold.
   Axis? _scrollLockedAxis;
   static const double _axisLockThreshold = 10.0;
 
@@ -56,12 +56,14 @@ class _CustomLayoutGridBodyState<T extends DataGridRow>
   double _maxHScroll = 0;
   double _maxVScroll = 0;
 
-  /// A real [ScrollPosition] attached to the shared horizontal
-  /// [ScrollController] so the header/filter row can read its offset.
+  /// External scroll positions bridging the internal offsets to [GridScrollController].
   late final ExternalScrollPosition _hScrollPosition;
+  late final ExternalScrollPosition _vScrollPosition;
 
-  /// Cached reference so dispose() doesn't look up an InheritedWidget on a
-  /// deactivated element (which Flutter forbids and causes test failures).
+  /// Guards against feedback loops in the two-way offset ↔ position sync.
+  bool _updatingHOffset = false;
+  bool _updatingVOffset = false;
+
   GridScrollController? _cachedScrollController;
 
   @override
@@ -72,7 +74,13 @@ class _CustomLayoutGridBodyState<T extends DataGridRow>
       context: this,
       initialPixels: 0,
     );
+    _vScrollPosition = ExternalScrollPosition(
+      physics: const NeverScrollableScrollPhysics(),
+      context: this,
+      initialPixels: 0,
+    );
     _hOffset.addListener(_pushHorizontalOffset);
+    _vOffset.addListener(_pushVerticalOffset);
   }
 
   @override
@@ -80,25 +88,43 @@ class _CustomLayoutGridBodyState<T extends DataGridRow>
     super.didChangeDependencies();
     final controller = context.gridScrollController<T>();
     _cachedScrollController = controller;
-    if (controller != null &&
-        !controller.horizontalController.positions.contains(_hScrollPosition)) {
-      controller.horizontalController.attach(_hScrollPosition);
-    }
-  }
+    if (controller == null) return;
 
-  void _pushHorizontalOffset() {
-    _hScrollPosition.syncPixels(_hOffset.value);
+    if (!controller.horizontalController.positions.contains(_hScrollPosition)) {
+      controller.horizontalController.attach(_hScrollPosition);
+      controller.horizontalController.addListener(
+        _onHorizontalControllerChanged,
+      );
+    }
+    if (!controller.verticalController.positions.contains(_vScrollPosition)) {
+      controller.verticalController.attach(_vScrollPosition);
+      controller.verticalController.addListener(_onVerticalControllerChanged);
+    }
   }
 
   @override
   void dispose() {
     _hOffset.removeListener(_pushHorizontalOffset);
+    _vOffset.removeListener(_pushVerticalOffset);
     final controller = _cachedScrollController;
-    if (controller != null &&
-        controller.horizontalController.positions.contains(_hScrollPosition)) {
-      controller.horizontalController.detach(_hScrollPosition);
+    if (controller != null) {
+      controller.horizontalController.removeListener(
+        _onHorizontalControllerChanged,
+      );
+      if (controller.horizontalController.positions.contains(
+        _hScrollPosition,
+      )) {
+        controller.horizontalController.detach(_hScrollPosition);
+      }
+      controller.verticalController.removeListener(
+        _onVerticalControllerChanged,
+      );
+      if (controller.verticalController.positions.contains(_vScrollPosition)) {
+        controller.verticalController.detach(_vScrollPosition);
+      }
     }
     _hScrollPosition.dispose();
+    _vScrollPosition.dispose();
     _hOffset.dispose();
     _vOffset.dispose();
     _cancelBallistic();
@@ -133,6 +159,34 @@ class _CustomLayoutGridBodyState<T extends DataGridRow>
 
   @override
   void saveOffset(double offset) {}
+
+  // -- Offset ↔ position sync -----------------------------------------------
+
+  void _pushHorizontalOffset() {
+    _updatingHOffset = true;
+    _hScrollPosition.syncPixels(_hOffset.value);
+    _updatingHOffset = false;
+  }
+
+  void _pushVerticalOffset() {
+    _updatingVOffset = true;
+    _vScrollPosition.syncPixels(_vOffset.value);
+    _updatingVOffset = false;
+  }
+
+  /// Updates [_hOffset] when position is changed externally (e.g. [GridScrollController.scrollToColumn]).
+  void _onHorizontalControllerChanged() {
+    if (!_updatingHOffset) {
+      _hOffset.value = _hScrollPosition.pixels.clamp(0.0, _maxHScroll);
+    }
+  }
+
+  /// Updates [_vOffset] when position is changed externally (e.g. [GridScrollController.scrollToRow]).
+  void _onVerticalControllerChanged() {
+    if (!_updatingVOffset) {
+      _vOffset.value = _vScrollPosition.pixels.clamp(0.0, _maxVScroll);
+    }
+  }
 
   // -- Ballistic helpers -----------------------------------------------------
 
@@ -196,12 +250,10 @@ class _CustomLayoutGridBodyState<T extends DataGridRow>
       if (HardwareKeyboard.instance.isShiftPressed) {
         _hOffset.value = (_hOffset.value + dy).clamp(0.0, _maxHScroll);
       } else {
-        if (dx != 0) {
+        if (dx != 0)
           _hOffset.value = (_hOffset.value + dx).clamp(0.0, _maxHScroll);
-        }
-        if (dy != 0) {
+        if (dy != 0)
           _vOffset.value = (_vOffset.value + dy).clamp(0.0, _maxVScroll);
-        }
       }
     }
   }
@@ -227,16 +279,14 @@ class _CustomLayoutGridBodyState<T extends DataGridRow>
     }
 
     final delta = start - event.position;
-
     _scrollLockedAxis ??= _resolveAxis(delta.dx, delta.dy);
     final locked = _scrollLockedAxis;
 
-    if (locked != Axis.vertical) {
+    if (locked != Axis.vertical)
       _hOffset.value = (_dragStartH + delta.dx).clamp(0.0, _maxHScroll);
-    }
-    if (locked != Axis.horizontal) {
+    if (locked != Axis.horizontal)
       _vOffset.value = (_dragStartV + delta.dy).clamp(0.0, _maxVScroll);
-    }
+
     _velocityTrackerH?.addPosition(event.timeStamp, Offset(_hOffset.value, 0));
     _velocityTrackerV?.addPosition(event.timeStamp, Offset(0, _vOffset.value));
   }
@@ -254,8 +304,6 @@ class _CustomLayoutGridBodyState<T extends DataGridRow>
     _velocityTrackerV = null;
   }
 
-  // -- Pan-zoom (trackpad two-finger scroll) handlers -----------------------
-
   void _onPointerPanZoomStart(PointerPanZoomStartEvent event) {
     _cancelBallistic();
     _panZoomStartOffset = Offset(_hOffset.value, _vOffset.value);
@@ -271,12 +319,11 @@ class _CustomLayoutGridBodyState<T extends DataGridRow>
     _scrollLockedAxis ??= _resolveAxis(event.pan.dx, event.pan.dy);
     final locked = _scrollLockedAxis;
 
-    if (locked != Axis.vertical) {
+    if (locked != Axis.vertical)
       _hOffset.value = (start.dx - event.pan.dx).clamp(0.0, _maxHScroll);
-    }
-    if (locked != Axis.horizontal) {
+    if (locked != Axis.horizontal)
       _vOffset.value = (start.dy - event.pan.dy).clamp(0.0, _maxVScroll);
-    }
+
     _velocityTrackerH?.addPosition(event.timeStamp, Offset(_hOffset.value, 0));
     _velocityTrackerV?.addPosition(event.timeStamp, Offset(0, _vOffset.value));
   }
@@ -287,8 +334,6 @@ class _CustomLayoutGridBodyState<T extends DataGridRow>
     _startBallistic();
   }
 
-  /// Returns the dominant axis once movement exceeds [_axisLockThreshold],
-  /// or null if the gesture hasn't travelled far enough yet to decide.
   Axis? _resolveAxis(double dx, double dy) {
     final absDx = dx.abs();
     final absDy = dy.abs();
@@ -310,11 +355,10 @@ class _CustomLayoutGridBodyState<T extends DataGridRow>
     final columns = context.dataGridEffectiveColumns<T>();
     if (columns == null) return const SizedBox.expand();
 
-    if (state.displayOrder.isEmpty) {
-      return const SizedBox.expand();
-    }
+    if (state.displayOrder.isEmpty) return const SizedBox.expand();
 
     final scrollbarWidth = theme.dimensions.scrollbarWidth;
+    final scrollController = _cachedScrollController;
 
     return RepaintBoundary(
       child: LayoutBuilder(
@@ -350,12 +394,17 @@ class _CustomLayoutGridBodyState<T extends DataGridRow>
             double.infinity,
           );
 
-          if (_hOffset.value > _maxHScroll) {
-            _hOffset.value = _maxHScroll;
-          }
-          if (_vOffset.value > _maxVScroll) {
-            _vOffset.value = _maxVScroll;
-          }
+          if (_hOffset.value > _maxHScroll) _hOffset.value = _maxHScroll;
+          if (_vOffset.value > _maxVScroll) _vOffset.value = _maxVScroll;
+
+          _hScrollPosition.syncDimensions(
+            viewportExtent: scrollableViewportWidth,
+            maxScrollExtent: _maxHScroll,
+          );
+          _vScrollPosition.syncDimensions(
+            viewportExtent: viewportHeight,
+            maxScrollExtent: _maxVScroll,
+          );
 
           return Listener(
             behavior: HitTestBehavior.translucent,
@@ -404,30 +453,22 @@ class _CustomLayoutGridBodyState<T extends DataGridRow>
                       vOffset: _vOffset,
                     ),
                   ),
-                if (_maxVScroll >= 0)
+                if (scrollController != null && _maxVScroll > 0)
                   Positioned(
                     right: 0,
                     top: 0,
-                    bottom: scrollbarWidth,
-                    child: OffsetScrollbar(
-                      offset: _vOffset,
-                      maxScroll: _maxVScroll,
-                      axis: Axis.vertical,
-                      viewportExtent: viewportHeight,
-                      contentExtent: totalHeight,
+                    bottom: _maxHScroll > 0 ? scrollbarWidth : 0,
+                    child: VerticalDataGridScrollbar(
+                      controller: scrollController.verticalController,
                     ),
                   ),
-                if (_maxHScroll >= 0)
+                if (scrollController != null && _maxHScroll > 0)
                   Positioned(
                     left: pinnedWidth,
-                    right: scrollbarWidth,
+                    right: _maxVScroll > 0 ? scrollbarWidth : 0,
                     bottom: 0,
-                    child: OffsetScrollbar(
-                      offset: _hOffset,
-                      maxScroll: _maxHScroll,
-                      axis: Axis.horizontal,
-                      viewportExtent: scrollableViewportWidth,
-                      contentExtent: unpinnedWidth,
+                    child: HorizontalDataGridScrollbar(
+                      controller: scrollController.horizontalController,
                     ),
                   ),
               ],

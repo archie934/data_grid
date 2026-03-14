@@ -101,9 +101,7 @@ class _HeaderCellWrapper<T extends DataGridRow> extends StatelessWidget {
       // For pinned columns suppress the inner right border — the outer
       // wrapper Container already draws pinnedBorder on the right edge.
       final effectiveBorder = column.pinned
-          ? Border(
-              bottom: theme.borders.headerBorder.bottom,
-            )
+          ? Border(bottom: theme.borders.headerBorder.bottom)
           : null;
 
       cell = DataGridHeaderCell(

@@ -225,7 +225,7 @@ void main() {
 
       await tester.pumpAndSettle();
 
-      final body = find.byType(DataGridBody<TestRow>);
+      final body = find.byType(CustomLayoutGridBody<TestRow>);
       expect(body, findsOneWidget);
     });
 

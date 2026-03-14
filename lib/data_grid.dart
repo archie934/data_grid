@@ -5,7 +5,6 @@ export 'controllers/grid_scroll_controller.dart';
 // Models
 export 'models/data/column.dart';
 export 'models/data/row.dart';
-export 'models/enums/grid_renderer.dart';
 export 'models/state/grid_state.dart';
 export 'models/events/grid_events.dart';
 
@@ -16,8 +15,6 @@ export 'theme/data_grid_theme_data.dart';
 // Main widgets
 export 'widgets/data_grid.dart';
 export 'widgets/data_grid_header.dart';
-export 'widgets/data_grid_body.dart';
-export 'widgets/data_grid_scroll_view.dart';
 export 'widgets/data_grid_inherited.dart';
 export 'widgets/data_grid_pagination.dart';
 
@@ -34,15 +31,9 @@ export 'widgets/filters/default_filter_widget.dart';
 export 'widgets/overlays/loading_overlay.dart';
 
 // Scrollbars (for customization)
-export 'widgets/scroll/scrollbar_horizontal.dart';
-export 'widgets/scroll/scrollbar_vertical.dart';
-export 'widgets/scroll/scrollbar_tracker.dart';
+export 'widgets/scroll/vertical_scrollbar.dart';
+export 'widgets/scroll/horizontal_scrollbar.dart';
 
-// Viewport (advanced use cases)
-export 'widgets/viewport/data_grid_viewport.dart';
-export 'widgets/viewport/data_grid_viewport_delegate.dart';
-export 'widgets/viewport/data_grid_viewport_render.dart';
-
-// Custom layout renderer (alternative to TwoDimensionalScrollView)
+// Custom layout renderer
 export 'widgets/custom_layout/custom_layout_grid_body.dart';
 export 'widgets/custom_layout/grid_layout_delegate.dart';

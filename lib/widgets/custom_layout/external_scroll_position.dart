@@ -16,6 +16,15 @@ class ExternalScrollPosition extends ScrollPositionWithSingleContext {
     if (pixels != value) forcePixels(value);
   }
 
+  /// Updates viewport and content dimensions without triggering scroll corrections.
+  void syncDimensions({
+    required double viewportExtent,
+    required double maxScrollExtent,
+  }) {
+    applyViewportDimension(viewportExtent);
+    applyContentDimensions(0.0, maxScrollExtent);
+  }
+
   /// When this position is driven externally (no real viewport / notification
   /// context) use [syncPixels] so we never dereference a null notificationContext.
   @override
@@ -25,6 +34,19 @@ class ExternalScrollPosition extends ScrollPositionWithSingleContext {
     } else {
       super.jumpTo(value);
     }
+  }
+
+  /// Bypasses [DrivenScrollActivity] entirely — avoids starting a Ticker that
+  /// conflicts with concurrent [jumpTo]/[syncPixels] calls (e.g. scrollbar drag
+  /// starting while a track-tap animation is still running).
+  @override
+  Future<void> animateTo(
+    double to, {
+    required Duration duration,
+    required Curve curve,
+  }) {
+    syncPixels(to.clamp(minScrollExtent, maxScrollExtent));
+    return Future.value();
   }
 
   @override

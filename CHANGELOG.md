@@ -1,3 +1,9 @@
+## 0.0.17 - 2026-03-14
+
+* **Breaking**: Removed `DataGridRendererType` enum and `renderer` parameter from `DataGrid` — only the `CustomMultiChildLayout` renderer is now supported
+* **Breaking**: Removed `DataGridBody`, `DataGridScrollView`, and all `TwoDimensionalScrollView`-based viewport classes (`DataGridViewport`, `RenderDataGridViewport`, `DataGridChildDelegate`, `DataGridVicinity`)
+* Fixed scrollbar drag throwing when a track-tap `animateTo` and a simultaneous drag `jumpTo` conflicted — `ExternalScrollPosition.animateTo` now resolves instantly via `syncPixels` instead of starting a `DrivenScrollActivity`
+
 ## 0.0.16 - 2026-03-14
 
 * Fixed `CustomLayoutGridBody` touchpad and pointer device scrolling compatibility
