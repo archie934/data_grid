@@ -72,6 +72,10 @@ class DataGridCellDecorations {
   final BoxDecoration oddRowPinnedSelected;
   final BoxDecoration checkboxEven;
   final BoxDecoration checkboxOdd;
+  final BoxDecoration evenRowCellFocused;
+  final BoxDecoration oddRowCellFocused;
+  final BoxDecoration evenRowCellActive;
+  final BoxDecoration oddRowCellActive;
 
   DataGridCellDecorations._(DataGridColors colors, DataGridBorders borders)
     : evenRow = BoxDecoration(
@@ -117,6 +121,38 @@ class DataGridCellDecorations {
       checkboxOdd = BoxDecoration(
         color: colors.oddRowColor,
         border: borders.checkboxCellBorder,
+      ),
+      evenRowCellFocused = BoxDecoration(
+        color: colors.cellFocusColor,
+        border: borders.cellBorder,
+      ),
+      oddRowCellFocused = BoxDecoration(
+        color: colors.cellFocusColor,
+        border: borders.cellBorder,
+      ),
+      evenRowCellActive = BoxDecoration(
+        color: colors.cellFocusColor,
+        border: Border(
+          top: const BorderSide(color: Colors.blue, width: 2),
+          bottom: const BorderSide(color: Colors.blue, width: 2),
+          left: const BorderSide(color: Colors.blue, width: 2),
+          right: BorderSide(
+            color: borders.cellBorder.right.color,
+            width: 1,
+          ),
+        ),
+      ),
+      oddRowCellActive = BoxDecoration(
+        color: colors.cellFocusColor,
+        border: Border(
+          top: const BorderSide(color: Colors.blue, width: 2),
+          bottom: const BorderSide(color: Colors.blue, width: 2),
+          left: const BorderSide(color: Colors.blue, width: 2),
+          right: BorderSide(
+            color: borders.cellBorder.right.color,
+            width: 1,
+          ),
+        ),
       );
 
   BoxDecoration forCell({
@@ -138,6 +174,19 @@ class DataGridCellDecorations {
 
   BoxDecoration forCheckbox({required bool isEven}) {
     return isEven ? checkboxEven : checkboxOdd;
+  }
+
+  /// Returns the appropriate decoration for a cell in the focused-cells path.
+  /// Priority: active (last in path) > in path > normal row decoration.
+  BoxDecoration forFocusedCell({
+    required bool isEven,
+    required bool isPinned,
+    required bool isInPath,
+    required bool isActive,
+  }) {
+    if (isActive) return isEven ? evenRowCellActive : oddRowCellActive;
+    if (isInPath) return isEven ? evenRowCellFocused : oddRowCellFocused;
+    return forCell(isEven: isEven, isSelected: false, isPinned: isPinned);
   }
 }
 
@@ -328,6 +377,9 @@ class DataGridColors {
   /// Color of the editing indicator.
   final Color editIndicatorColor;
 
+  /// Background color for cells in the focused-cells path.
+  final Color cellFocusColor;
+
   /// Color of the resize handle when active.
   final Color resizeHandleActiveColor;
 
@@ -337,8 +389,12 @@ class DataGridColors {
   /// Color of the scrollbar thumb.
   final Color scrollbarThumbColor;
 
+  /// Fill color of the drag-selection rectangle overlay.
+  final Color dragSelectOverlayColor;
+
   DataGridColors({
     Color? selectionColor,
+    Color? cellFocusColor,
     Color? evenRowColor,
     Color? oddRowColor,
     Color? headerColor,
@@ -347,7 +403,9 @@ class DataGridColors {
     Color? resizeHandleActiveColor,
     Color? scrollbarTrackColor,
     Color? scrollbarThumbColor,
+    Color? dragSelectOverlayColor,
   }) : selectionColor = selectionColor ?? Colors.blue.withValues(alpha: 0.1),
+       cellFocusColor = cellFocusColor ?? Colors.blue.withValues(alpha: 0.15),
        evenRowColor = evenRowColor ?? Colors.white,
        oddRowColor = oddRowColor ?? Colors.grey[50]!,
        headerColor = headerColor ?? Colors.grey[200]!,
@@ -359,7 +417,9 @@ class DataGridColors {
            scrollbarTrackColor ?? Colors.grey.withValues(alpha: 0.1),
        scrollbarThumbColor =
            scrollbarThumbColor ??
-           const Color(0xFF757575).withValues(alpha: 0.7);
+           const Color(0xFF757575).withValues(alpha: 0.7),
+       dragSelectOverlayColor =
+           dragSelectOverlayColor ?? Colors.blue.withValues(alpha: 0.12);
 
   factory DataGridColors.defaults() {
     return DataGridColors();
@@ -367,6 +427,7 @@ class DataGridColors {
 
   DataGridColors copyWith({
     Color? selectionColor,
+    Color? cellFocusColor,
     Color? evenRowColor,
     Color? oddRowColor,
     Color? headerColor,
@@ -375,9 +436,11 @@ class DataGridColors {
     Color? resizeHandleActiveColor,
     Color? scrollbarTrackColor,
     Color? scrollbarThumbColor,
+    Color? dragSelectOverlayColor,
   }) {
     return DataGridColors(
       selectionColor: selectionColor ?? this.selectionColor,
+      cellFocusColor: cellFocusColor ?? this.cellFocusColor,
       evenRowColor: evenRowColor ?? this.evenRowColor,
       oddRowColor: oddRowColor ?? this.oddRowColor,
       headerColor: headerColor ?? this.headerColor,
@@ -388,6 +451,8 @@ class DataGridColors {
           resizeHandleActiveColor ?? this.resizeHandleActiveColor,
       scrollbarTrackColor: scrollbarTrackColor ?? this.scrollbarTrackColor,
       scrollbarThumbColor: scrollbarThumbColor ?? this.scrollbarThumbColor,
+      dragSelectOverlayColor:
+          dragSelectOverlayColor ?? this.dragSelectOverlayColor,
     );
   }
 }

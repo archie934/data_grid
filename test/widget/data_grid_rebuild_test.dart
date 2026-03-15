@@ -77,7 +77,7 @@ void main() {
           initialRows: rows,
         );
         addTearDown(controller.dispose);
-        controller.setSelectionMode(SelectionMode.single);
+        controller.setSelectionMode(SelectionMode.multiple);
 
         await tester.pumpWidget(
           MaterialApp(
@@ -139,7 +139,7 @@ void main() {
         initialRows: rows,
       );
       addTearDown(controller.dispose);
-      controller.setSelectionMode(SelectionMode.single);
+      controller.setSelectionMode(SelectionMode.multiple);
 
       await tester.pumpWidget(
         MaterialApp(

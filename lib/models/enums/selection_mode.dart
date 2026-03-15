@@ -1,1 +1,1 @@
-enum SelectionMode { none, single, multiple }
+enum SelectionMode { none, multiple }

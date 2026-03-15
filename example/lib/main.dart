@@ -7,6 +7,7 @@ import 'package:flutter_data_grid_example/config/theme.dart';
 import 'models/product_row.dart';
 import 'config/columns.dart';
 import 'renderers/cell_renderers.dart';
+import 'interceptors/logging_interceptor.dart';
 
 const exampleRows = 1000000;
 
@@ -48,6 +49,7 @@ class _MainAppState extends State<MainApp> {
       rowHeight: 48.0,
       onLoadPage: _loadPage,
       onGetTotalCount: _getTotalCount,
+      interceptors: [const LoggingInterceptor()],
     );
 
     controller.enablePagination(true);
@@ -165,7 +167,6 @@ class _MainAppState extends State<MainApp> {
     return SegmentedButton<SelectionMode>(
       segments: const [
         ButtonSegment(value: SelectionMode.none, label: Text('None')),
-        ButtonSegment(value: SelectionMode.single, label: Text('Single')),
         ButtonSegment(value: SelectionMode.multiple, label: Text('Multi')),
       ],
       selected: {mode},

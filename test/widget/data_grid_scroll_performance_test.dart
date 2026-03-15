@@ -550,7 +550,7 @@ void main() {
         ),
       );
       addTearDown(controller.dispose);
-      controller.setSelectionMode(SelectionMode.single);
+      controller.setSelectionMode(SelectionMode.multiple);
 
       await tester.pumpWidget(_grid(controller, rowHeight: rowHeight));
       await tester.pumpAndSettle();
@@ -636,7 +636,7 @@ void main() {
           ),
         );
         addTearDown(controller.dispose);
-        controller.setSelectionMode(SelectionMode.single);
+        controller.setSelectionMode(SelectionMode.multiple);
 
         await tester.pumpWidget(_grid(controller, rowHeight: rowHeight));
         await tester.pumpAndSettle();

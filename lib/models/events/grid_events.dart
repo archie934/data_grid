@@ -3,6 +3,7 @@ export 'column_events.dart';
 export 'sort_events.dart';
 export 'filter_events.dart';
 export 'selection_events.dart';
+export 'cell_selection_events.dart';
 export 'group_events.dart';
 export 'data_events.dart';
 export 'keyboard_events.dart';

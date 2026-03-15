@@ -5,8 +5,7 @@ import 'package:flutter_data_grid/controllers/data_grid_controller.dart';
 import 'package:flutter_data_grid/models/data/row.dart';
 import 'package:flutter_data_grid/models/data/column.dart';
 import 'package:flutter_data_grid/models/state/grid_state.dart';
-import 'package:flutter_data_grid/models/events/selection_events.dart';
-import 'package:flutter_data_grid/models/enums/selection_mode.dart';
+import 'package:flutter_data_grid/models/events/cell_selection_events.dart';
 import 'package:flutter_data_grid/widgets/data_grid_inherited.dart';
 import 'package:flutter_data_grid/theme/data_grid_theme.dart';
 import 'package:flutter_data_grid/widgets/cells/cell_scope.dart';
@@ -17,23 +16,30 @@ import 'package:flutter_data_grid/widgets/cells/cell_scope.dart';
 class _CellDisplayState {
   final bool isSelected;
   final bool isEditing;
-  final SelectionMode selectionMode;
+  final bool isCellInPath;
+  final bool isCellActive;
 
   const _CellDisplayState({
     required this.isSelected,
     required this.isEditing,
-    required this.selectionMode,
+    required this.isCellInPath,
+    required this.isCellActive,
   });
 
   factory _CellDisplayState.from(
     DataGridState state,
     double rowId,
     int columnId,
+    String cellId, // pre-computed to avoid per-update string allocation
   ) {
+    final focused = state.selection.focusedCells;
     return _CellDisplayState(
       isSelected: state.selection.isRowSelected(rowId),
       isEditing: state.edit.isCellEditing(rowId, columnId),
-      selectionMode: state.selection.mode,
+      // Use the list directly rather than going through isCellFocused() so the
+      // pre-computed cellId string is reused rather than recreated each time.
+      isCellInPath: focused.contains(cellId),
+      isCellActive: focused.isNotEmpty && focused.last == cellId,
     );
   }
 
@@ -42,10 +48,12 @@ class _CellDisplayState {
       other is _CellDisplayState &&
       isSelected == other.isSelected &&
       isEditing == other.isEditing &&
-      selectionMode == other.selectionMode;
+      isCellInPath == other.isCellInPath &&
+      isCellActive == other.isCellActive;
 
   @override
-  int get hashCode => Object.hash(isSelected, isEditing, selectionMode);
+  int get hashCode =>
+      Object.hash(isSelected, isEditing, isCellInPath, isCellActive);
 }
 
 /// Cell widget whose content is always a stable widget instance wrapped in
@@ -82,6 +90,9 @@ class _DataGridCellState<T extends DataGridRow> extends State<DataGridCell<T>> {
   StreamSubscription<_CellDisplayState>? _subscription;
   DataGridController<T>? _subscribedController;
   late _CellDisplayState _displayState;
+  // Cached cell ID string — computed once, reused on every state update to
+  // avoid allocating a new String object for every visible cell per update.
+  late String _cellId;
 
   @override
   void didChangeDependencies() {
@@ -91,10 +102,12 @@ class _DataGridCellState<T extends DataGridRow> extends State<DataGridCell<T>> {
       _cancelSubscription();
       _subscribedController = controller;
       if (controller != null) {
+        _cellId = '${widget.rowId}_${widget.column.id}';
         _displayState = _CellDisplayState.from(
           controller.state,
           widget.rowId,
           widget.column.id,
+          _cellId,
         );
         _subscribe(controller);
       }
@@ -114,10 +127,12 @@ class _DataGridCellState<T extends DataGridRow> extends State<DataGridCell<T>> {
       final controller = _subscribedController;
       if (controller != null) {
         _cancelSubscription();
+        _cellId = '${widget.rowId}_${widget.column.id}';
         _displayState = _CellDisplayState.from(
           controller.state,
           widget.rowId,
           widget.column.id,
+          _cellId,
         );
         _subscribe(controller);
       }
@@ -125,8 +140,14 @@ class _DataGridCellState<T extends DataGridRow> extends State<DataGridCell<T>> {
   }
 
   void _subscribe(DataGridController<T> controller) {
+    final cellId = _cellId;
     _subscription = controller.state$
-        .map((s) => _CellDisplayState.from(s, widget.rowId, widget.column.id))
+        .map((s) => _CellDisplayState.from(
+              s,
+              widget.rowId,
+              widget.column.id,
+              cellId,
+            ))
         .distinct()
         .skip(
           1,
@@ -175,20 +196,57 @@ class _DataGridCellState<T extends DataGridRow> extends State<DataGridCell<T>> {
 
     final value = widget.column.valueAccessor?.call(widget.row);
 
+    final isEven = widget.rowIndex % 2 == 0;
+    final decoration = (ds.isCellInPath || ds.isCellActive)
+        ? theme.cellDecorations.forFocusedCell(
+            isEven: isEven,
+            isPinned: widget.isPinned,
+            isInPath: ds.isCellInPath,
+            isActive: ds.isCellActive,
+          )
+        : theme.cellDecorations.forCell(
+            isEven: isEven,
+            isSelected: ds.isSelected,
+            isPinned: widget.isPinned,
+          );
+
     return _CellContainer(
-      decoration: theme.cellDecorations.forCell(
-        isEven: widget.rowIndex % 2 == 0,
-        isSelected: ds.isSelected,
-        isPinned: widget.isPinned,
-      ),
-      onTap: ds.selectionMode != SelectionMode.none
-          ? () => controller.addEvent(
-              SelectRowEvent(
-                rowId: widget.rowId,
-                multiSelect: ds.selectionMode == SelectionMode.multiple,
-              ),
-            )
-          : null,
+      decoration: decoration,
+      onTap: () {
+        // Commit any in-progress edit before changing cell focus.
+        // Safe: _onFocusChange's isCellEditing guard prevents double-commit.
+        if (controller.state.edit.isEditing) {
+          controller.commitCellEdit();
+        }
+
+        // Reclaim keyboard focus for the grid on every cell tap.
+        // On WASM web, GestureDetector taps do not move Flutter focus, so
+        // arrow-key navigation breaks unless we explicitly request it here.
+        context.dataGridFocusNode<T>()?.requestFocus();
+
+        final isShift = HardwareKeyboard.instance.isShiftPressed;
+        final isCtrl = HardwareKeyboard.instance.isControlPressed ||
+            HardwareKeyboard.instance.isMetaPressed;
+        if (isShift) {
+          controller.addEvent(
+            ShiftSelectCellEvent(
+              rowId: widget.rowId,
+              columnId: widget.column.id,
+            ),
+          );
+        } else if (isCtrl) {
+          controller.addEvent(
+            ToggleCellInSelectionEvent(
+              rowId: widget.rowId,
+              columnId: widget.column.id,
+            ),
+          );
+        } else {
+          controller.addEvent(
+            FocusCellEvent(rowId: widget.rowId, columnId: widget.column.id),
+          );
+        }
+      },
       onDoubleTap: widget.column.editable
           ? () => controller.startEditCell(widget.rowId, widget.column.id)
           : null,
@@ -402,6 +460,7 @@ class _CellEditorState<T extends DataGridRow> extends State<_CellEditor<T>> {
           contentPadding: theme.padding.editorPadding,
           isDense: true,
         ),
+        onChanged: (text) => controller.updateCellEditValue(text),
         onSubmitted: (_) => _commitEdit(controller),
       ),
     );

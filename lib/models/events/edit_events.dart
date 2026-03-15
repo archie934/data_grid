@@ -63,6 +63,7 @@ class StartCellEditEvent extends DataGridEvent {
         editingCellId: cellId,
         editingValue: currentValue,
       ),
+      selection: newState.selection.copyWith(focusedCells: [cellId]),
     );
   }
 }
@@ -101,11 +102,25 @@ class CommitCellEditEvent extends DataGridEvent {
     final columnId = int.parse(parts[1]);
     final newValue = context.state.edit.editingValue;
 
-    context.dispatchEvent(
-      UpdateCellEvent(rowId: rowId, columnId: columnId, value: newValue),
+    // Apply the row update inline so that any events already queued (e.g.
+    // CopyCellsEvent) see the new value immediately rather than reading stale
+    // data from rowsById before a separately-dispatched UpdateCellEvent runs.
+    final row = context.state.rowsById[rowId];
+    final column = context.state.columns.firstWhere(
+      (c) => c.id == columnId,
+      orElse: () => throw Exception('Column $columnId not found'),
     );
+    if (row != null && column.cellValueSetter != null) {
+      column.cellValueSetter!(row, newValue);
+    }
+    final newRowsById = Map<double, T>.of(context.state.rowsById);
+    context.dataIndexer.setData(newRowsById);
 
-    return context.state.copyWith(edit: EditState.initial());
+    return context.state.copyWith(
+      edit: EditState.initial(),
+      rowsById: newRowsById,
+      selection: context.state.selection.copyWith(focusedCells: [cellId]),
+    );
   }
 }
 
@@ -113,6 +128,12 @@ class CommitCellEditEvent extends DataGridEvent {
 class CancelCellEditEvent extends DataGridEvent {
   @override
   DataGridState<T>? apply<T extends DataGridRow>(EventContext<T> context) {
-    return context.state.copyWith(edit: EditState.initial());
+    final cancelledCellId = context.state.edit.editingCellId;
+    return context.state.copyWith(
+      edit: EditState.initial(),
+      selection: cancelledCellId != null
+          ? context.state.selection.copyWith(focusedCells: [cancelledCellId])
+          : context.state.selection,
+    );
   }
 }

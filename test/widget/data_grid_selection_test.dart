@@ -72,10 +72,10 @@ void main() {
       expect(controller.state.selection.selectedRowIds.length, 0);
     });
 
-    testWidgets('SelectionMode.single allows one row selection', (
+    testWidgets('SelectionMode.multiple allows single row select behavior', (
       tester,
     ) async {
-      controller.setSelectionMode(SelectionMode.single);
+      controller.setSelectionMode(SelectionMode.multiple);
 
       await tester.pumpWidget(
         MaterialApp(
@@ -85,7 +85,7 @@ void main() {
 
       await tester.pumpAndSettle();
 
-      expect(controller.state.selection.mode, SelectionMode.single);
+      expect(controller.state.selection.mode, SelectionMode.multiple);
 
       controller.addEvent(SelectRowEvent(rowId: 1));
       await tester.pumpAndSettle();
@@ -135,7 +135,7 @@ void main() {
     });
 
     testWidgets('selection column appears in multiple mode', (tester) async {
-      controller.setSelectionMode(SelectionMode.single);
+      controller.setSelectionMode(SelectionMode.none);
 
       await tester.pumpWidget(
         MaterialApp(
@@ -201,8 +201,8 @@ void main() {
       expect(controller.state.selection.isRowSelected(5), true);
     });
 
-    testWidgets('toggle selection in single mode', (tester) async {
-      controller.setSelectionMode(SelectionMode.single);
+    testWidgets('toggle selection in multiple mode', (tester) async {
+      controller.setSelectionMode(SelectionMode.multiple);
 
       await tester.pumpWidget(
         MaterialApp(
@@ -247,7 +247,7 @@ void main() {
     });
 
     testWidgets('focused row updates on selection', (tester) async {
-      controller.setSelectionMode(SelectionMode.single);
+      controller.setSelectionMode(SelectionMode.multiple);
 
       await tester.pumpWidget(
         MaterialApp(
@@ -299,7 +299,7 @@ void main() {
 
       await tester.pumpAndSettle();
 
-      expect(controller.state.selection.mode, SelectionMode.single);
+      expect(controller.state.selection.mode, SelectionMode.none);
 
       controller.enableMultiSelect(true);
       await tester.pumpAndSettle();
@@ -309,7 +309,7 @@ void main() {
       controller.enableMultiSelect(false);
       await tester.pumpAndSettle();
 
-      expect(controller.state.selection.mode, SelectionMode.single);
+      expect(controller.state.selection.mode, SelectionMode.none);
     });
 
     testWidgets('disableSelection helper method works', (tester) async {
@@ -321,7 +321,7 @@ void main() {
 
       await tester.pumpAndSettle();
 
-      expect(controller.state.selection.mode, SelectionMode.single);
+      expect(controller.state.selection.mode, SelectionMode.none);
 
       controller.disableSelection();
       await tester.pumpAndSettle();
@@ -348,7 +348,7 @@ void main() {
 
       expect(controller.state.selection.selectedRowIds.length, 2);
 
-      controller.setSelectionMode(SelectionMode.single);
+      controller.setSelectionMode(SelectionMode.none);
       await tester.pumpAndSettle();
 
       expect(controller.state.selection.selectedRowIds.length, 0);
@@ -360,6 +360,7 @@ void main() {
         initialRows: rows,
         canSelectRow: (rowId) => rowId != 2,
       );
+      restrictedController.setSelectionMode(SelectionMode.multiple);
 
       await tester.pumpWidget(
         MaterialApp(

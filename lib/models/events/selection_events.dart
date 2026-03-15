@@ -92,7 +92,7 @@ class ClearSelectionEvent extends DataGridEvent {
     return context.state.copyWith(
       selection: context.state.selection.copyWith(
         selectedRowIds: {},
-        selectedCellIds: {},
+        focusedCells: [],
         focusedRowId: null,
       ),
     );
@@ -121,7 +121,7 @@ class SelectAllRowsEvent extends DataGridEvent {
   }
 }
 
-/// Changes the selection mode (none, single, or multiple).
+/// Changes the selection mode (none or multiple).
 class SetSelectionModeEvent extends DataGridEvent {
   final SelectionMode mode;
 
@@ -137,7 +137,7 @@ class SetSelectionModeEvent extends DataGridEvent {
       selection: context.state.selection.copyWith(
         mode: mode,
         selectedRowIds: {},
-        selectedCellIds: {},
+        focusedCells: [],
         focusedRowId: null,
       ),
     );

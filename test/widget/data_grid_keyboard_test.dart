@@ -56,6 +56,7 @@ void main() {
         sortDebounce: Duration.zero,
         filterDebounce: Duration.zero,
       );
+      controller.setSelectionMode(SelectionMode.multiple);
     });
 
     tearDown(() {
@@ -340,10 +341,10 @@ void main() {
       expect(controller.state.selection.focusedRowId, 2);
     });
 
-    testWidgets('keyboard navigation updates selection in single mode', (
+    testWidgets('keyboard navigation updates selection in multiple mode', (
       tester,
     ) async {
-      controller.setSelectionMode(SelectionMode.single);
+      controller.setSelectionMode(SelectionMode.multiple);
 
       await tester.pumpWidget(
         MaterialApp(

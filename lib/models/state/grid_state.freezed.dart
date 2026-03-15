@@ -14,8 +14,8 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$DataGridState<T extends DataGridRow> {
 
- List<DataGridColumn<T>> get columns; Map<double, T> get rowsById; List<double> get displayOrder; SelectionState get selection; SortState get sort; FilterState get filter; GroupState get group; EditState get edit; PaginationState get pagination; int get totalItems; bool get isLoading; String? get loadingMessage;
 /// Create a copy of DataGridState
+ List<DataGridColumn<T>> get columns; Map<double, T> get rowsById; List<double> get displayOrder; SelectionState get selection; SortState get sort; FilterState get filter; GroupState get group; EditState get edit; PaginationState get pagination; int get totalItems; bool get isLoading; String? get loadingMessage;
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
@@ -430,7 +430,7 @@ $PaginationStateCopyWith<$Res> get pagination {
 /// @nodoc
 mixin _$SelectionState {
 
- Set<double> get selectedRowIds; double? get focusedRowId; Set<String> get selectedCellIds; SelectionMode get mode;
+ Set<double> get selectedRowIds; double? get focusedRowId; List<String> get focusedCells; SelectionMode get mode;
 /// Create a copy of SelectionState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -441,16 +441,16 @@ $SelectionStateCopyWith<SelectionState> get copyWith => _$SelectionStateCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SelectionState&&const DeepCollectionEquality().equals(other.selectedRowIds, selectedRowIds)&&(identical(other.focusedRowId, focusedRowId) || other.focusedRowId == focusedRowId)&&const DeepCollectionEquality().equals(other.selectedCellIds, selectedCellIds)&&(identical(other.mode, mode) || other.mode == mode));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SelectionState&&const DeepCollectionEquality().equals(other.selectedRowIds, selectedRowIds)&&(identical(other.focusedRowId, focusedRowId) || other.focusedRowId == focusedRowId)&&const DeepCollectionEquality().equals(other.focusedCells, focusedCells)&&(identical(other.mode, mode) || other.mode == mode));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(selectedRowIds),focusedRowId,const DeepCollectionEquality().hash(selectedCellIds),mode);
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(selectedRowIds),focusedRowId,const DeepCollectionEquality().hash(focusedCells),mode);
 
 @override
 String toString() {
-  return 'SelectionState(selectedRowIds: $selectedRowIds, focusedRowId: $focusedRowId, selectedCellIds: $selectedCellIds, mode: $mode)';
+  return 'SelectionState(selectedRowIds: $selectedRowIds, focusedRowId: $focusedRowId, focusedCells: $focusedCells, mode: $mode)';
 }
 
 
@@ -461,7 +461,7 @@ abstract mixin class $SelectionStateCopyWith<$Res>  {
   factory $SelectionStateCopyWith(SelectionState value, $Res Function(SelectionState) _then) = _$SelectionStateCopyWithImpl;
 @useResult
 $Res call({
- Set<double> selectedRowIds, double? focusedRowId, Set<String> selectedCellIds, SelectionMode mode
+ Set<double> selectedRowIds, double? focusedRowId, List<String> focusedCells, SelectionMode mode
 });
 
 
@@ -478,12 +478,12 @@ class _$SelectionStateCopyWithImpl<$Res>
 
 /// Create a copy of SelectionState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? selectedRowIds = null,Object? focusedRowId = freezed,Object? selectedCellIds = null,Object? mode = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? selectedRowIds = null,Object? focusedRowId = freezed,Object? focusedCells = null,Object? mode = null,}) {
   return _then(_self.copyWith(
 selectedRowIds: null == selectedRowIds ? _self.selectedRowIds : selectedRowIds // ignore: cast_nullable_to_non_nullable
 as Set<double>,focusedRowId: freezed == focusedRowId ? _self.focusedRowId : focusedRowId // ignore: cast_nullable_to_non_nullable
-as double?,selectedCellIds: null == selectedCellIds ? _self.selectedCellIds : selectedCellIds // ignore: cast_nullable_to_non_nullable
-as Set<String>,mode: null == mode ? _self.mode : mode // ignore: cast_nullable_to_non_nullable
+as double?,focusedCells: null == focusedCells ? _self.focusedCells : focusedCells // ignore: cast_nullable_to_non_nullable
+as List<String>,mode: null == mode ? _self.mode : mode // ignore: cast_nullable_to_non_nullable
 as SelectionMode,
   ));
 }
@@ -569,10 +569,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Set<double> selectedRowIds,  double? focusedRowId,  Set<String> selectedCellIds,  SelectionMode mode)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Set<double> selectedRowIds,  double? focusedRowId,  List<String> focusedCells,  SelectionMode mode)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _SelectionState() when $default != null:
-return $default(_that.selectedRowIds,_that.focusedRowId,_that.selectedCellIds,_that.mode);case _:
+return $default(_that.selectedRowIds,_that.focusedRowId,_that.focusedCells,_that.mode);case _:
   return orElse();
 
 }
@@ -590,10 +590,10 @@ return $default(_that.selectedRowIds,_that.focusedRowId,_that.selectedCellIds,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Set<double> selectedRowIds,  double? focusedRowId,  Set<String> selectedCellIds,  SelectionMode mode)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Set<double> selectedRowIds,  double? focusedRowId,  List<String> focusedCells,  SelectionMode mode)  $default,) {final _that = this;
 switch (_that) {
 case _SelectionState():
-return $default(_that.selectedRowIds,_that.focusedRowId,_that.selectedCellIds,_that.mode);case _:
+return $default(_that.selectedRowIds,_that.focusedRowId,_that.focusedCells,_that.mode);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -610,10 +610,10 @@ return $default(_that.selectedRowIds,_that.focusedRowId,_that.selectedCellIds,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Set<double> selectedRowIds,  double? focusedRowId,  Set<String> selectedCellIds,  SelectionMode mode)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Set<double> selectedRowIds,  double? focusedRowId,  List<String> focusedCells,  SelectionMode mode)?  $default,) {final _that = this;
 switch (_that) {
 case _SelectionState() when $default != null:
-return $default(_that.selectedRowIds,_that.focusedRowId,_that.selectedCellIds,_that.mode);case _:
+return $default(_that.selectedRowIds,_that.focusedRowId,_that.focusedCells,_that.mode);case _:
   return null;
 
 }
@@ -625,7 +625,7 @@ return $default(_that.selectedRowIds,_that.focusedRowId,_that.selectedCellIds,_t
 
 
 class _SelectionState extends SelectionState {
-  const _SelectionState({required final  Set<double> selectedRowIds, this.focusedRowId, required final  Set<String> selectedCellIds, required this.mode}): _selectedRowIds = selectedRowIds,_selectedCellIds = selectedCellIds,super._();
+  const _SelectionState({required final  Set<double> selectedRowIds, this.focusedRowId, final  List<String> focusedCells = const [], required this.mode}): _selectedRowIds = selectedRowIds,_focusedCells = focusedCells,super._();
   
 
  final  Set<double> _selectedRowIds;
@@ -636,11 +636,11 @@ class _SelectionState extends SelectionState {
 }
 
 @override final  double? focusedRowId;
- final  Set<String> _selectedCellIds;
-@override Set<String> get selectedCellIds {
-  if (_selectedCellIds is EqualUnmodifiableSetView) return _selectedCellIds;
+ final  List<String> _focusedCells;
+@override@JsonKey() List<String> get focusedCells {
+  if (_focusedCells is EqualUnmodifiableListView) return _focusedCells;
   // ignore: implicit_dynamic_type
-  return EqualUnmodifiableSetView(_selectedCellIds);
+  return EqualUnmodifiableListView(_focusedCells);
 }
 
 @override final  SelectionMode mode;
@@ -655,16 +655,16 @@ _$SelectionStateCopyWith<_SelectionState> get copyWith => __$SelectionStateCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SelectionState&&const DeepCollectionEquality().equals(other._selectedRowIds, _selectedRowIds)&&(identical(other.focusedRowId, focusedRowId) || other.focusedRowId == focusedRowId)&&const DeepCollectionEquality().equals(other._selectedCellIds, _selectedCellIds)&&(identical(other.mode, mode) || other.mode == mode));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SelectionState&&const DeepCollectionEquality().equals(other._selectedRowIds, _selectedRowIds)&&(identical(other.focusedRowId, focusedRowId) || other.focusedRowId == focusedRowId)&&const DeepCollectionEquality().equals(other._focusedCells, _focusedCells)&&(identical(other.mode, mode) || other.mode == mode));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_selectedRowIds),focusedRowId,const DeepCollectionEquality().hash(_selectedCellIds),mode);
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_selectedRowIds),focusedRowId,const DeepCollectionEquality().hash(_focusedCells),mode);
 
 @override
 String toString() {
-  return 'SelectionState(selectedRowIds: $selectedRowIds, focusedRowId: $focusedRowId, selectedCellIds: $selectedCellIds, mode: $mode)';
+  return 'SelectionState(selectedRowIds: $selectedRowIds, focusedRowId: $focusedRowId, focusedCells: $focusedCells, mode: $mode)';
 }
 
 
@@ -675,7 +675,7 @@ abstract mixin class _$SelectionStateCopyWith<$Res> implements $SelectionStateCo
   factory _$SelectionStateCopyWith(_SelectionState value, $Res Function(_SelectionState) _then) = __$SelectionStateCopyWithImpl;
 @override @useResult
 $Res call({
- Set<double> selectedRowIds, double? focusedRowId, Set<String> selectedCellIds, SelectionMode mode
+ Set<double> selectedRowIds, double? focusedRowId, List<String> focusedCells, SelectionMode mode
 });
 
 
@@ -692,12 +692,12 @@ class __$SelectionStateCopyWithImpl<$Res>
 
 /// Create a copy of SelectionState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? selectedRowIds = null,Object? focusedRowId = freezed,Object? selectedCellIds = null,Object? mode = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? selectedRowIds = null,Object? focusedRowId = freezed,Object? focusedCells = null,Object? mode = null,}) {
   return _then(_SelectionState(
 selectedRowIds: null == selectedRowIds ? _self._selectedRowIds : selectedRowIds // ignore: cast_nullable_to_non_nullable
 as Set<double>,focusedRowId: freezed == focusedRowId ? _self.focusedRowId : focusedRowId // ignore: cast_nullable_to_non_nullable
-as double?,selectedCellIds: null == selectedCellIds ? _self._selectedCellIds : selectedCellIds // ignore: cast_nullable_to_non_nullable
-as Set<String>,mode: null == mode ? _self.mode : mode // ignore: cast_nullable_to_non_nullable
+as double?,focusedCells: null == focusedCells ? _self._focusedCells : focusedCells // ignore: cast_nullable_to_non_nullable
+as List<String>,mode: null == mode ? _self.mode : mode // ignore: cast_nullable_to_non_nullable
 as SelectionMode,
   ));
 }

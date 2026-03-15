@@ -51,7 +51,8 @@ import 'package:flutter_data_grid/data_grid.dart';
 This package is in active development. Core features work well, but some advanced features are still being refined:
 
 ### What Works Well ✅
-- **Row selection** - Fully implemented with none/single/multiple modes
+- **Row selection** - Fully implemented with none/multiple modes
+- **Cell selection** - Individual cell focus, range selection (Shift+click / Shift+Arrow), right-click drag, Ctrl+C copy as CSV
 - **Virtualized rendering** - Smooth scrolling with 100k+ rows
 - **Sorting & filtering** - Single-column sorting with background processing for large datasets
 - **Column management** - Resize, pin, hide/show columns
@@ -65,12 +66,10 @@ This package is in active development. Core features work well, but some advance
 - **Cell editing** - Edge cases with rapid interactions being addressed
 
 ### Planned Features 🚀
-- **Cell selection** - Individual cell selection and ranges
 - **Column selection** - Select entire columns
 - **Accessibility** - Improved screen reader support and ARIA labels
 - **Column reordering** - Drag-and-drop reordering
 - **Context menus** - Right-click menus for rows/cells
-- **Copy/paste** - Clipboard integration
 
 ### Production Use
 This package is suitable for:
@@ -532,8 +531,7 @@ controller.addEvent(ClearFilterEvent());              // Clear all
 ```dart
 // Configure selection mode
 controller.setSelectionMode(SelectionMode.none);      // Disabled
-controller.setSelectionMode(SelectionMode.single);    // Single row
-controller.setSelectionMode(SelectionMode.multiple);  // Multiple rows
+controller.setSelectionMode(SelectionMode.multiple);  // Multiple rows (checkbox column)
 
 // Or use helpers
 controller.disableSelection();
@@ -635,13 +633,39 @@ final controller = DataGridController<MyRow>(
 );
 ```
 
+### Cell Selection
+
+```dart
+// Plain click — focus a single cell
+controller.addEvent(FocusCellEvent(rowId: 1.0, columnId: 2));
+
+// Ctrl+click — toggle a cell in/out of the selection
+controller.addEvent(ToggleCellInSelectionEvent(rowId: 1.0, columnId: 2));
+
+// Shift+click — extend the selection to this cell
+controller.addEvent(ShiftSelectCellEvent(rowId: 3.0, columnId: 2));
+
+// Programmatically set a rect of cells
+controller.addEvent(SetFocusedCellsEvent(['1.0_2', '1.0_3', '2.0_2', '2.0_3']));
+
+// Clear cell focus
+controller.addEvent(ClearCellSelectionEvent());
+
+// Copy focused cells to clipboard as CSV (Ctrl+C also triggers this)
+controller.addEvent(CopyCellsEvent());
+```
+
+Right-click drag draws a selection rectangle over the grid body; releasing commits the covered cells as focused.
+
 ### Keyboard Navigation
 
 Built-in keyboard shortcuts:
-- **Arrow Up/Down**: Navigate rows
-- **Arrow Left/Right**: Navigate columns  
+- **Arrow Up/Down**: Navigate rows (or cells when a cell is focused)
+- **Arrow Left/Right**: Navigate cells
+- **Shift+Arrow**: Extend cell selection
 - **Escape**: Clear selection
 - **Ctrl+A / Cmd+A**: Select all visible rows
+- **Ctrl+C / Cmd+C**: Copy focused cells to clipboard as CSV
 
 ### Custom Rendering
 
@@ -1013,7 +1037,7 @@ dev_dependencies:
 ## 🚧 Roadmap & Future Enhancements
 
 ### High Priority (Addressing Limitations)
-- [ ] **Cell selection** - Individual cell selection and ranges
+- [x] **Cell selection** - Individual cell selection, ranges, drag-select, Ctrl+C copy
 - [ ] **Improved keyboard navigation** - Reliable arrow key navigation and Tab support
 - [ ] **Accessibility improvements** - Screen reader support, ARIA labels, focus management
 - [ ] **Column reordering** - Drag-and-drop column reordering
@@ -1021,7 +1045,7 @@ dev_dependencies:
 
 ### Medium Priority
 - [ ] **Context menus** - Right-click menus for rows/cells/headers
-- [ ] **Copy/paste** - Clipboard integration
+- [x] **Copy** - Ctrl+C copies focused cells as CSV
 - [ ] **Row grouping UI** - Visual grouping with expand/collapse
 - [x] **Pagination** - Built-in pagination controls (added in v0.0.3)
 - [ ] **Export functionality** - CSV/Excel export
@@ -1043,7 +1067,7 @@ Contributions are welcome! This is an experimental project and could benefit fro
 ### Areas Needing Help
 1. **Accessibility** - Making the grid work with screen readers
 2. **Keyboard Navigation** - Improving reliability and coverage
-3. **Cell Selection** - Implementing individual cell selection
+3. **Accessibility** - Making the grid work with screen readers
 4. **Testing** - Adding more test coverage
 5. **Documentation** - Improving examples and API docs
 6. **Performance** - Optimizing for even larger datasets

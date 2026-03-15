@@ -95,24 +95,33 @@ abstract class SelectionState with _$SelectionState {
   const factory SelectionState({
     required Set<double> selectedRowIds,
     double? focusedRowId,
-    required Set<String> selectedCellIds,
+    @Default([]) List<String> focusedCells,
     required SelectionMode mode,
   }) = _SelectionState;
 
   const SelectionState._();
 
-  /// Creates an initial selection state with single-select mode and no selection.
+  /// Creates an initial selection state with no selection.
   factory SelectionState.initial() => const SelectionState(
     selectedRowIds: {},
-    selectedCellIds: {},
-    mode: SelectionMode.single,
+    mode: SelectionMode.none,
   );
 
   /// Returns `true` if the row with [rowId] is currently selected.
   bool isRowSelected(double rowId) => selectedRowIds.contains(rowId);
 
-  /// Returns `true` if the cell identified by [cellId] is currently selected.
-  bool isCellSelected(String cellId) => selectedCellIds.contains(cellId);
+  /// Returns `true` if [cellId] is anywhere in the focused cells path.
+  bool isCellFocused(String cellId) => focusedCells.contains(cellId);
+
+  /// Returns `true` if [cellId] is the active (last) cell in the focused path.
+  bool isActiveCellId(String cellId) =>
+      focusedCells.isNotEmpty && focusedCells.last == cellId;
+
+  /// The anchor cell (first in path), or `null` if no cells are focused.
+  String? get anchorCellId => focusedCells.isEmpty ? null : focusedCells.first;
+
+  /// The active/cursor cell (last in path), or `null` if no cells are focused.
+  String? get activeCellId => focusedCells.isEmpty ? null : focusedCells.last;
 }
 
 /// Current sort configuration.

@@ -23,10 +23,18 @@ class DataGridControllerScope<T extends DataGridRow> extends InheritedWidget {
   final DataGridController<T> controller;
   final GridScrollController scrollController;
 
+  /// The [FocusNode] attached to the grid's root [Focus] widget.
+  ///
+  /// Cells call [FocusNode.requestFocus] on this node when tapped so that
+  /// keyboard navigation works on WASM web, where [GestureDetector] taps do
+  /// not automatically return Flutter keyboard focus from the browser.
+  final FocusNode gridFocusNode;
+
   const DataGridControllerScope({
     super.key,
     required this.controller,
     required this.scrollController,
+    required this.gridFocusNode,
     required super.child,
   });
 
@@ -40,7 +48,8 @@ class DataGridControllerScope<T extends DataGridRow> extends InheritedWidget {
   @override
   bool updateShouldNotify(DataGridControllerScope<T> oldWidget) {
     return oldWidget.controller != controller ||
-        oldWidget.scrollController != scrollController;
+        oldWidget.scrollController != scrollController ||
+        oldWidget.gridFocusNode != gridFocusNode;
   }
 }
 
@@ -104,6 +113,7 @@ class DataGridInherited<T extends DataGridRow> extends StatelessWidget {
   final DataGridController<T> controller;
   final GridScrollController scrollController;
   final DataGridState<T> state;
+  final FocusNode gridFocusNode;
   final Widget child;
 
   const DataGridInherited({
@@ -111,6 +121,7 @@ class DataGridInherited<T extends DataGridRow> extends StatelessWidget {
     required this.controller,
     required this.scrollController,
     required this.state,
+    required this.gridFocusNode,
     required this.child,
   });
 
@@ -119,6 +130,7 @@ class DataGridInherited<T extends DataGridRow> extends StatelessWidget {
     return DataGridControllerScope<T>(
       controller: controller,
       scrollController: scrollController,
+      gridFocusNode: gridFocusNode,
       child: DataGridStateScope<T>(state: state, child: child),
     );
   }
@@ -133,6 +145,12 @@ extension DataGridContext on BuildContext {
   /// Depends on [DataGridControllerScope] only (no rebuild on state change).
   GridScrollController? gridScrollController<T extends DataGridRow>() {
     return DataGridControllerScope.maybeOf<T>(this)?.scrollController;
+  }
+
+  /// Returns the grid's root [FocusNode]. Widgets can call [FocusNode.requestFocus]
+  /// on it to ensure keyboard events reach the grid (required on WASM web).
+  FocusNode? dataGridFocusNode<T extends DataGridRow>() {
+    return DataGridControllerScope.maybeOf<T>(this)?.gridFocusNode;
   }
 
   /// Depends on the given [aspects] of grid state. If [aspects] is null,

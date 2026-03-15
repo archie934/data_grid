@@ -208,6 +208,7 @@ class DeleteRowEvent extends DataGridEvent {
   @override
   DataGridState<T>? apply<T extends DataGridRow>(EventContext<T> context) {
     final newRowsById = Map<double, T>.from(context.state.rowsById);
+    
     newRowsById.remove(rowId);
 
     final newDisplayOrder = context.state.displayOrder
