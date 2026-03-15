@@ -1,4 +1,4 @@
-## 0.0.19 - 2026-03-15
+## 0.0.20 - 2026-03-15
 
 * **Breaking**: Removed `SelectionMode.single` — selection modes are now `none` and `multiple` only
 * **Breaking**: `SelectionState.initial()` now defaults to `SelectionMode.none` (was `single`)
@@ -7,6 +7,10 @@
 * Added `CopyCellsEvent` — copies focused cells to clipboard as CSV; also triggered by Ctrl+C / Cmd+C
 * Added right-click drag-to-select rectangle over the grid body
 * Refactored `CustomLayoutGridBody` into three focused part files: `grid_body_scroll_mixin.dart` and `grid_body_drag_select_mixin.dart`
+
+## 0.0.19 - 2026-03-15
+
+* Pub points changes
 
 ## 0.0.18 - 2026-03-14
 
