@@ -1,3 +1,9 @@
+## 0.0.22 - 2026-05-19
+
+* Docs: Added dartdoc for `CellValueChange` and `CellValueChangeSource`
+* Fixed lint in `grid_body_scroll_mixin` (curly braces in flow control) for full pub.dev static analysis score
+* Updated dependencies: `collection` ^1.19.1, `freezed` / `freezed_annotation` ^3.1.0, `build_runner` ^2.15.0, `mockito` ^5.6.4
+
 ## 0.0.21 - 2026-05-19
 
 * **Performance**: `updateCell` and `commitCellEdit` no longer copy the entire `rowsById` map — single-cell updates are O(1) regardless of row count

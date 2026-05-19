@@ -141,7 +141,7 @@ class DataGridController<T extends DataGridRow> {
   /// Stream of currently rendered row IDs.
   Stream<Set<double>> get renderedRowIds$ => _renderedRowIds.stream;
 
-  /// Emitted when a single cell value is persisted without replacing [rowsById].
+  /// Emitted when a single cell value is persisted without replacing the row map.
   Stream<CellValueChange> get cellValueChanges => _cellValueChanges.stream;
 
   /// Current set of rendered row IDs.
