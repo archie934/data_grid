@@ -1,3 +1,4 @@
+import 'package:flutter_data_grid/models/data/cell_value_change.dart';
 import 'package:flutter_data_grid/models/data/row.dart';
 import 'package:flutter_data_grid/models/state/grid_state.dart';
 import 'package:flutter_data_grid/models/events/base_event.dart';
@@ -112,13 +113,18 @@ class CommitCellEditEvent extends DataGridEvent {
     );
     if (row != null && column.cellValueSetter != null) {
       column.cellValueSetter!(row, newValue);
+      context.notifyCellValueChanged?.call(
+        CellValueChange(
+          rowId: rowId,
+          columnId: columnId,
+          value: newValue,
+          source: CellValueChangeSource.editCommit,
+        ),
+      );
     }
-    final newRowsById = Map<double, T>.of(context.state.rowsById);
-    context.dataIndexer.setData(newRowsById);
 
     return context.state.copyWith(
       edit: EditState.initial(),
-      rowsById: newRowsById,
       selection: context.state.selection.copyWith(focusedCells: [cellId]),
     );
   }

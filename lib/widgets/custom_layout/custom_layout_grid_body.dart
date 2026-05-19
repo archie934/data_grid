@@ -23,15 +23,23 @@ class CustomLayoutGridBody<T extends DataGridRow> extends StatefulWidget {
   final double rowHeight;
   final double cacheExtent;
 
-  const CustomLayoutGridBody({super.key, required this.rowHeight, required this.cacheExtent});
+  const CustomLayoutGridBody({
+    super.key,
+    required this.rowHeight,
+    required this.cacheExtent,
+  });
 
   @override
-  State<CustomLayoutGridBody<T>> createState() => _CustomLayoutGridBodyState<T>();
+  State<CustomLayoutGridBody<T>> createState() =>
+      _CustomLayoutGridBodyState<T>();
 }
 
 class _CustomLayoutGridBodyState<T extends DataGridRow>
     extends State<CustomLayoutGridBody<T>>
-    with TickerProviderStateMixin, _GridBodyScrollMixin<T>, _GridBodyDragSelectMixin<T>
+    with
+        TickerProviderStateMixin,
+        _GridBodyScrollMixin<T>,
+        _GridBodyDragSelectMixin<T>
     implements ScrollContext {
   @override
   TickerProvider get vsync => this;
@@ -93,7 +101,10 @@ class _CustomLayoutGridBodyState<T extends DataGridRow>
   @override
   Widget build(BuildContext context) {
     final theme = DataGridTheme.of(context);
-    final state = context.dataGridState<T>({DataGridAspect.data, DataGridAspect.columns});
+    final state = context.dataGridState<T>({
+      DataGridAspect.data,
+      DataGridAspect.columns,
+    });
     if (state == null) return const SizedBox.expand();
 
     final columns = context.dataGridEffectiveColumns<T>();
@@ -189,14 +200,18 @@ class _CustomLayoutGridBodyState<T extends DataGridRow>
                   right: 0,
                   top: 0,
                   bottom: _maxHScroll > 0 ? scrollbarWidth : 0,
-                  child: VerticalDataGridScrollbar(controller: scrollController.verticalController),
+                  child: VerticalDataGridScrollbar(
+                    controller: scrollController.verticalController,
+                  ),
                 ),
               if (scrollController != null && _maxHScroll > 0)
                 Positioned(
                   left: pinnedWidth,
                   right: _maxVScroll > 0 ? scrollbarWidth : 0,
                   bottom: 0,
-                  child: HorizontalDataGridScrollbar(controller: scrollController.horizontalController),
+                  child: HorizontalDataGridScrollbar(
+                    controller: scrollController.horizontalController,
+                  ),
                 ),
               if (_isDragSelecting &&
                   _dragSelectStart != null &&

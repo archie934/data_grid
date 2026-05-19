@@ -27,6 +27,8 @@ class EventContext<T extends DataGridRow> {
   )?
   onCellCommit;
 
+  final void Function(CellValueChange change)? notifyCellValueChanged;
+
   const EventContext({
     required this.state,
     required this.sortDelegate,
@@ -36,5 +38,6 @@ class EventContext<T extends DataGridRow> {
     this.canEditCell,
     this.canSelectRow,
     this.onCellCommit,
+    this.notifyCellValueChanged,
   });
 }

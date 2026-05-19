@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_data_grid/controllers/data_grid_controller.dart';
+import 'package:flutter_data_grid/models/data/cell_value_change.dart';
 import 'package:flutter_data_grid/models/data/row.dart';
 import 'package:flutter_data_grid/models/data/column.dart';
 import 'package:flutter_data_grid/models/state/grid_state.dart';
@@ -88,6 +89,7 @@ class _DataGridCellState<T extends DataGridRow> extends State<DataGridCell<T>> {
   late Widget _cellWidget = widget.column.cellWidget ?? _DefaultTextCell<T>();
 
   StreamSubscription<_CellDisplayState>? _subscription;
+  StreamSubscription<CellValueChange>? _valueSubscription;
   DataGridController<T>? _subscribedController;
   late _CellDisplayState _displayState;
   // Cached cell ID string — computed once, reused on every state update to
@@ -141,13 +143,10 @@ class _DataGridCellState<T extends DataGridRow> extends State<DataGridCell<T>> {
 
   void _subscribe(DataGridController<T> controller) {
     final cellId = _cellId;
+    final rowId = widget.rowId;
+    final columnId = widget.column.id;
     _subscription = controller.state$
-        .map((s) => _CellDisplayState.from(
-              s,
-              widget.rowId,
-              widget.column.id,
-              cellId,
-            ))
+        .map((s) => _CellDisplayState.from(s, rowId, columnId, cellId))
         .distinct()
         .skip(
           1,
@@ -155,11 +154,18 @@ class _DataGridCellState<T extends DataGridRow> extends State<DataGridCell<T>> {
         .listen((ds) {
           if (mounted) setState(() => _displayState = ds);
         });
+    _valueSubscription = controller.cellValueChanges
+        .where((change) => change.affectsCell(rowId, columnId))
+        .listen((_) {
+          if (mounted) setState(() {});
+        });
   }
 
   void _cancelSubscription() {
     _subscription?.cancel();
     _subscription = null;
+    _valueSubscription?.cancel();
+    _valueSubscription = null;
   }
 
   @override
@@ -225,7 +231,8 @@ class _DataGridCellState<T extends DataGridRow> extends State<DataGridCell<T>> {
         context.dataGridFocusNode<T>()?.requestFocus();
 
         final isShift = HardwareKeyboard.instance.isShiftPressed;
-        final isCtrl = HardwareKeyboard.instance.isControlPressed ||
+        final isCtrl =
+            HardwareKeyboard.instance.isControlPressed ||
             HardwareKeyboard.instance.isMetaPressed;
         if (isShift) {
           controller.addEvent(

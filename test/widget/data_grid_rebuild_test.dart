@@ -5,7 +5,7 @@ import 'package:flutter_data_grid/models/enums/selection_mode.dart';
 
 /// Minimal row type for rebuild tests.
 class TestRow extends DataGridRow {
-  final String name;
+  String name;
   final int value;
 
   TestRow({required double id, required this.name, required this.value}) {
@@ -40,6 +40,7 @@ DataGridColumn<TestRow> _countingColumn({
       onBuild();
       return row.name;
     },
+    cellValueSetter: (row, value) => row.name = value as String,
   );
 }
 
@@ -163,6 +164,57 @@ void main() {
         equals(1),
         reason: 'Only the deselected row\'s cells should rebuild',
       );
+    });
+
+    testWidgets('updateCell rebuilds only the affected cell', (tester) async {
+      tester.view.physicalSize = const Size(800, 600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
+      int buildCount = 0;
+
+      final rows = List.generate(
+        20,
+        (i) => TestRow(id: i.toDouble(), name: 'Row $i', value: i),
+      );
+
+      final controller = DataGridController<TestRow>(
+        initialColumns: [
+          _countingColumn(
+            id: 1,
+            title: 'Name',
+            width: 200,
+            onBuild: () => buildCount++,
+          ),
+          _countingColumn(
+            id: 2,
+            title: 'Value',
+            width: 150,
+            onBuild: () => buildCount++,
+          ),
+        ],
+        initialRows: rows,
+      );
+      addTearDown(controller.dispose);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(body: DataGrid<TestRow>(controller: controller)),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      buildCount = 0;
+
+      controller.updateCell(3, 1, 'Row 3 updated');
+      await waitForAsync(tester);
+
+      expect(
+        buildCount,
+        equals(1),
+        reason: 'Only the updated cell should rebuild',
+      );
+      expect(controller.state.rowsById[3]!.name, 'Row 3 updated');
     });
   });
 }

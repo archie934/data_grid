@@ -1,3 +1,10 @@
+## 0.0.21 - 2026-05-19
+
+* **Performance**: `updateCell` and `commitCellEdit` no longer copy the entire `rowsById` map — single-cell updates are O(1) regardless of row count
+* **Performance**: Cell-only updates skip body/quadrant rebuilds; only the affected visible cell refreshes via a targeted notification
+* Added `CellValueChange`, `CellValueChangeSource`, and `DataGridController.cellValueChanges` for subscribing to persisted cell value updates
+* **Note**: `updateCell` mutates row objects in place; `rowsById` and `DataGridState` references may be unchanged after a cell edit (listen to `cellValueChanges` or read row data directly)
+
 ## 0.0.20 - 2026-03-15
 
 * **Breaking**: Removed `SelectionMode.single` — selection modes are now `none` and `multiple` only

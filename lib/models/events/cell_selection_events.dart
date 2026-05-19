@@ -131,8 +131,9 @@ class NavigateCellEvent extends DataGridEvent {
     // ── Resolve current position ─────────────────────────────────────────────
     final (activeRowId, activeColId) = parseCellId(activeCellId);
 
-    final visibleColumns =
-        state.effectiveColumns.where((c) => c.visible).toList();
+    final visibleColumns = state.effectiveColumns
+        .where((c) => c.visible)
+        .toList();
 
     // For Shift+Arrow we need the anchor's row/col indices as well as the
     // active cell's. Parse the anchor up front so both can be located in a
@@ -141,8 +142,9 @@ class NavigateCellEvent extends DataGridEvent {
     final anchorCellId = extend && existingPath.isNotEmpty
         ? existingPath.first
         : null;
-    final anchorParsed =
-        anchorCellId != null ? parseCellId(anchorCellId) : null;
+    final anchorParsed = anchorCellId != null
+        ? parseCellId(anchorCellId)
+        : null;
     final anchorRowId = anchorParsed?.$1;
     final anchorColId = anchorParsed?.$2;
 
@@ -317,8 +319,9 @@ class CopyCellsEvent extends DataGridEvent {
     };
 
     // Parse and sort cells: by row display-order index, then column index
-    final visibleColumns =
-        state.effectiveColumns.where((c) => c.visible).toList();
+    final visibleColumns = state.effectiveColumns
+        .where((c) => c.visible)
+        .toList();
     final colIndexMap = <int, int>{
       for (int i = 0; i < visibleColumns.length; i++) visibleColumns[i].id: i,
     };

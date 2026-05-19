@@ -3,6 +3,7 @@ export 'controllers/data_grid_controller.dart';
 export 'controllers/grid_scroll_controller.dart';
 
 // Models
+export 'models/data/cell_value_change.dart';
 export 'models/data/column.dart';
 export 'models/data/row.dart';
 export 'models/state/grid_state.dart';

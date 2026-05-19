@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'package:flutter_data_grid/models/data/cell_value_change.dart';
 import 'package:flutter_data_grid/models/data/row.dart';
 import 'package:flutter_data_grid/models/state/grid_state.dart';
 import 'package:flutter_data_grid/models/events/base_event.dart';
@@ -208,7 +209,7 @@ class DeleteRowEvent extends DataGridEvent {
   @override
   DataGridState<T>? apply<T extends DataGridRow>(EventContext<T> context) {
     final newRowsById = Map<double, T>.from(context.state.rowsById);
-    
+
     newRowsById.remove(rowId);
 
     final newDisplayOrder = context.state.displayOrder
@@ -355,13 +356,20 @@ class UpdateCellEvent extends DataGridEvent {
     }
 
     final column = context.state.columns.firstWhere((c) => c.id == columnId);
-    if (column.cellValueSetter != null) {
-      column.cellValueSetter!(row, value);
+    if (column.cellValueSetter == null) {
+      return null;
     }
 
-    final newRowsById = Map<double, T>.of(context.state.rowsById);
-    context.dataIndexer.setData(newRowsById);
+    column.cellValueSetter!(row, value);
+    context.notifyCellValueChanged?.call(
+      CellValueChange(
+        rowId: rowId,
+        columnId: columnId,
+        value: value,
+        source: CellValueChangeSource.programmatic,
+      ),
+    );
 
-    return context.state.copyWith(rowsById: newRowsById);
+    return context.state;
   }
 }

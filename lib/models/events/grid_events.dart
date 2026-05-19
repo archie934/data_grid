@@ -1,3 +1,4 @@
+export 'package:flutter_data_grid/models/data/cell_value_change.dart';
 export 'base_event.dart';
 export 'column_events.dart';
 export 'sort_events.dart';

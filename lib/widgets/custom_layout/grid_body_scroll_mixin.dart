@@ -93,7 +93,9 @@ mixin _GridBodyScrollMixin<T extends DataGridRow>
 
     if (!controller.horizontalController.positions.contains(_hScrollPosition)) {
       controller.horizontalController.attach(_hScrollPosition);
-      controller.horizontalController.addListener(_onHorizontalControllerChanged);
+      controller.horizontalController.addListener(
+        _onHorizontalControllerChanged,
+      );
     }
     if (!controller.verticalController.positions.contains(_vScrollPosition)) {
       controller.verticalController.attach(_vScrollPosition);
@@ -106,11 +108,17 @@ mixin _GridBodyScrollMixin<T extends DataGridRow>
     _vOffset.removeListener(_pushVerticalOffset);
     final controller = _cachedScrollController;
     if (controller != null) {
-      controller.horizontalController.removeListener(_onHorizontalControllerChanged);
-      if (controller.horizontalController.positions.contains(_hScrollPosition)) {
+      controller.horizontalController.removeListener(
+        _onHorizontalControllerChanged,
+      );
+      if (controller.horizontalController.positions.contains(
+        _hScrollPosition,
+      )) {
         controller.horizontalController.detach(_hScrollPosition);
       }
-      controller.verticalController.removeListener(_onVerticalControllerChanged);
+      controller.verticalController.removeListener(
+        _onVerticalControllerChanged,
+      );
       if (controller.verticalController.positions.contains(_vScrollPosition)) {
         controller.verticalController.detach(_vScrollPosition);
       }
@@ -210,7 +218,10 @@ mixin _GridBodyScrollMixin<T extends DataGridRow>
     required double totalHeight,
   }) {
     _maxVScroll = (totalHeight - viewportHeight).clamp(0.0, double.infinity);
-    _maxHScroll = (unpinnedWidth - scrollableViewportWidth).clamp(0.0, double.infinity);
+    _maxHScroll = (unpinnedWidth - scrollableViewportWidth).clamp(
+      0.0,
+      double.infinity,
+    );
 
     if (_hOffset.value > _maxHScroll) _hOffset.value = _maxHScroll;
     if (_vOffset.value > _maxVScroll) _vOffset.value = _maxVScroll;
@@ -279,8 +290,10 @@ mixin _GridBodyScrollMixin<T extends DataGridRow>
     _scrollLockedAxis ??= _resolveAxis(delta.dx, delta.dy);
     final locked = _scrollLockedAxis;
 
-    if (locked != Axis.vertical) _hOffset.value = (_dragStartH + delta.dx).clamp(0.0, _maxHScroll);
-    if (locked != Axis.horizontal) _vOffset.value = (_dragStartV + delta.dy).clamp(0.0, _maxVScroll);
+    if (locked != Axis.vertical)
+      _hOffset.value = (_dragStartH + delta.dx).clamp(0.0, _maxHScroll);
+    if (locked != Axis.horizontal)
+      _vOffset.value = (_dragStartV + delta.dy).clamp(0.0, _maxVScroll);
 
     _velocityTrackerH?.addPosition(event.timeStamp, Offset(_hOffset.value, 0));
     _velocityTrackerV?.addPosition(event.timeStamp, Offset(0, _vOffset.value));

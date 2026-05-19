@@ -124,12 +124,12 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
         .distinct()
         .skip(1)
         .listen((cellId) {
-      if (cellId != null && mounted) {
-        WidgetsBinding.instance.addPostFrameCallback(
-          (_) => _ensureCellVisible(cellId),
-        );
-      }
-    });
+          if (cellId != null && mounted) {
+            WidgetsBinding.instance.addPostFrameCallback(
+              (_) => _ensureCellVisible(cellId),
+            );
+          }
+        });
     // On WASM web the browser's focus system does not automatically return
     // keyboard focus to Flutter when the editing TextField is removed from the
     // widget tree.  Explicitly reclaim focus on the grid's Focus node so that
@@ -139,12 +139,12 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
         .map((s) => s.edit.isEditing)
         .distinct()
         .listen((isEditing) {
-      if (!isEditing && mounted) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) _gridFocusNode.requestFocus();
+          if (!isEditing && mounted) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) _gridFocusNode.requestFocus();
+            });
+          }
         });
-      }
-    });
   }
 
   @override
@@ -197,8 +197,9 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
     }
 
     // --- Horizontal ---
-    final visibleColumns =
-        state.effectiveColumns.where((c) => c.visible).toList();
+    final visibleColumns = state.effectiveColumns
+        .where((c) => c.visible)
+        .toList();
     final colIndex = visibleColumns.indexWhere((c) => c.id == colId);
     if (colIndex < 0) return;
 
@@ -208,8 +209,7 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
         .where((c) => c.pinned)
         .fold(0.0, (sum, c) => sum + c.width);
 
-    final unpinnedColumns =
-        visibleColumns.where((c) => !c.pinned).toList();
+    final unpinnedColumns = visibleColumns.where((c) => !c.pinned).toList();
     final unpinnedColIndex = unpinnedColumns.indexWhere((c) => c.id == colId);
     if (unpinnedColIndex < 0) return;
 
@@ -248,7 +248,8 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
     }
 
     final isShift = HardwareKeyboard.instance.isShiftPressed;
-    final isCtrlOrMeta = HardwareKeyboard.instance.isControlPressed ||
+    final isCtrlOrMeta =
+        HardwareKeyboard.instance.isControlPressed ||
         HardwareKeyboard.instance.isMetaPressed;
 
     if (event.logicalKey == LogicalKeyboardKey.arrowUp) {

@@ -34,8 +34,12 @@ export 'package:flutter_data_grid/delegates/filter_delegate.dart';
 class DataGridController<T extends DataGridRow> {
   final BehaviorSubject<DataGridState<T>> _stateSubject;
   final PublishSubject<DataGridEvent> _eventSubject = PublishSubject();
-  final StreamController<void> _disposeController = StreamController.broadcast();
-  final BehaviorSubject<Set<double>> _renderedRowIds = BehaviorSubject.seeded({});
+  final StreamController<void> _disposeController =
+      StreamController.broadcast();
+  final BehaviorSubject<Set<double>> _renderedRowIds = BehaviorSubject.seeded(
+    {},
+  );
+  final PublishSubject<CellValueChange> _cellValueChanges = PublishSubject();
 
   final DataIndexer<T> _dataIndexer;
 
@@ -51,7 +55,13 @@ class DataGridController<T extends DataGridRow> {
   final bool Function(double rowId)? canSelectRow;
 
   /// Callback invoked when a cell edit is committed. Return false to reject.
-  final Future<bool> Function(double rowId, int columnId, dynamic oldValue, dynamic newValue)? onCellCommit;
+  final Future<bool> Function(
+    double rowId,
+    int columnId,
+    dynamic oldValue,
+    dynamic newValue,
+  )?
+  onCellCommit;
 
   /// Callback for server-side pagination to load a specific page.
   /// Returns the list of rows for the requested page.
@@ -79,9 +89,24 @@ class DataGridController<T extends DataGridRow> {
     this.onLoadPage,
     this.onGetTotalCount,
   }) : _dataIndexer = DataIndexer<T>(),
-       _stateSubject = BehaviorSubject<DataGridState<T>>.seeded(DataGridState<T>.initial()) {
-    _filterDelegate = filterDelegate ?? DefaultFilterDelegate<T>(dataIndexer: _dataIndexer, filterDebounce: filterDebounce, isolateThreshold: filterIsolateThreshold);
-    _sortDelegate = sortDelegate ?? DefaultSortDelegate<T>(dataIndexer: _dataIndexer, sortDebounce: sortDebounce, isolateThreshold: sortIsolateThreshold, filterDelegate: _filterDelegate);
+       _stateSubject = BehaviorSubject<DataGridState<T>>.seeded(
+         DataGridState<T>.initial(),
+       ) {
+    _filterDelegate =
+        filterDelegate ??
+        DefaultFilterDelegate<T>(
+          dataIndexer: _dataIndexer,
+          filterDebounce: filterDebounce,
+          isolateThreshold: filterIsolateThreshold,
+        );
+    _sortDelegate =
+        sortDelegate ??
+        DefaultSortDelegate<T>(
+          dataIndexer: _dataIndexer,
+          sortDebounce: sortDebounce,
+          isolateThreshold: sortIsolateThreshold,
+          filterDelegate: _filterDelegate,
+        );
 
     if (interceptors != null) {
       _interceptors.addAll(interceptors);
@@ -98,19 +123,26 @@ class DataGridController<T extends DataGridRow> {
   DataGridState<T> get state => _stateSubject.value;
 
   /// Stream of selection state changes.
-  Stream<SelectionState> get selection$ => _stateSubject.stream.map((s) => s.selection).distinct();
+  Stream<SelectionState> get selection$ =>
+      _stateSubject.stream.map((s) => s.selection).distinct();
 
   /// Stream of sort state changes.
-  Stream<SortState> get sort$ => _stateSubject.stream.map((s) => s.sort).distinct();
+  Stream<SortState> get sort$ =>
+      _stateSubject.stream.map((s) => s.sort).distinct();
 
   /// Stream of filter state changes.
-  Stream<FilterState> get filter$ => _stateSubject.stream.map((s) => s.filter).distinct();
+  Stream<FilterState> get filter$ =>
+      _stateSubject.stream.map((s) => s.filter).distinct();
 
   /// Stream of group state changes.
-  Stream<GroupState> get group$ => _stateSubject.stream.map((s) => s.group).distinct();
+  Stream<GroupState> get group$ =>
+      _stateSubject.stream.map((s) => s.group).distinct();
 
   /// Stream of currently rendered row IDs.
   Stream<Set<double>> get renderedRowIds$ => _renderedRowIds.stream;
+
+  /// Emitted when a single cell value is persisted without replacing [rowsById].
+  Stream<CellValueChange> get cellValueChanges => _cellValueChanges.stream;
 
   /// Current set of rendered row IDs.
   Set<double> get renderedRowIds => _renderedRowIds.value;
@@ -120,11 +152,20 @@ class DataGridController<T extends DataGridRow> {
     final displayOrder = rows.map((r) => r.id).toList();
     _dataIndexer.setData(rowsById);
 
-    _stateSubject.add(state.copyWith(columns: columns, rowsById: rowsById, displayOrder: displayOrder, totalItems: displayOrder.length));
+    _stateSubject.add(
+      state.copyWith(
+        columns: columns,
+        rowsById: rowsById,
+        displayOrder: displayOrder,
+        totalItems: displayOrder.length,
+      ),
+    );
   }
 
   void _setupEventHandlers() {
-    _eventSubject.takeUntil(_disposeController.stream).listen((event) => _handleEvent(event));
+    _eventSubject
+        .takeUntil(_disposeController.stream)
+        .listen((event) => _handleEvent(event));
   }
 
   Future<void> _handleEvent(DataGridEvent event) async {
@@ -140,7 +181,9 @@ class DataGridController<T extends DataGridRow> {
 
         final row = state.rowsById[rowId];
         final column = state.columns.firstWhere((c) => c.id == columnId);
-        final oldValue = row != null ? _dataIndexer.getCellValue(row, column) : null;
+        final oldValue = row != null
+            ? _dataIndexer.getCellValue(row, column)
+            : null;
         final newValue = state.edit.editingValue;
 
         if (column.validator != null) {
@@ -152,7 +195,12 @@ class DataGridController<T extends DataGridRow> {
         }
 
         if (onCellCommit != null) {
-          final allowed = await onCellCommit!(rowId, columnId, oldValue, newValue);
+          final allowed = await onCellCommit!(
+            rowId,
+            columnId,
+            oldValue,
+            newValue,
+          );
           if (!allowed) {
             addEvent(CancelCellEditEvent());
             return;
@@ -162,7 +210,13 @@ class DataGridController<T extends DataGridRow> {
 
       final shouldShowLoading = interceptedEvent.shouldShowLoading(state);
       if (shouldShowLoading) {
-        _updateStateWithInterceptors(state.copyWith(isLoading: true, loadingMessage: interceptedEvent.loadingMessage()), null);
+        _updateStateWithInterceptors(
+          state.copyWith(
+            isLoading: true,
+            loadingMessage: interceptedEvent.loadingMessage(),
+          ),
+          null,
+        );
       }
 
       final result = interceptedEvent.apply(_createContext());
@@ -179,7 +233,10 @@ class DataGridController<T extends DataGridRow> {
 
         if (asyncResult != null) {
           final current = state;
-          newState = asyncResult.copyWith(selection: current.selection, edit: current.edit);
+          newState = asyncResult.copyWith(
+            selection: current.selection,
+            edit: current.edit,
+          );
         }
       } else {
         newState = result;
@@ -197,6 +254,10 @@ class DataGridController<T extends DataGridRow> {
     }
   }
 
+  void _notifyCellValueChanged(CellValueChange change) {
+    _cellValueChanges.add(change);
+  }
+
   EventContext<T> _createContext() {
     return EventContext<T>(
       state: state,
@@ -207,6 +268,7 @@ class DataGridController<T extends DataGridRow> {
       canEditCell: canEditCell,
       canSelectRow: canSelectRow,
       onCellCommit: onCellCommit,
+      notifyCellValueChanged: _notifyCellValueChanged,
     );
   }
 
@@ -237,12 +299,19 @@ class DataGridController<T extends DataGridRow> {
     return currentEvent;
   }
 
-  void _updateStateWithInterceptors(DataGridState<T> newState, DataGridEvent? event) {
+  void _updateStateWithInterceptors(
+    DataGridState<T> newState,
+    DataGridEvent? event,
+  ) {
     final oldState = state;
     DataGridState<T>? interceptedState = newState;
 
     for (final interceptor in _interceptors) {
-      interceptedState = interceptor.onBeforeStateUpdate(interceptedState!, oldState, event);
+      interceptedState = interceptor.onBeforeStateUpdate(
+        interceptedState!,
+        oldState,
+        event,
+      );
       if (interceptedState == null) return;
     }
 
@@ -254,7 +323,11 @@ class DataGridController<T extends DataGridRow> {
     }
   }
 
-  void _runErrorInterceptors(Object error, StackTrace stackTrace, DataGridEvent? event) {
+  void _runErrorInterceptors(
+    Object error,
+    StackTrace stackTrace,
+    DataGridEvent? event,
+  ) {
     for (final interceptor in _interceptors) {
       interceptor.onError(error, stackTrace, event);
     }
@@ -401,5 +474,6 @@ class DataGridController<T extends DataGridRow> {
     _eventSubject.close();
     _stateSubject.close();
     _renderedRowIds.close();
+    _cellValueChanges.close();
   }
 }

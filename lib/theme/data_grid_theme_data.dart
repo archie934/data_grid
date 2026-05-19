@@ -136,10 +136,7 @@ class DataGridCellDecorations {
           top: const BorderSide(color: Colors.blue, width: 2),
           bottom: const BorderSide(color: Colors.blue, width: 2),
           left: const BorderSide(color: Colors.blue, width: 2),
-          right: BorderSide(
-            color: borders.cellBorder.right.color,
-            width: 1,
-          ),
+          right: BorderSide(color: borders.cellBorder.right.color, width: 1),
         ),
       ),
       oddRowCellActive = BoxDecoration(
@@ -148,10 +145,7 @@ class DataGridCellDecorations {
           top: const BorderSide(color: Colors.blue, width: 2),
           bottom: const BorderSide(color: Colors.blue, width: 2),
           left: const BorderSide(color: Colors.blue, width: 2),
-          right: BorderSide(
-            color: borders.cellBorder.right.color,
-            width: 1,
-          ),
+          right: BorderSide(color: borders.cellBorder.right.color, width: 1),
         ),
       );
 

@@ -102,10 +102,8 @@ abstract class SelectionState with _$SelectionState {
   const SelectionState._();
 
   /// Creates an initial selection state with no selection.
-  factory SelectionState.initial() => const SelectionState(
-    selectedRowIds: {},
-    mode: SelectionMode.none,
-  );
+  factory SelectionState.initial() =>
+      const SelectionState(selectedRowIds: {}, mode: SelectionMode.none);
 
   /// Returns `true` if the row with [rowId] is currently selected.
   bool isRowSelected(double rowId) => selectedRowIds.contains(rowId);

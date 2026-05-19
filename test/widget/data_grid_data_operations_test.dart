@@ -222,9 +222,13 @@ void main() {
 
       expect(controller.state.rowsById[1]!.name, 'Alice');
 
+      final stateBefore = controller.state;
+      final rowBefore = controller.state.rowsById[1]!;
       controller.updateCell(1, 1, 'Alice Modified');
       await tester.pumpAndSettle();
 
+      expect(identical(controller.state, stateBefore), isTrue);
+      expect(identical(controller.state.rowsById[1], rowBefore), isTrue);
       expect(controller.state.rowsById[1]!.name, 'Alice Modified');
       expect(controller.state.rowsById[1]!.value, 100);
     });
