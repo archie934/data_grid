@@ -9,7 +9,7 @@ import 'config/columns.dart';
 import 'renderers/cell_renderers.dart';
 import 'interceptors/logging_interceptor.dart';
 
-const exampleRows = 10000000;
+const exampleRows = 100000;
 
 void main() {
   runApp(const MainApp());
