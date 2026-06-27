@@ -30,7 +30,7 @@ jobs:
 
       - name: Build web
         working-directory: example
-        run: flutter build web --release --base-href /data_grid/
+        run: flutter build web --release --wasm --base-href /data_grid/
 
       - uses: actions/configure-pages@v5
 
