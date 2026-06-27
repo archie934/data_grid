@@ -4,6 +4,10 @@ A high-performance, reactive data grid for Flutter with comprehensive features i
 
 ![Flutter Data Grid Overview](doc/images/overview.png)
 
+## 🌐 Live Demo
+
+Try it in your browser: [https://archie934.github.io/data_grid/](https://archie934.github.io/data_grid/) — 100k rows, WebAssembly build.
+
 > **Early Development - Beta**: This package is in active development. While core features are stable and well-tested, some advanced features are still being refined. APIs may evolve based on community feedback. See [Known Issues & Roadmap](#-known-issues--roadmap) below for current limitations.
 
 ## ✨ Features
@@ -31,7 +35,7 @@ Add this to your package's `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  flutter_data_grid: ^0.0.18
+  flutter_data_grid: ^0.0.23
 ```
 
 Then run:

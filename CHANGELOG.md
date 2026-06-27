@@ -1,3 +1,8 @@
+## 0.0.23 - 2026-06-27
+
+* Added GitHub Pages live demo: https://archie934.github.io/data_grid/ (100k-row WebAssembly build)
+* Added GitHub Actions workflow to auto-deploy example to GitHub Pages on push to main
+
 ## 0.0.22 - 2026-05-19
 
 * Docs: Added dartdoc for `CellValueChange` and `CellValueChangeSource`
