@@ -1,3 +1,13 @@
+## 0.0.24 - 2026-08-22
+
+* Added row grouping: group by a column's value with collapsible, full-width group header bands (`GroupByColumnEvent`, `UngroupColumnEvent`, `ToggleGroupExpansionEvent`, `controller.groupByColumn`/`ungroupColumn`/`toggleGroupExpansion`). v1 supports a single active grouped column. Groups default to **collapsed**.
+* Added a header right-click context menu (suppressing the browser's native menu on web): Sort Ascending/Descending/Clear Sort, Group by This Column/Remove Grouping, Pin Column/Unpin Column, Hide Column
+* Added `SetColumnVisibilityEvent`/`controller.setColumnVisibility` and `SetColumnPinnedEvent`/`controller.setColumnPinned`
+* Added `DataGridColumn.groupable` flag to opt a column out of the "Group by This Column" menu item
+* **Fixed**: keyboard cell navigation (`NavigateCellEvent`) and `CopyCellsEvent` indexed into raw row-insertion order (`displayOrder`), which is wrong once grouping is active — group header bands aren't real rows and rows in a collapsed group aren't on screen. Navigation now walks the same grouping-aware visual row order the grid renders.
+* **Known issue**: copied cell/row order still doesn't fully match the on-screen grouped order in all cases — see README
+* Example app: added a column-visibility toggle button (`MenuAnchor`-based checklist that stays open across multiple toggles)
+
 ## 0.0.23 - 2026-06-27
 
 * Added GitHub Pages live demo: https://archie934.github.io/data_grid/ (100k-row WebAssembly build)
