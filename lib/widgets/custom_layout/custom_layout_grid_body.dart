@@ -131,6 +131,7 @@ class _CustomLayoutGridBodyState<T extends DataGridRow>
         double unpinnedWidth = 0;
 
         for (int i = 0; i < columns.length; i++) {
+          if (!columns[i].visible) continue;
           if (columns[i].pinned) {
             pinnedIndices.add(i);
             pinnedWidth += columns[i].width;

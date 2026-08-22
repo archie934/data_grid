@@ -253,7 +253,10 @@ void main() {
           final rowId = (i % rowCount).toDouble();
           final sw = Stopwatch()..start();
           controller.startEditCell(rowId, 0);
-          await _waitForState(controller, (s) => s.edit.isCellEditing(rowId, 0));
+          await _waitForState(
+            controller,
+            (s) => s.edit.isCellEditing(rowId, 0),
+          );
           controller.cancelCellEdit();
           await _waitForState(controller, (s) => !s.edit.isEditing);
           sw.stop();
@@ -269,9 +272,17 @@ void main() {
           final sw = Stopwatch()..start();
           controller.updateRow(
             rowId,
-            _BenchRow(id: rowId, name: 'Updated $i', quantity: i, price: i + 0.5),
+            _BenchRow(
+              id: rowId,
+              name: 'Updated $i',
+              quantity: i,
+              price: i + 0.5,
+            ),
           );
-          await _waitForState(controller, (s) => !identical(s.rowsById, prevRowsById));
+          await _waitForState(
+            controller,
+            (s) => !identical(s.rowsById, prevRowsById),
+          );
           sw.stop();
           updateRowUsecs.add(sw.elapsedMicroseconds);
         }
@@ -322,57 +333,61 @@ void main() {
       });
 
       if (rowCount >= 10000) {
-        test('sort/filter isolate path @ $rowCount rows', () async {
-          final controller = DataGridController<_BenchRow>(
-            initialColumns: _generateColumns(_columnCount),
-            initialRows: _generateRows(rowCount),
-            sortDebounce: Duration.zero,
-            filterDebounce: Duration.zero,
-            sortIsolateThreshold: 1, // force the isolate path
-            filterIsolateThreshold: 1, // force the isolate path
-          );
-          addTearDown(controller.dispose);
-
-          final sortUsecs = <int>[];
-          for (var i = 0; i < _heavyIterations; i++) {
-            final direction = i.isEven
-                ? SortDirection.ascending
-                : SortDirection.descending;
-            final prevDisplayOrder = controller.state.displayOrder;
-            final sw = Stopwatch()..start();
-            controller.addEvent(SortEvent(columnId: 1, direction: direction));
-            await _waitForState(
-              controller,
-              (s) => !identical(s.displayOrder, prevDisplayOrder),
+        test(
+          'sort/filter isolate path @ $rowCount rows',
+          () async {
+            final controller = DataGridController<_BenchRow>(
+              initialColumns: _generateColumns(_columnCount),
+              initialRows: _generateRows(rowCount),
+              sortDebounce: Duration.zero,
+              filterDebounce: Duration.zero,
+              sortIsolateThreshold: 1, // force the isolate path
+              filterIsolateThreshold: 1, // force the isolate path
             );
-            sw.stop();
-            sortUsecs.add(sw.elapsedMicroseconds);
-          }
-          _printBench('SortEvent isolate path (deep)', sortUsecs);
+            addTearDown(controller.dispose);
 
-          final filterUsecs = <int>[];
-          for (var i = 0; i < _heavyIterations; i++) {
-            final prevDisplayOrder = controller.state.displayOrder;
-            final sw = Stopwatch()..start();
-            controller.addEvent(
-              FilterEvent(
-                columnId: 1,
-                operator: FilterOperator.greaterThanOrEqual,
-                value: i * 10,
-              ),
-            );
-            await _waitForState(
-              controller,
-              (s) => !identical(s.displayOrder, prevDisplayOrder),
-            );
-            sw.stop();
-            filterUsecs.add(sw.elapsedMicroseconds);
+            final sortUsecs = <int>[];
+            for (var i = 0; i < _heavyIterations; i++) {
+              final direction = i.isEven
+                  ? SortDirection.ascending
+                  : SortDirection.descending;
+              final prevDisplayOrder = controller.state.displayOrder;
+              final sw = Stopwatch()..start();
+              controller.addEvent(SortEvent(columnId: 1, direction: direction));
+              await _waitForState(
+                controller,
+                (s) => !identical(s.displayOrder, prevDisplayOrder),
+              );
+              sw.stop();
+              sortUsecs.add(sw.elapsedMicroseconds);
+            }
+            _printBench('SortEvent isolate path (deep)', sortUsecs);
 
-            controller.addEvent(ClearFilterEvent(columnId: 1));
-            await _waitForState(controller, (s) => !s.filter.hasFilters);
-          }
-          _printBench('FilterEvent isolate path (deep)', filterUsecs);
-        }, timeout: const Timeout(Duration(minutes: 2)));
+            final filterUsecs = <int>[];
+            for (var i = 0; i < _heavyIterations; i++) {
+              final prevDisplayOrder = controller.state.displayOrder;
+              final sw = Stopwatch()..start();
+              controller.addEvent(
+                FilterEvent(
+                  columnId: 1,
+                  operator: FilterOperator.greaterThanOrEqual,
+                  value: i * 10,
+                ),
+              );
+              await _waitForState(
+                controller,
+                (s) => !identical(s.displayOrder, prevDisplayOrder),
+              );
+              sw.stop();
+              filterUsecs.add(sw.elapsedMicroseconds);
+
+              controller.addEvent(ClearFilterEvent(columnId: 1));
+              await _waitForState(controller, (s) => !s.filter.hasFilters);
+            }
+            _printBench('FilterEvent isolate path (deep)', filterUsecs);
+          },
+          timeout: const Timeout(Duration(minutes: 2)),
+        );
       }
     }
   });

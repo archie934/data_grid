@@ -62,7 +62,8 @@ List<GridDisplayRow<T>> computeDisplayRows<T extends DataGridRow>({
     final isExpanded = group.isGroupExpanded(groupKey);
     final firstRow = rowsById[ids.first]!;
     final formatter = groupColumn.cellFormatter as CellFormatter<T>?;
-    final displayLabel = formatter?.call(firstRow, groupColumn) ?? value.toString();
+    final displayLabel =
+        formatter?.call(firstRow, groupColumn) ?? value.toString();
 
     result.add(
       GridGroupHeaderRow<T>(

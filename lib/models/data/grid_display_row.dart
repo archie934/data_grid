@@ -15,7 +15,8 @@ final class GridDataRow<T extends DataGridRow> extends GridDisplayRow<T> {
 }
 
 /// A slot rendering a collapsible group header band.
-final class GridGroupHeaderRow<T extends DataGridRow> extends GridDisplayRow<T> {
+final class GridGroupHeaderRow<T extends DataGridRow>
+    extends GridDisplayRow<T> {
   /// Deterministic key, e.g. `'$columnId:$value'`. Passed to
   /// `ToggleGroupExpansionEvent` and used as the `GroupState.expandedGroups` key.
   final String groupKey;

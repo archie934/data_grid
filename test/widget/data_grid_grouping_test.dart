@@ -60,10 +60,12 @@ void main() {
 
       expect(result.length, 4);
       expect(result.every((r) => r is GridDataRow<TestRow>), true);
-      expect(
-        result.map((r) => (r as GridDataRow<TestRow>).rowId).toList(),
-        [1, 2, 3, 4],
-      );
+      expect(result.map((r) => (r as GridDataRow<TestRow>).rowId).toList(), [
+        1,
+        2,
+        3,
+        4,
+      ]);
     });
 
     test(

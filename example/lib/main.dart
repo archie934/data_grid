@@ -8,6 +8,7 @@ import 'models/product_row.dart';
 import 'config/columns.dart';
 import 'renderers/cell_renderers.dart';
 import 'interceptors/logging_interceptor.dart';
+import 'widgets/column_visibility_menu.dart';
 
 const exampleRows = 100000;
 
@@ -152,6 +153,8 @@ class _MainAppState extends State<MainApp> {
         return Row(
           children: [
             _buildSelectionModeSelector(snapshot.data!),
+            const SizedBox(width: 16),
+            ColumnVisibilityMenu<ProductRow>(controller: controller),
             const SizedBox(width: 16),
             _buildPaginationToggle(),
             const SizedBox(width: 8),
