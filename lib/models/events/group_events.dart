@@ -4,6 +4,10 @@ import 'package:flutter_data_grid/models/events/base_event.dart';
 import 'package:flutter_data_grid/models/events/event_context.dart';
 
 /// Groups rows by the specified column.
+///
+/// v1 supports only a single active grouped column: applying this event
+/// replaces `groupedColumnIds` rather than appending to it. The field stays
+/// a `List<int>` for forward compatibility with future multi-level grouping.
 class GroupByColumnEvent extends DataGridEvent {
   final int columnId;
 
@@ -11,14 +15,8 @@ class GroupByColumnEvent extends DataGridEvent {
 
   @override
   DataGridState<T>? apply<T extends DataGridRow>(EventContext<T> context) {
-    final groupedColumns = List<int>.from(context.state.group.groupedColumnIds);
-
-    if (!groupedColumns.contains(columnId)) {
-      groupedColumns.add(columnId);
-    }
-
     return context.state.copyWith(
-      group: context.state.group.copyWith(groupedColumnIds: groupedColumns),
+      group: context.state.group.copyWith(groupedColumnIds: [columnId]),
     );
   }
 }
@@ -52,11 +50,11 @@ class ToggleGroupExpansionEvent extends DataGridEvent {
       context.state.group.expandedGroups,
     );
 
-    if (expandedGroups.containsKey(groupKey)) {
-      expandedGroups[groupKey] = !expandedGroups[groupKey]!;
-    } else {
-      expandedGroups[groupKey] = true;
-    }
+    // Invert the *effective* state (isGroupExpanded defaults to true when
+    // absent), not just the literal map entry — otherwise the first toggle
+    // on a never-touched group would set it to `true` (a no-op, since that's
+    // already the default) instead of visibly collapsing it.
+    expandedGroups[groupKey] = !context.state.group.isGroupExpanded(groupKey);
 
     return context.state.copyWith(
       group: context.state.group.copyWith(expandedGroups: expandedGroups),

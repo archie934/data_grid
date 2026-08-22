@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_data_grid/models/data/column.dart';
+import 'package:flutter_data_grid/models/data/grid_display_row.dart';
 import 'package:flutter_data_grid/models/data/row.dart';
 import 'package:flutter_data_grid/widgets/custom_layout/layout_grid_cell.dart';
 import 'package:flutter_data_grid/widgets/custom_layout/grid_layout_delegate.dart';
@@ -17,7 +18,7 @@ class GridPinnedQuadrant<T extends DataGridRow> extends StatefulWidget {
   final List<DataGridColumn<T>> columns;
   final List<int> pinnedIndices;
   final double viewportHeight;
-  final List<double> displayOrder;
+  final List<GridDisplayRow<T>> rows;
   final Map<double, T> rowsById;
   final int rowCount;
   final double rowHeight;
@@ -30,7 +31,7 @@ class GridPinnedQuadrant<T extends DataGridRow> extends StatefulWidget {
     required this.columns,
     required this.pinnedIndices,
     required this.viewportHeight,
-    required this.displayOrder,
+    required this.rows,
     required this.rowsById,
     required this.rowCount,
     required this.rowHeight,
@@ -77,7 +78,7 @@ class _GridPinnedQuadrantState<T extends DataGridRow>
 
     // Clear cache when content-affecting parameters change.
     if (!identical(old.rowsById, widget.rowsById) ||
-        !identical(old.displayOrder, widget.displayOrder) ||
+        !identical(old.rows, widget.rows) ||
         !identical(old.columns, widget.columns) ||
         !identical(old.pinnedIndices, widget.pinnedIndices)) {
       _cellCache.clear();
@@ -143,9 +144,12 @@ class _GridPinnedQuadrantState<T extends DataGridRow>
       final column = widget.columns[colIndex];
 
       for (int row = _firstRow; row < _lastRow; row++) {
-        if (row < 0 || row >= widget.displayOrder.length) continue;
+        if (row < 0 || row >= widget.rows.length) continue;
 
-        final rowId = widget.displayOrder[row];
+        final entry = widget.rows[row];
+        if (entry is! GridDataRow<T>) continue; // group header band
+
+        final rowId = entry.rowId;
         final rowData = widget.rowsById[rowId];
         if (rowData == null) continue;
 

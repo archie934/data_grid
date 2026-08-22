@@ -448,6 +448,7 @@ DataGridColumn<MyRow>(
   resizable: true,                        // Allow resize
   sortable: true,                         // Enable sorting
   filterable: true,                       // Enable filtering
+  groupable: true,                        // Enable grouping via header context menu
   editable: true,                         // Allow inline editing
   valueAccessor: (row) => row.value,      // Get cell value
   cellValueSetter: (row, val) => row.value = val,  // Set cell value

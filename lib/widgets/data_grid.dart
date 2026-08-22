@@ -1,11 +1,14 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_data_grid/controllers/data_grid_controller.dart';
 import 'package:flutter_data_grid/controllers/grid_scroll_controller.dart';
+import 'package:flutter_data_grid/models/data/grid_display_row.dart';
 import 'package:flutter_data_grid/models/data/row.dart';
 import 'package:flutter_data_grid/models/state/grid_state.dart';
 import 'package:flutter_data_grid/models/events/grid_events.dart';
+import 'package:flutter_data_grid/utils/grid_display_rows.dart';
 import 'package:flutter_data_grid/widgets/data_grid_header.dart';
 import 'package:flutter_data_grid/widgets/custom_layout/custom_layout_grid_body.dart';
 import 'package:flutter_data_grid/widgets/data_grid_inherited.dart';
@@ -112,10 +115,16 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
   double _viewportHeight = 0;
   double _viewportWidth = 0;
   double _effectiveRowHeight = 48.0;
+  List<GridDisplayRow<T>> _lastDisplayRows = const [];
 
   @override
   void initState() {
     super.initState();
+    // The header context menu is triggered by right-click; on web that
+    // would otherwise also open the browser's native context menu.
+    if (kIsWeb) {
+      BrowserContextMenu.disableContextMenu();
+    }
     _scrollController = widget.scrollController ?? GridScrollController();
     _filterWidget = widget.filterWidget ?? const DefaultFilterWidget();
     _themeData = widget.theme ?? DataGridThemeData.defaultTheme();
@@ -157,6 +166,9 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
 
   @override
   void dispose() {
+    if (kIsWeb) {
+      BrowserContextMenu.enableContextMenu();
+    }
     _activeCellSubscription?.cancel();
     _editSubscription?.cancel();
     _gridFocusNode.dispose();
@@ -172,7 +184,13 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
     final (rowId, colId) = parseCellId(cellId);
 
     // --- Vertical ---
-    final rowIndex = state.displayOrder.indexOf(rowId);
+    // Resolved against the grouped display list, not raw displayOrder, so
+    // scrolling stays correct when grouping reorders/interleaves rows. If the
+    // row is hidden inside a collapsed group it isn't in this list at all —
+    // skip the scroll rather than guessing a position (known v1 limitation).
+    final rowIndex = _lastDisplayRows.indexWhere(
+      (r) => r is GridDataRow<T> && r.rowId == rowId,
+    );
     if (rowIndex >= 0) {
       final vCtrl = _scrollController.verticalController;
       if (vCtrl.hasClients) {
@@ -320,13 +338,21 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
           }
 
           final state = snapshot.data!;
-          final rowCount = state.displayOrder.length;
+          final displayRows = computeDisplayRows<T>(
+            displayOrder: state.displayOrder,
+            rowsById: state.rowsById,
+            columns: state.columns,
+            group: state.group,
+          );
+          _lastDisplayRows = displayRows;
+          final rowCount = displayRows.length;
           final columnCount = state.effectiveColumns.length;
 
           return DataGridInherited<T>(
             controller: widget.controller,
             scrollController: _scrollController,
             state: state,
+            displayRows: displayRows,
             gridFocusNode: _gridFocusNode,
             child: Focus(
               autofocus: true,

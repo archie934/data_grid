@@ -386,6 +386,9 @@ class DataGridColors {
   /// Fill color of the drag-selection rectangle overlay.
   final Color dragSelectOverlayColor;
 
+  /// Background color of group header bands.
+  final Color groupHeaderColor;
+
   DataGridColors({
     Color? selectionColor,
     Color? cellFocusColor,
@@ -398,6 +401,7 @@ class DataGridColors {
     Color? scrollbarTrackColor,
     Color? scrollbarThumbColor,
     Color? dragSelectOverlayColor,
+    Color? groupHeaderColor,
   }) : selectionColor = selectionColor ?? Colors.blue.withValues(alpha: 0.1),
        cellFocusColor = cellFocusColor ?? Colors.blue.withValues(alpha: 0.15),
        evenRowColor = evenRowColor ?? Colors.white,
@@ -413,7 +417,8 @@ class DataGridColors {
            scrollbarThumbColor ??
            const Color(0xFF757575).withValues(alpha: 0.7),
        dragSelectOverlayColor =
-           dragSelectOverlayColor ?? Colors.blue.withValues(alpha: 0.12);
+           dragSelectOverlayColor ?? Colors.blue.withValues(alpha: 0.12),
+       groupHeaderColor = groupHeaderColor ?? Colors.blueGrey[50]!;
 
   factory DataGridColors.defaults() {
     return DataGridColors();
@@ -431,6 +436,7 @@ class DataGridColors {
     Color? scrollbarTrackColor,
     Color? scrollbarThumbColor,
     Color? dragSelectOverlayColor,
+    Color? groupHeaderColor,
   }) {
     return DataGridColors(
       selectionColor: selectionColor ?? this.selectionColor,
@@ -447,6 +453,7 @@ class DataGridColors {
       scrollbarThumbColor: scrollbarThumbColor ?? this.scrollbarThumbColor,
       dragSelectOverlayColor:
           dragSelectOverlayColor ?? this.dragSelectOverlayColor,
+      groupHeaderColor: groupHeaderColor ?? this.groupHeaderColor,
     );
   }
 }

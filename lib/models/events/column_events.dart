@@ -22,6 +22,25 @@ class ColumnResizeEvent extends DataGridEvent {
   }
 }
 
+/// Shows or hides a column.
+class SetColumnVisibilityEvent extends DataGridEvent {
+  final int columnId;
+  final bool visible;
+
+  SetColumnVisibilityEvent({required this.columnId, required this.visible});
+
+  @override
+  DataGridState<T>? apply<T extends DataGridRow>(EventContext<T> context) {
+    final updatedColumns = context.state.columns.map((col) {
+      if (col.id == columnId) {
+        return col.copyWith(visible: visible);
+      }
+      return col;
+    }).toList();
+    return context.state.copyWith(columns: updatedColumns);
+  }
+}
+
 /// Moves a column from [oldIndex] to [newIndex].
 class ColumnReorderEvent extends DataGridEvent {
   final int oldIndex;

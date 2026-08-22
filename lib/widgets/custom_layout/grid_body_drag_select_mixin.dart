@@ -51,17 +51,17 @@ mixin _GridBodyDragSelectMixin<T extends DataGridRow>
   // -- Layout cache (written in build, read by pointer handlers) ------------
   List<_VisualColumn> _visualColumns = const [];
   double _cachedPinnedWidth = 0;
-  List<double> _cachedDisplayOrder = const [];
+  List<GridDisplayRow<T>> _cachedRows = const [];
 
   // -- Layout cache update --------------------------------------------------
 
   void _updateLayoutCache(
     List<DataGridColumn<T>> columns,
-    List<double> displayOrder,
+    List<GridDisplayRow<T>> rows,
     double pinnedWidth,
   ) {
     _cachedPinnedWidth = pinnedWidth;
-    _cachedDisplayOrder = displayOrder;
+    _cachedRows = rows;
     _visualColumns = [
       for (final col in columns.where((c) => c.visible && c.pinned))
         _VisualColumn(colId: col.id, width: col.width, pinned: true),
@@ -75,12 +75,14 @@ mixin _GridBodyDragSelectMixin<T extends DataGridRow>
   /// Converts a local pixel position to (rowIdx, colIdx in _visualColumns).
   /// Returns null if layout cache is empty.
   ({int rowIdx, int colIdx})? _localToCell(Offset local) {
-    final order = _cachedDisplayOrder;
+    final rows = _cachedRows;
     final vcols = _visualColumns;
-    if (order.isEmpty || vcols.isEmpty) return null;
+    if (rows.isEmpty || vcols.isEmpty) return null;
 
     int rowIdx = ((local.dy + _vOffset.value) / widget.rowHeight).floor();
-    rowIdx = rowIdx.clamp(0, order.length - 1);
+    rowIdx = rowIdx.clamp(0, rows.length - 1);
+    // A group header band isn't a selectable cell.
+    if (rows[rowIdx] is! GridDataRow<T>) return null;
 
     final x = local.dx;
     int colIdx;
@@ -120,7 +122,7 @@ mixin _GridBodyDragSelectMixin<T extends DataGridRow>
     if (controller == null) return;
 
     final vcols = _visualColumns;
-    final order = _cachedDisplayOrder;
+    final rows = _cachedRows;
 
     final minRow = math.min(startCell.rowIdx, endCell.rowIdx);
     final maxRow = math.max(startCell.rowIdx, endCell.rowIdx);
@@ -129,7 +131,9 @@ mixin _GridBodyDragSelectMixin<T extends DataGridRow>
 
     final cells = <String>[];
     for (int r = minRow; r <= maxRow; r++) {
-      final rowId = order[r];
+      final entry = rows[r];
+      if (entry is! GridDataRow<T>) continue; // skip group header bands
+      final rowId = entry.rowId;
       for (int c = minCol; c <= maxCol; c++) {
         cells.add('${rowId}_${vcols[c].colId}');
       }

@@ -5,12 +5,15 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_data_grid/models/data/column.dart';
+import 'package:flutter_data_grid/models/data/grid_display_row.dart';
 import 'package:flutter_data_grid/models/data/row.dart';
 import 'package:flutter_data_grid/models/events/cell_selection_events.dart';
 import 'package:flutter_data_grid/theme/data_grid_theme.dart';
 import 'package:flutter_data_grid/widgets/custom_layout/external_scroll_position.dart';
+import 'package:flutter_data_grid/widgets/custom_layout/full_width_row_band_layer.dart';
 import 'package:flutter_data_grid/widgets/custom_layout/grid_pinned_quadrant.dart';
 import 'package:flutter_data_grid/widgets/custom_layout/grid_unpinned_quadrant.dart';
+import 'package:flutter_data_grid/widgets/overlays/group_header_band.dart';
 import 'package:flutter_data_grid/widgets/scroll/vertical_scrollbar.dart';
 import 'package:flutter_data_grid/widgets/scroll/horizontal_scrollbar.dart';
 import 'package:flutter_data_grid/controllers/grid_scroll_controller.dart';
@@ -104,13 +107,15 @@ class _CustomLayoutGridBodyState<T extends DataGridRow>
     final state = context.dataGridState<T>({
       DataGridAspect.data,
       DataGridAspect.columns,
+      DataGridAspect.group,
     });
     if (state == null) return const SizedBox.expand();
 
     final columns = context.dataGridEffectiveColumns<T>();
     if (columns == null) return const SizedBox.expand();
 
-    if (state.displayOrder.isEmpty) return const SizedBox.expand();
+    final rows = context.dataGridDisplayRows<T>();
+    if (rows == null || rows.isEmpty) return const SizedBox.expand();
 
     final scrollbarWidth = theme.dimensions.scrollbarWidth;
     final scrollController = _cachedScrollController;
@@ -135,7 +140,7 @@ class _CustomLayoutGridBodyState<T extends DataGridRow>
           }
         }
 
-        final rowCount = state.displayOrder.length;
+        final rowCount = rows.length;
         final totalHeight = rowCount * widget.rowHeight;
         final scrollableViewportWidth = viewportWidth - pinnedWidth;
 
@@ -146,7 +151,7 @@ class _CustomLayoutGridBodyState<T extends DataGridRow>
           totalHeight: totalHeight,
         );
 
-        _updateLayoutCache(columns, state.displayOrder, pinnedWidth);
+        _updateLayoutCache(columns, rows, pinnedWidth);
 
         return Listener(
           behavior: HitTestBehavior.translucent,
@@ -167,7 +172,7 @@ class _CustomLayoutGridBodyState<T extends DataGridRow>
                   pinnedWidth: pinnedWidth,
                   viewportWidth: viewportWidth,
                   viewportHeight: viewportHeight,
-                  displayOrder: state.displayOrder,
+                  rows: rows,
                   rowsById: state.rowsById,
                   rowCount: rowCount,
                   rowHeight: widget.rowHeight,
@@ -186,13 +191,33 @@ class _CustomLayoutGridBodyState<T extends DataGridRow>
                     columns: columns,
                     pinnedIndices: pinnedIndices,
                     viewportHeight: viewportHeight,
-                    displayOrder: state.displayOrder,
+                    rows: rows,
                     rowsById: state.rowsById,
                     rowCount: rowCount,
                     rowHeight: widget.rowHeight,
                     cacheExtent: widget.cacheExtent,
                     backgroundColor: theme.colors.evenRowColor,
                     vOffset: _vOffset,
+                  ),
+                ),
+              if (state.group.hasGroups)
+                Positioned.fill(
+                  child: FullWidthRowBandLayer<T>(
+                    rows: rows,
+                    viewportWidth: viewportWidth,
+                    viewportHeight: viewportHeight,
+                    rowHeight: widget.rowHeight,
+                    cacheExtent: widget.cacheExtent,
+                    vOffset: _vOffset,
+                    bandBuilder: (entry, rowIndex) {
+                      if (entry is GridGroupHeaderRow<T>) {
+                        return GroupHeaderBand<T>(
+                          key: ValueKey('group_${entry.groupKey}'),
+                          header: entry,
+                        );
+                      }
+                      return null;
+                    },
                   ),
                 ),
               if (scrollController != null && _maxVScroll > 0)
