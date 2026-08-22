@@ -1,5 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_data_grid/data_grid.dart';
 import 'package:flutter_data_grid/models/enums/selection_mode.dart';
@@ -75,7 +76,10 @@ void main() {
           displayOrder: displayOrder,
           rowsById: rowsById,
           columns: columns,
-          group: const GroupState(groupedColumnIds: [1], expandedGroups: {}),
+          group: const GroupState(
+            groupedColumnIds: [1],
+            expandedGroups: {'1:Fruit': true, '1:Vegetable': true},
+          ),
         );
 
         // Fruit (rows 1,3) appears before Vegetable (rows 2,4), even though
@@ -106,7 +110,7 @@ void main() {
           columns: columns,
           group: const GroupState(
             groupedColumnIds: [1],
-            expandedGroups: {groupKey: false},
+            expandedGroups: {groupKey: false, '1:Vegetable': true},
           ),
         );
 
@@ -119,6 +123,22 @@ void main() {
         expect(result[1] is GridGroupHeaderRow<TestRow>, true);
       },
     );
+
+    test('groups default to collapsed when never explicitly toggled', () {
+      final result = computeDisplayRows<TestRow>(
+        displayOrder: displayOrder,
+        rowsById: rowsById,
+        columns: columns,
+        group: const GroupState(groupedColumnIds: [1], expandedGroups: {}),
+      );
+
+      expect(result.length, 2); // Headers only, no data rows.
+      expect(result.every((r) => r is GridGroupHeaderRow<TestRow>), true);
+      expect(
+        result.every((r) => !(r as GridGroupHeaderRow<TestRow>).isExpanded),
+        true,
+      );
+    });
 
     test('uses cellFormatter for displayLabel when provided', () {
       final formattedColumns = [
@@ -182,15 +202,15 @@ void main() {
     });
 
     testWidgets(
-      'toggling an unknown groupKey collapses it on the first toggle (was implicitly expanded)',
+      'toggling an unknown groupKey expands it on the first toggle (was implicitly collapsed)',
       (tester) async {
         controller.addEvent(ToggleGroupExpansionEvent(groupKey: 'g1'));
         await tester.pump();
-        expect(controller.state.group.isGroupExpanded('g1'), false);
+        expect(controller.state.group.isGroupExpanded('g1'), true);
 
         controller.addEvent(ToggleGroupExpansionEvent(groupKey: 'g1'));
         await tester.pump();
-        expect(controller.state.group.isGroupExpanded('g1'), true);
+        expect(controller.state.group.isGroupExpanded('g1'), false);
       },
     );
   });
@@ -232,7 +252,7 @@ void main() {
     });
 
     testWidgets(
-      'tapping the chevron collapses and expands a group, changing visible rows',
+      'groups start collapsed — no data rows visible until expanded',
       (tester) async {
         final controller = DataGridController<TestRow>(
           initialColumns: _buildColumns(),
@@ -254,18 +274,46 @@ void main() {
         controller.addEvent(GroupByColumnEvent(columnId: 1));
         await tester.pumpAndSettle();
 
-        expect(find.text('Apple'), findsOneWidget);
+        expect(find.text('Apple'), findsNothing);
+        expect(find.byIcon(Icons.chevron_right), findsNWidgets(2));
+      },
+    );
 
-        await tester.tap(find.byIcon(Icons.expand_more).first);
+    testWidgets(
+      'tapping the chevron expands and collapses a group, changing visible rows',
+      (tester) async {
+        final controller = DataGridController<TestRow>(
+          initialColumns: _buildColumns(),
+          initialRows: _buildRows(),
+          sortDebounce: Duration.zero,
+          filterDebounce: Duration.zero,
+        );
+        addTearDown(controller.dispose);
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: DataGrid<TestRow>(controller: controller, rowHeight: 40),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        controller.addEvent(GroupByColumnEvent(columnId: 1));
         await tester.pumpAndSettle();
 
         expect(find.text('Apple'), findsNothing);
-        expect(find.textContaining('Category: Fruit'), findsOneWidget);
 
         await tester.tap(find.byIcon(Icons.chevron_right).first);
         await tester.pumpAndSettle();
 
         expect(find.text('Apple'), findsOneWidget);
+        expect(find.textContaining('Category: Fruit'), findsOneWidget);
+
+        await tester.tap(find.byIcon(Icons.expand_more).first);
+        await tester.pumpAndSettle();
+
+        expect(find.text('Apple'), findsNothing);
       },
     );
   });
@@ -333,12 +381,63 @@ void main() {
       expect(find.text('Sort Descending'), findsOneWidget);
       expect(find.text('Clear Sort'), findsOneWidget);
       expect(find.text('Group by This Column'), findsOneWidget);
+      expect(find.text('Pin Column'), findsOneWidget);
       expect(find.text('Hide Column'), findsOneWidget);
 
       await tester.tap(find.text('Group by This Column'));
       await tester.pumpAndSettle();
 
       expect(controller.state.group.groupedColumnIds, [1]);
+    });
+
+    testWidgets('pin/unpin toggles the column and menu label', (tester) async {
+      final controller = DataGridController<TestRow>(
+        initialColumns: _buildColumns(),
+        initialRows: _buildRows(),
+        sortDebounce: Duration.zero,
+        filterDebounce: Duration.zero,
+      );
+      addTearDown(controller.dispose);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(body: DataGrid<TestRow>(controller: controller)),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      Future<void> openMenu() async {
+        final headerCell = find.text('Category').first;
+        final gesture = await tester.startGesture(
+          tester.getCenter(headerCell),
+          kind: PointerDeviceKind.mouse,
+          buttons: kSecondaryMouseButton,
+        );
+        await gesture.up();
+        await tester.pumpAndSettle();
+      }
+
+      await openMenu();
+      expect(find.text('Pin Column'), findsOneWidget);
+
+      await tester.tap(find.text('Pin Column'));
+      await tester.pumpAndSettle();
+
+      expect(
+        controller.state.columns.firstWhere((c) => c.id == 1).pinned,
+        true,
+      );
+
+      await openMenu();
+      expect(find.text('Unpin Column'), findsOneWidget);
+
+      await tester.tap(find.text('Unpin Column'));
+      await tester.pumpAndSettle();
+
+      expect(
+        controller.state.columns.firstWhere((c) => c.id == 1).pinned,
+        false,
+      );
     });
 
     testWidgets('excludes sort/group items when the column disables them', (
@@ -408,6 +507,10 @@ void main() {
 
         controller.addEvent(GroupByColumnEvent(columnId: 1));
         await tester.pumpAndSettle();
+        // Groups start collapsed by default — expand "Fruit" so its data
+        // rows are actually on screen for the drag below.
+        controller.addEvent(ToggleGroupExpansionEvent(groupKey: '1:Fruit'));
+        await tester.pumpAndSettle();
 
         final gridTopLeft = tester.getTopLeft(find.byType(DataGrid<TestRow>));
         // Row 0 is the "Fruit" group header band; drag from inside it down
@@ -431,6 +534,177 @@ void main() {
           final rowId = double.parse(cellId.split('_').first);
           expect(controller.state.rowsById.containsKey(rowId), true);
         }
+      },
+    );
+  });
+
+  group('Cell navigation with grouping active', () {
+    // Regression coverage: NavigateCellEvent used to index straight into
+    // `state.displayOrder` (raw row order), which is wrong once grouping is
+    // active — group header bands aren't real rows, and grouping buckets
+    // rows by value rather than preserving `displayOrder`'s sequence. That
+    // made arrow/shift-arrow navigation jump to the wrong row (or into a
+    // hidden, collapsed one) as soon as grouping was active.
+    late DataGridController<TestRow> controller;
+
+    setUp(() {
+      controller = DataGridController<TestRow>(
+        initialColumns: _buildColumns(),
+        initialRows: _buildRows(),
+        sortDebounce: Duration.zero,
+        filterDebounce: Duration.zero,
+      );
+    });
+
+    tearDown(() => controller.dispose());
+
+    testWidgets(
+      'arrow-down follows the visual grouped order, not raw displayOrder',
+      (tester) async {
+        controller.addEvent(GroupByColumnEvent(columnId: 1));
+        await tester.pump();
+        controller.addEvent(ToggleGroupExpansionEvent(groupKey: '1:Fruit'));
+        await tester.pump();
+        controller.addEvent(ToggleGroupExpansionEvent(groupKey: '1:Vegetable'));
+        await tester.pump();
+
+        // Visual order: [Fruit header, 1 (Apple), 3 (Banana), Vegetable
+        // header, 2 (Carrot), 4 (Pea)] — not raw displayOrder [1, 2, 3, 4].
+        controller.addEvent(FocusCellEvent(rowId: 1, columnId: 2));
+        await tester.pump();
+
+        controller.addEvent(NavigateCellEvent(CellNavDirection.down));
+        await tester.pump();
+        // Banana (id 3) is visually next, NOT Carrot (id 2 — which is
+        // `displayOrder[1]` in raw insertion order).
+        expect(controller.state.selection.activeCellId, '3.0_2');
+
+        controller.addEvent(NavigateCellEvent(CellNavDirection.down));
+        await tester.pump();
+        // Falls through the (non-navigable) Vegetable header band straight
+        // to its first row.
+        expect(controller.state.selection.activeCellId, '2.0_2');
+
+        controller.addEvent(NavigateCellEvent(CellNavDirection.down));
+        await tester.pump();
+        expect(controller.state.selection.activeCellId, '4.0_2');
+
+        // Last visible row — nothing further down.
+        controller.addEvent(NavigateCellEvent(CellNavDirection.down));
+        await tester.pump();
+        expect(controller.state.selection.activeCellId, '4.0_2');
+      },
+    );
+
+    testWidgets(
+      'shift+arrow-down range selection only includes visible rows in visual order',
+      (tester) async {
+        controller.addEvent(GroupByColumnEvent(columnId: 1));
+        await tester.pump();
+        controller.addEvent(ToggleGroupExpansionEvent(groupKey: '1:Fruit'));
+        await tester.pump();
+        controller.addEvent(ToggleGroupExpansionEvent(groupKey: '1:Vegetable'));
+        await tester.pump();
+
+        controller.addEvent(FocusCellEvent(rowId: 1, columnId: 2));
+        await tester.pump();
+
+        controller.addEvent(
+          NavigateCellEvent(CellNavDirection.down, extend: true),
+        );
+        await tester.pump();
+        controller.addEvent(
+          NavigateCellEvent(CellNavDirection.down, extend: true),
+        );
+        await tester.pump();
+
+        expect(controller.state.selection.focusedCells, [
+          '1.0_2',
+          '3.0_2',
+          '2.0_2',
+        ]);
+      },
+    );
+
+    testWidgets('rows inside a collapsed group are skipped entirely', (
+      tester,
+    ) async {
+      controller.addEvent(GroupByColumnEvent(columnId: 1));
+      await tester.pump();
+      // Only expand Vegetable — Fruit stays collapsed (the new default).
+      controller.addEvent(ToggleGroupExpansionEvent(groupKey: '1:Vegetable'));
+      await tester.pump();
+
+      controller.addEvent(FocusCellEvent(rowId: 2, columnId: 2));
+      await tester.pump();
+
+      // Nothing above id 2: Fruit's rows are all hidden, so there's no
+      // navigable row above it.
+      controller.addEvent(NavigateCellEvent(CellNavDirection.up));
+      await tester.pump();
+      expect(controller.state.selection.activeCellId, '2.0_2');
+
+      controller.addEvent(NavigateCellEvent(CellNavDirection.down));
+      await tester.pump();
+      expect(controller.state.selection.activeCellId, '4.0_2');
+    });
+  });
+
+  group('Copy with grouping active', () {
+    // Regression coverage: CopyCellsEvent sorted rows by their index in raw
+    // `state.displayOrder`, same bug class as navigation — with grouping
+    // active that doesn't match the visual (grouped-bucket) row order, so
+    // copying scrambled-order focused cells produced CSV rows in the wrong
+    // order even though the on-screen selection looked correct.
+    testWidgets(
+      'pasted rows follow visual grouped order, not raw displayOrder',
+      (tester) async {
+        final controller = DataGridController<TestRow>(
+          initialColumns: _buildColumns(),
+          initialRows: _buildRows(),
+          sortDebounce: Duration.zero,
+          filterDebounce: Duration.zero,
+        );
+        addTearDown(controller.dispose);
+
+        final clipboardData = <String, dynamic>{};
+        tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          SystemChannels.platform,
+          (MethodCall call) async {
+            if (call.method == 'Clipboard.setData') {
+              clipboardData.addAll(
+                Map<String, dynamic>.from(call.arguments as Map),
+              );
+            }
+            return null;
+          },
+        );
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(body: DataGrid<TestRow>(controller: controller)),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        controller.addEvent(GroupByColumnEvent(columnId: 1));
+        await tester.pumpAndSettle();
+        controller.addEvent(ToggleGroupExpansionEvent(groupKey: '1:Fruit'));
+        await tester.pumpAndSettle();
+        controller.addEvent(ToggleGroupExpansionEvent(groupKey: '1:Vegetable'));
+        await tester.pumpAndSettle();
+
+        // Deliberately out of visual order (and out of raw displayOrder
+        // too): row 2 (Carrot) is visually last among these three.
+        controller.addEvent(SetFocusedCellsEvent(['3.0_2', '1.0_2', '2.0_2']));
+        await tester.pumpAndSettle();
+
+        controller.addEvent(CopyCellsEvent());
+        await tester.pumpAndSettle();
+
+        // Visual order is Apple (1), Banana (3), then Carrot (2) — not the
+        // raw displayOrder sequence [1, 2, 3].
+        expect(clipboardData['text'], 'Apple\nBanana\nCarrot');
       },
     );
   });

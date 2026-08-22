@@ -7,7 +7,8 @@ import 'package:flutter_data_grid/models/events/grid_events.dart';
 import 'package:flutter_data_grid/models/state/grid_state.dart';
 
 /// Shows the header right-click context menu for [column] at [globalPosition]:
-/// sort actions (if sortable), group/ungroup (if groupable), and hide column.
+/// sort actions (if sortable), group/ungroup (if groupable), pin/unpin, and
+/// hide column.
 void showColumnHeaderContextMenu<T extends DataGridRow>({
   required BuildContext context,
   required Offset globalPosition,
@@ -23,25 +24,31 @@ void showColumnHeaderContextMenu<T extends DataGridRow>({
   );
 
   final isGrouped = groupState.groupedColumnIds.contains(column.id);
+  final hasSortItems = column.sortable;
+  final hasGroupItem = column.groupable;
 
   showMenu<void>(
     context: context,
     position: position,
     items: [
-      if (column.sortable) ...[
+      if (hasSortItems) ...[
         _SortAscendingMenuItem(columnId: column.id, controller: controller),
         _SortDescendingMenuItem(columnId: column.id, controller: controller),
         _ClearSortMenuItem(columnId: column.id, controller: controller),
       ],
-      if (column.sortable && (column.groupable || column.visible))
-        const PopupMenuDivider(),
-      if (column.groupable)
+      if (hasSortItems && hasGroupItem) const PopupMenuDivider(),
+      if (hasGroupItem)
         _GroupByMenuItem(
           columnId: column.id,
           isGrouped: isGrouped,
           controller: controller,
         ),
-      if (column.groupable && column.visible) const PopupMenuDivider(),
+      if (hasSortItems || hasGroupItem) const PopupMenuDivider(),
+      _PinColumnMenuItem(
+        columnId: column.id,
+        isPinned: column.pinned,
+        controller: controller,
+      ),
       if (column.visible)
         _HideColumnMenuItem(columnId: column.id, controller: controller),
     ],
@@ -94,6 +101,19 @@ class _GroupByMenuItem extends PopupMenuItem<void> {
                : GroupByColumnEvent(columnId: columnId),
          ),
          child: Text(isGrouped ? 'Remove Grouping' : 'Group by This Column'),
+       );
+}
+
+class _PinColumnMenuItem extends PopupMenuItem<void> {
+  _PinColumnMenuItem({
+    required int columnId,
+    required bool isPinned,
+    required DataGridController controller,
+  }) : super(
+         onTap: () => controller.addEvent(
+           SetColumnPinnedEvent(columnId: columnId, pinned: !isPinned),
+         ),
+         child: Text(isPinned ? 'Unpin Column' : 'Pin Column'),
        );
 }
 

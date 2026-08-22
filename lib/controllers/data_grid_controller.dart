@@ -474,6 +474,11 @@ class DataGridController<T extends DataGridRow> {
     addEvent(SetColumnVisibilityEvent(columnId: columnId, visible: visible));
   }
 
+  /// Pins or unpins the column identified by [columnId].
+  void setColumnPinned(int columnId, bool pinned) {
+    addEvent(SetColumnPinnedEvent(columnId: columnId, pinned: pinned));
+  }
+
   /// Registers [rowId] as currently rendered in the viewport.
   void registerRenderedRow(double rowId) {
     final updated = Set<double>.from(_renderedRowIds.value)..add(rowId);

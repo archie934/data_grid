@@ -45,10 +45,8 @@ class ColumnVisibilityMenu<T extends DataGridRow> extends StatelessWidget {
                     !column.visible,
                   ),
                 ),
-                onPressed: () => controller.setColumnVisibility(
-                  column.id,
-                  !column.visible,
-                ),
+                onPressed: () =>
+                    controller.setColumnVisibility(column.id, !column.visible),
                 child: Text(column.title),
               ),
           ],

@@ -41,6 +41,25 @@ class SetColumnVisibilityEvent extends DataGridEvent {
   }
 }
 
+/// Pins or unpins a column.
+class SetColumnPinnedEvent extends DataGridEvent {
+  final int columnId;
+  final bool pinned;
+
+  SetColumnPinnedEvent({required this.columnId, required this.pinned});
+
+  @override
+  DataGridState<T>? apply<T extends DataGridRow>(EventContext<T> context) {
+    final updatedColumns = context.state.columns.map((col) {
+      if (col.id == columnId) {
+        return col.copyWith(pinned: pinned);
+      }
+      return col;
+    }).toList();
+    return context.state.copyWith(columns: updatedColumns);
+  }
+}
+
 /// Moves a column from [oldIndex] to [newIndex].
 class ColumnReorderEvent extends DataGridEvent {
   final int oldIndex;

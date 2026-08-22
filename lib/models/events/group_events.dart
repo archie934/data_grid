@@ -50,10 +50,10 @@ class ToggleGroupExpansionEvent extends DataGridEvent {
       context.state.group.expandedGroups,
     );
 
-    // Invert the *effective* state (isGroupExpanded defaults to true when
+    // Invert the *effective* state (isGroupExpanded defaults to false when
     // absent), not just the literal map entry — otherwise the first toggle
-    // on a never-touched group would set it to `true` (a no-op, since that's
-    // already the default) instead of visibly collapsing it.
+    // on a never-touched group would set it to `false` (a no-op, since
+    // that's already the default) instead of visibly expanding it.
     expandedGroups[groupKey] = !context.state.group.isGroupExpanded(groupKey);
 
     return context.state.copyWith(

@@ -10,7 +10,7 @@ import 'renderers/cell_renderers.dart';
 import 'interceptors/logging_interceptor.dart';
 import 'widgets/column_visibility_menu.dart';
 
-const exampleRows = 100000;
+const exampleRows = 1000000;
 
 void main() {
   runApp(const MainApp());

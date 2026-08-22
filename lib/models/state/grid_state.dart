@@ -188,7 +188,10 @@ abstract class GroupState with _$GroupState {
   bool get hasGroups => groupedColumnIds.isNotEmpty;
 
   /// Returns `true` if the group identified by [groupKey] is expanded.
-  bool isGroupExpanded(String groupKey) => expandedGroups[groupKey] ?? true;
+  ///
+  /// Groups default to collapsed until explicitly toggled, so grouping a
+  /// column doesn't dump every row into view at once.
+  bool isGroupExpanded(String groupKey) => expandedGroups[groupKey] ?? false;
 }
 
 /// Inline cell editing state.
