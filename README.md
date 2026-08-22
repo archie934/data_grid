@@ -17,6 +17,8 @@ Try it in your browser: [https://archie934.github.io/data_grid/](https://archie9
 - ✅ **Column Management** - Resize, pin, hide/show, reorder columns
 - ✅ **Column Sorting** - Single-column sorting with ascending/descending/clear cycle
 - ✅ **Column Filtering** - Customizable column filtering
+- ✅ **Row Grouping** - Group rows by a column's value with collapsible, full-width group header bands
+- ✅ **Header Context Menu** - Right-click a column header for sort/group/hide actions
 - ✅ **Row Selection** - None/Single/Multiple modes with checkbox column
 - ✅ **Cell Editing** - Inline editing with validation and callbacks
 - ✅ **Pagination** - Client-side and server-side pagination with customizable page sizes
@@ -60,6 +62,8 @@ This package is in active development. Core features work well, but some advance
 - **Virtualized rendering** - Smooth scrolling with 100k+ rows
 - **Sorting & filtering** - Single-column sorting with background processing for large datasets
 - **Column management** - Resize, pin, hide/show columns
+- **Row grouping** - Single-column grouping by cell value, with collapsible group header bands
+- **Header context menu** - Right-click a header for sort/group/hide actions
 - **Cell editing** - Inline editing with validation (some edge cases remain)
 - **Pagination** - Client-side and server-side pagination with loading states
 - **Theming** - Comprehensive customization options
@@ -68,12 +72,14 @@ This package is in active development. Core features work well, but some advance
 - **Keyboard navigation** - Arrow keys work but may have issues in some scenarios
 - **Tab navigation** - Between cells needs improvement
 - **Cell editing** - Edge cases with rapid interactions being addressed
+- **Copy with grouping active** - Copied cell/row order doesn't fully match the on-screen grouped order in all cases
 
 ### Planned Features 🚀
 - **Column selection** - Select entire columns
 - **Accessibility** - Improved screen reader support and ARIA labels
 - **Column reordering** - Drag-and-drop reordering
-- **Context menus** - Right-click menus for rows/cells
+- **Multi-level grouping** - Group by more than one column at a time
+- **Row/cell context menus** - Right-click menus beyond the current header menu
 
 ### Production Use
 This package is suitable for:
@@ -448,6 +454,7 @@ DataGridColumn<MyRow>(
   resizable: true,                        // Allow resize
   sortable: true,                         // Enable sorting
   filterable: true,                       // Enable filtering
+  groupable: true,                        // Enable grouping via header context menu
   editable: true,                         // Allow inline editing
   valueAccessor: (row) => row.value,      // Get cell value
   cellValueSetter: (row, val) => row.value = val,  // Set cell value
@@ -561,6 +568,50 @@ controller.addEvent(ClearSelectionEvent());
 controller.selection$.listen((selection) {
   print('Selected: ${selection.selectedRowIds}');
 });
+```
+
+### Grouping
+
+Right-click a header cell (with `groupable: true`, the default) to open the context menu and choose **Group by This Column**. Rows are bucketed by that column's cell value, in first-appearance order, and rendered as collapsible full-width group header bands with a row count. v1 supports a single active grouped column — grouping by a new column replaces the previous grouping rather than nesting.
+
+```dart
+// Group by a column's value
+controller.groupByColumn(columnId);
+
+// Remove grouping
+controller.ungroupColumn(columnId);
+
+// Expand/collapse a specific group (groupKey comes from the group header band)
+controller.toggleGroupExpansion(groupKey);
+
+// Listen to group state
+controller.group$.listen((group) {
+  print('Grouped columns: ${group.groupedColumnIds}');
+});
+
+// Opt a column out of the "Group by This Column" menu item
+DataGridColumn<MyRow>(
+  id: 1,
+  title: 'ID',
+  width: 80,
+  groupable: false,
+)
+```
+
+### Header Context Menu
+
+Right-clicking a column header opens a context menu (suppressing the browser's native context menu on web) with actions gated by that column's flags:
+- **Sort Ascending / Descending / Clear Sort** - shown when `sortable: true`
+- **Group by This Column / Remove Grouping** - shown when `groupable: true`
+- **Pin Column / Unpin Column** - always available; toggles `column.pinned`
+- **Hide Column** - always available; toggle a column back on via `controller.setColumnVisibility(columnId, true)`
+
+```dart
+controller.setColumnVisibility(columnId, false);  // Hide
+controller.setColumnVisibility(columnId, true);   // Show
+
+controller.setColumnPinned(columnId, true);   // Pin to the left
+controller.setColumnPinned(columnId, false);  // Unpin
 ```
 
 ### Pagination
@@ -1004,6 +1055,13 @@ flutter test
 ### Column Events
 - `ColumnResizeEvent` - Resize column
 - `SetColumnWidthEvent` - Set exact width
+- `SetColumnVisibilityEvent` - Show/hide column
+- `SetColumnPinnedEvent` - Pin/unpin column
+
+### Group Events
+- `GroupByColumnEvent` - Group rows by a column's value (replaces any existing grouping)
+- `UngroupColumnEvent` - Remove grouping for a column
+- `ToggleGroupExpansionEvent` - Expand/collapse a specific group
 
 ## 🔧 Troubleshooting
 

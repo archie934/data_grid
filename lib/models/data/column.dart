@@ -49,6 +49,9 @@ class DataGridColumn<T extends DataGridRow> {
   /// Whether this column can be filtered.
   final bool filterable;
 
+  /// Whether rows can be grouped by this column via the header context menu.
+  final bool groupable;
+
   /// Whether cells in this column can be edited.
   final bool editable;
 
@@ -97,6 +100,7 @@ class DataGridColumn<T extends DataGridRow> {
     this.resizable = true,
     this.sortable = true,
     this.filterable = true,
+    this.groupable = true,
     this.editable = true,
     this.filterWidget,
     this.cellEditorBuilder,
@@ -120,6 +124,7 @@ class DataGridColumn<T extends DataGridRow> {
           resizable == other.resizable &&
           sortable == other.sortable &&
           filterable == other.filterable &&
+          groupable == other.groupable &&
           editable == other.editable &&
           filterWidget == other.filterWidget &&
           cellWidget == other.cellWidget;
@@ -134,6 +139,7 @@ class DataGridColumn<T extends DataGridRow> {
     resizable,
     sortable,
     filterable,
+    groupable,
     editable,
     filterWidget,
     cellWidget,
@@ -149,6 +155,7 @@ class DataGridColumn<T extends DataGridRow> {
     bool? resizable,
     bool? sortable,
     bool? filterable,
+    bool? groupable,
     bool? editable,
     Widget? filterWidget,
     CellEditorBuilder? cellEditorBuilder,
@@ -167,6 +174,7 @@ class DataGridColumn<T extends DataGridRow> {
       resizable: resizable ?? this.resizable,
       sortable: sortable ?? this.sortable,
       filterable: filterable ?? this.filterable,
+      groupable: groupable ?? this.groupable,
       editable: editable ?? this.editable,
       filterWidget: filterWidget ?? this.filterWidget,
       cellEditorBuilder: cellEditorBuilder ?? this.cellEditorBuilder,
@@ -189,6 +197,7 @@ class DataGridColumn<T extends DataGridRow> {
       resizable: false,
       sortable: false,
       filterable: false,
+      groupable: false,
       editable: false,
     );
   }

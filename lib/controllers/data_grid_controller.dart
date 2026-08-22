@@ -453,6 +453,32 @@ class DataGridController<T extends DataGridRow> {
     addEvent(SetServerSidePaginationEvent(serverSide: serverSide));
   }
 
+  /// Groups rows by [columnId] (v1 supports a single active grouped column).
+  void groupByColumn(int columnId) {
+    addEvent(GroupByColumnEvent(columnId: columnId));
+  }
+
+  /// Removes grouping for [columnId].
+  void ungroupColumn(int columnId) {
+    addEvent(UngroupColumnEvent(columnId: columnId));
+  }
+
+  /// Toggles the expanded/collapsed state of the row group identified by
+  /// [groupKey].
+  void toggleGroupExpansion(String groupKey) {
+    addEvent(ToggleGroupExpansionEvent(groupKey: groupKey));
+  }
+
+  /// Shows or hides the column identified by [columnId].
+  void setColumnVisibility(int columnId, bool visible) {
+    addEvent(SetColumnVisibilityEvent(columnId: columnId, visible: visible));
+  }
+
+  /// Pins or unpins the column identified by [columnId].
+  void setColumnPinned(int columnId, bool pinned) {
+    addEvent(SetColumnPinnedEvent(columnId: columnId, pinned: pinned));
+  }
+
   /// Registers [rowId] as currently rendered in the viewport.
   void registerRenderedRow(double rowId) {
     final updated = Set<double>.from(_renderedRowIds.value)..add(rowId);

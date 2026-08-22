@@ -2,10 +2,35 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:flutter_data_grid/models/data/row.dart';
 import 'package:flutter_data_grid/models/data/column.dart';
+import 'package:flutter_data_grid/models/data/grid_display_row.dart';
 import 'package:flutter_data_grid/models/state/grid_state.dart';
 import 'package:flutter_data_grid/models/events/base_event.dart';
 import 'package:flutter_data_grid/models/events/event_context.dart';
 import 'package:flutter_data_grid/models/enums/selection_mode.dart';
+import 'package:flutter_data_grid/utils/grid_display_rows.dart';
+
+/// Row ids in on-screen visual order, for navigation purposes.
+///
+/// When grouping is inactive this is just `state.displayOrder`. When
+/// grouping is active, group header bands aren't navigable and rows inside
+/// a collapsed group aren't on screen at all, so navigation must walk the
+/// same flattened, grouping-aware list the grid actually renders
+/// ([computeDisplayRows]) rather than the raw row order — otherwise index
+/// arithmetic on `displayOrder` lands on the wrong row (or a hidden one)
+/// as soon as grouping reorders/hides rows.
+List<double> _navigableRowIds<T extends DataGridRow>(DataGridState<T> state) {
+  if (!state.group.hasGroups) return state.displayOrder;
+  final displayRows = computeDisplayRows<T>(
+    displayOrder: state.displayOrder,
+    rowsById: state.rowsById,
+    columns: state.columns,
+    group: state.group,
+  );
+  return [
+    for (final entry in displayRows)
+      if (entry is GridDataRow<T>) entry.rowId,
+  ];
+}
 
 /// Direction for cell navigation events.
 enum CellNavDirection { up, down, left, right }
@@ -149,16 +174,17 @@ class NavigateCellEvent extends DataGridEvent {
     final anchorColId = anchorParsed?.$2;
 
     // ── Row index resolution ─────────────────────────────────────────────────
-    // displayOrder can contain hundreds of thousands of entries.
+    // navigableRowIds can contain hundreds of thousands of entries.
     // List.indexOf is O(n) and building a Map<double,int> allocates on the
     // heap. Instead we do one forward scan that locates both the active row
     // and (when extending) the anchor row simultaneously, breaking as soon
     // as both are found. In the common case — both cells visible on screen —
     // this exits within the first few dozen iterations.
+    final navigableRowIds = _navigableRowIds<T>(state);
     int rowIndex = -1;
     int anchorRowIdx = -1;
-    for (int i = 0; i < state.displayOrder.length; i++) {
-      final id = state.displayOrder[i];
+    for (int i = 0; i < navigableRowIds.length; i++) {
+      final id = navigableRowIds[i];
       if (rowIndex == -1 && id == activeRowId) rowIndex = i;
       if (anchorRowId != null && anchorRowIdx == -1 && id == anchorRowId) {
         anchorRowIdx = i;
@@ -198,14 +224,14 @@ class NavigateCellEvent extends DataGridEvent {
 
     // Clamp to bounds
     if (newRowIndex < 0 ||
-        newRowIndex >= state.displayOrder.length ||
+        newRowIndex >= navigableRowIds.length ||
         newColIndex < 0 ||
         newColIndex >= visibleColumns.length) {
       return null;
     }
 
     final newCellId =
-        '${state.displayOrder[newRowIndex]}_${visibleColumns[newColIndex].id}';
+        '${navigableRowIds[newRowIndex]}_${visibleColumns[newColIndex].id}';
 
     // ── Update focused-cells path ────────────────────────────────────────────
     if (!extend) {
@@ -228,7 +254,7 @@ class NavigateCellEvent extends DataGridEvent {
     final cells = <String>[];
     for (int r = anchorRowIdx; r != newRowIndex + rStep; r += rStep) {
       for (int c = anchorColIdx; c != newColIndex + cStep; c += cStep) {
-        cells.add('${state.displayOrder[r]}_${visibleColumns[c].id}');
+        cells.add('${navigableRowIds[r]}_${visibleColumns[c].id}');
       }
     }
 
@@ -250,11 +276,12 @@ class NavigateCellEvent extends DataGridEvent {
     if (state.selection.mode == SelectionMode.none) return null;
 
     final focusedRowId = state.selection.focusedRowId;
+    final navigableRowIds = _navigableRowIds<T>(state);
 
     if (direction == CellNavDirection.down) {
       if (focusedRowId == null) {
-        if (state.displayOrder.isEmpty) return null;
-        final first = state.displayOrder.first;
+        if (navigableRowIds.isEmpty) return null;
+        final first = navigableRowIds.first;
         return state.copyWith(
           selection: state.selection.copyWith(
             focusedRowId: first,
@@ -262,9 +289,9 @@ class NavigateCellEvent extends DataGridEvent {
           ),
         );
       }
-      final idx = state.displayOrder.indexOf(focusedRowId);
-      if (idx >= state.displayOrder.length - 1) return null;
-      final next = state.displayOrder[idx + 1];
+      final idx = navigableRowIds.indexOf(focusedRowId);
+      if (idx == -1 || idx >= navigableRowIds.length - 1) return null;
+      final next = navigableRowIds[idx + 1];
       return state.copyWith(
         selection: state.selection.copyWith(
           focusedRowId: next,
@@ -274,9 +301,9 @@ class NavigateCellEvent extends DataGridEvent {
     } else {
       // up
       if (focusedRowId == null) return null;
-      final idx = state.displayOrder.indexOf(focusedRowId);
+      final idx = navigableRowIds.indexOf(focusedRowId);
       if (idx <= 0) return null;
-      final prev = state.displayOrder[idx - 1];
+      final prev = navigableRowIds[idx - 1];
       return state.copyWith(
         selection: state.selection.copyWith(
           focusedRowId: prev,
@@ -302,8 +329,8 @@ class SetFocusedCellsEvent extends DataGridEvent {
 }
 
 /// Copies the values of all focused cells to the system clipboard as TSV.
-/// Cells are sorted by display-order row, then by column index.
-/// Returns `null` — no state change, side-effect only.
+/// Cells are sorted by on-screen visual row order (grouping-aware), then by
+/// column index. Returns `null` — no state change, side-effect only.
 class CopyCellsEvent extends DataGridEvent {
   @override
   Future<DataGridState<T>?> apply<T extends DataGridRow>(
@@ -318,16 +345,19 @@ class CopyCellsEvent extends DataGridEvent {
       for (final col in state.columns) col.id: col,
     };
 
-    // Parse and sort cells: by row display-order index, then column index
+    // Parse and sort cells: by visual row order, then column index. Uses
+    // the same grouping-aware row order as navigation (see
+    // `_navigableRowIds`) — raw `displayOrder` doesn't reflect the grouped
+    // bucket order rows actually appear in on screen.
     final visibleColumns = state.effectiveColumns
         .where((c) => c.visible)
         .toList();
     final colIndexMap = <int, int>{
       for (int i = 0; i < visibleColumns.length; i++) visibleColumns[i].id: i,
     };
+    final navigableRowIds = _navigableRowIds<T>(state);
     final rowIndexMap = <double, int>{
-      for (int i = 0; i < state.displayOrder.length; i++)
-        state.displayOrder[i]: i,
+      for (int i = 0; i < navigableRowIds.length; i++) navigableRowIds[i]: i,
     };
 
     final parsed = <({int rowIdx, int colIdx, double rowId, int colId})>[];

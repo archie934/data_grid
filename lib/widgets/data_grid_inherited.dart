@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_data_grid/controllers/data_grid_controller.dart';
 import 'package:flutter_data_grid/controllers/grid_scroll_controller.dart';
 import 'package:flutter_data_grid/models/data/column.dart';
+import 'package:flutter_data_grid/models/data/grid_display_row.dart';
 import 'package:flutter_data_grid/models/data/row.dart';
 import 'package:flutter_data_grid/models/state/grid_state.dart';
 
@@ -13,6 +14,7 @@ enum DataGridAspect {
   edit,
   sort,
   filter,
+  group,
   pagination,
   loading,
 }
@@ -62,8 +64,17 @@ class DataGridStateScope<T extends DataGridRow>
   /// Pre-computed effective columns (cached once per state change).
   final List<DataGridColumn<T>> effectiveColumns;
 
-  DataGridStateScope({super.key, required this.state, required super.child})
-    : effectiveColumns = state.effectiveColumns;
+  /// The flattened, grouping-aware list of visual row slots for the current
+  /// state, computed once by the caller (see `computeDisplayRows`) rather
+  /// than recomputed here, so every dependent reuses the same list.
+  final List<GridDisplayRow<T>> displayRows;
+
+  DataGridStateScope({
+    super.key,
+    required this.state,
+    required this.displayRows,
+    required super.child,
+  }) : effectiveColumns = state.effectiveColumns;
 
   @override
   bool updateShouldNotify(DataGridStateScope<T> oldWidget) {
@@ -95,6 +106,8 @@ class DataGridStateScope<T extends DataGridRow>
           if (state.sort != oldWidget.state.sort) return true;
         case DataGridAspect.filter:
           if (state.filter != oldWidget.state.filter) return true;
+        case DataGridAspect.group:
+          if (state.group != oldWidget.state.group) return true;
         case DataGridAspect.pagination:
           if (state.pagination != oldWidget.state.pagination) return true;
         case DataGridAspect.loading:
@@ -113,6 +126,7 @@ class DataGridInherited<T extends DataGridRow> extends StatelessWidget {
   final DataGridController<T> controller;
   final GridScrollController scrollController;
   final DataGridState<T> state;
+  final List<GridDisplayRow<T>> displayRows;
   final FocusNode gridFocusNode;
   final Widget child;
 
@@ -121,6 +135,7 @@ class DataGridInherited<T extends DataGridRow> extends StatelessWidget {
     required this.controller,
     required this.scrollController,
     required this.state,
+    required this.displayRows,
     required this.gridFocusNode,
     required this.child,
   });
@@ -131,7 +146,11 @@ class DataGridInherited<T extends DataGridRow> extends StatelessWidget {
       controller: controller,
       scrollController: scrollController,
       gridFocusNode: gridFocusNode,
-      child: DataGridStateScope<T>(state: state, child: child),
+      child: DataGridStateScope<T>(
+        state: state,
+        displayRows: displayRows,
+        child: child,
+      ),
     );
   }
 }
@@ -177,5 +196,18 @@ extension DataGridContext on BuildContext {
       this,
       aspect: DataGridAspect.columns,
     )?.effectiveColumns;
+  }
+
+  /// Depends on [DataGridAspect.data] and [DataGridAspect.group] — the
+  /// flattened, grouping-aware list of visual row slots for the current state.
+  List<GridDisplayRow<T>>? dataGridDisplayRows<T extends DataGridRow>() {
+    DataGridStateScope<T>? scope;
+    for (final aspect in {DataGridAspect.data, DataGridAspect.group}) {
+      scope = InheritedModel.inheritFrom<DataGridStateScope<T>>(
+        this,
+        aspect: aspect,
+      );
+    }
+    return scope?.displayRows;
   }
 }
