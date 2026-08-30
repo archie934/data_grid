@@ -166,12 +166,19 @@ void main() {
       );
     });
 
-    testWidgets('updateCell rebuilds only the affected cell', (tester) async {
+    testWidgets('updateCell rebuilds only the cells whose value changed', (
+      tester,
+    ) async {
       tester.view.physicalSize = const Size(800, 600);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
 
-      int buildCount = 0;
+      // Two accessors on *different* fields. (The shared _countingColumn helper
+      // is deliberately not used here: both of its columns render `row.name`,
+      // so an edit legitimately changes both and the test couldn't tell
+      // over-rebuilding from correct behaviour.)
+      int nameCalls = 0;
+      int valueCalls = 0;
 
       final rows = List.generate(
         20,
@@ -180,17 +187,25 @@ void main() {
 
       final controller = DataGridController<TestRow>(
         initialColumns: [
-          _countingColumn(
+          DataGridColumn<TestRow>(
             id: 1,
             title: 'Name',
             width: 200,
-            onBuild: () => buildCount++,
+            editable: true,
+            valueAccessor: (row) {
+              nameCalls++;
+              return row.name;
+            },
+            cellValueSetter: (row, value) => row.name = value as String,
           ),
-          _countingColumn(
+          DataGridColumn<TestRow>(
             id: 2,
             title: 'Value',
             width: 150,
-            onBuild: () => buildCount++,
+            valueAccessor: (row) {
+              valueCalls++;
+              return row.value.toString();
+            },
           ),
         ],
         initialRows: rows,
@@ -204,17 +219,37 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      buildCount = 0;
+      // Widget instance, not element: an Element survives a rebuild, so only
+      // the widget it holds can prove whether build() ran again.
+      final unrelatedCellBefore = tester.widget<Text>(find.text('3'));
+
+      nameCalls = 0;
+      valueCalls = 0;
 
       controller.updateCell(3, 1, 'Row 3 updated');
       await waitForAsync(tester);
 
-      expect(
-        buildCount,
-        equals(1),
-        reason: 'Only the updated cell should rebuild',
-      );
+      expect(find.text('Row 3 updated'), findsOneWidget);
       expect(controller.state.rowsById[3]!.name, 'Row 3 updated');
+
+      // The Value column reads a field the setter never touched, so it must not
+      // rebuild — even though the notification is row-scoped. Precision comes
+      // from the per-cell value diff, not from the notification's granularity.
+      expect(
+        tester.widget<Text>(find.text('3')),
+        same(unrelatedCellBefore),
+        reason: 'a column whose value did not change must not rebuild',
+      );
+
+      // Exactly one candidate row is notified, and each of its cells runs its
+      // accessor once to decide. The Name cell then rebuilds (a second call
+      // from build()); the Value cell stops at the diff.
+      expect(nameCalls, equals(2), reason: 'row 3 Name: one diff, one rebuild');
+      expect(
+        valueCalls,
+        equals(1),
+        reason: 'row 3 Value: diff only, no rebuild',
+      );
     });
   });
 }

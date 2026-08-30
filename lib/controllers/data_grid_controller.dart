@@ -378,6 +378,21 @@ class DataGridController<T extends DataGridRow> {
     addEvent(UpdateCellEvent(rowId: rowId, columnId: columnId, value: value));
   }
 
+  /// Asks cells to re-read their value without changing any state.
+  ///
+  /// Cells normally detect changes on their own: an edit notifies the row and
+  /// each cell diffs its own [DataGridColumn.valueAccessor]. Call this for what
+  /// that can't see — a row mutated by application code rather than through
+  /// [updateCell] or an inline edit, or a `cellWidget` that reads fields
+  /// straight off `CellScope.row` instead of going through an accessor.
+  ///
+  /// [rowIds] empty refreshes every row; [columnIds] null refreshes every
+  /// column of the named rows. Only the matching cells rebuild — no state is
+  /// emitted and the virtualization window is untouched.
+  void refreshCells({List<double> rowIds = const [], List<int>? columnIds}) {
+    addEvent(RefreshCellsEvent(rowIds: rowIds, columnIds: columnIds));
+  }
+
   /// Changes the row selection mode.
   void setSelectionMode(SelectionMode mode) {
     addEvent(SetSelectionModeEvent(mode: mode));

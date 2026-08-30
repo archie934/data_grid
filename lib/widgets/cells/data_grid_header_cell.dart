@@ -37,26 +37,13 @@ class DataGridHeaderCell extends StatefulWidget {
 }
 
 class _DataGridHeaderCellState extends State<DataGridHeaderCell> {
-  bool _isResizing = false;
-  bool _isHovering = false;
-
-  /// Locally-tracked width so every drag-update delta is applied to the
-  /// most-recent value rather than a potentially stale rebuild value.
-  late double _currentWidth;
-
-  @override
-  void initState() {
-    super.initState();
-    _currentWidth = widget.column.width;
-  }
-
-  @override
-  void didUpdateWidget(DataGridHeaderCell oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    // Sync from the widget tree only when the user is not actively dragging;
-    // during a drag we own the width value.
-    if (!_isResizing) {
-      _currentWidth = widget.column.width;
+  void _handleSortTap(bool isSorted, SortColumn? sortColumn) {
+    if (!isSorted) {
+      widget.onSort(SortDirection.ascending);
+    } else if (sortColumn!.direction == SortDirection.ascending) {
+      widget.onSort(SortDirection.descending);
+    } else {
+      widget.onSort(null);
     }
   }
 
@@ -66,6 +53,8 @@ class _DataGridHeaderCellState extends State<DataGridHeaderCell> {
     final sortColumn = widget.sortState.sortColumn;
     final isSorted =
         sortColumn != null && sortColumn.columnId == widget.column.id;
+    final sortable = widget.column.sortable;
+    final resizable = widget.column.resizable;
 
     final sortLabel = !isSorted
         ? 'Sort by ${widget.column.title}'
@@ -73,18 +62,34 @@ class _DataGridHeaderCellState extends State<DataGridHeaderCell> {
         ? '${widget.column.title} sorted ascending'
         : '${widget.column.title} sorted descending';
 
+    final titleRow = Padding(
+      padding: theme.padding.headerPadding,
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              widget.column.title,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          if (isSorted) ...[
+            SizedBox(width: theme.padding.iconSpacing),
+            Icon(
+              sortColumn.direction == SortDirection.ascending
+                  ? Icons.arrow_upward
+                  : Icons.arrow_downward,
+              size: 16,
+            ),
+          ],
+        ],
+      ),
+    );
+
     return Semantics(
-      label: sortLabel,
-      button: true,
-      onTap: () {
-        if (!isSorted) {
-          widget.onSort(SortDirection.ascending);
-        } else if (sortColumn.direction == SortDirection.ascending) {
-          widget.onSort(SortDirection.descending);
-        } else {
-          widget.onSort(null);
-        }
-      },
+      label: sortable ? sortLabel : widget.column.title,
+      button: sortable,
+      onTap: sortable ? () => _handleSortTap(isSorted, sortColumn) : null,
       child: Container(
         decoration: BoxDecoration(
           color: theme.colors.headerColor,
@@ -92,93 +97,111 @@ class _DataGridHeaderCellState extends State<DataGridHeaderCell> {
         ),
         child: Stack(
           children: [
-            InkWell(
-              onTap: () {
-                if (!isSorted) {
-                  widget.onSort(SortDirection.ascending);
-                } else if (sortColumn.direction == SortDirection.ascending) {
-                  widget.onSort(SortDirection.descending);
-                } else {
-                  widget.onSort(null);
-                }
-              },
-              child: Padding(
-                padding: theme.padding.headerPadding,
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        widget.column.title,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    if (isSorted) ...[
-                      SizedBox(width: theme.padding.iconSpacing),
-                      Icon(
-                        sortColumn.direction == SortDirection.ascending
-                            ? Icons.arrow_upward
-                            : Icons.arrow_downward,
-                        size: 16,
-                      ),
-                    ],
-                  ],
+            // Non-sortable columns render the plain title row, with no tap
+            // handler/ripple — clicking them shouldn't look interactive when
+            // it can't do anything (the sort delegate already no-ops these,
+            // but the header previously still wired up the tap unconditionally).
+            sortable
+                ? InkWell(
+                    onTap: () => _handleSortTap(isSorted, sortColumn),
+                    child: titleRow,
+                  )
+                : titleRow,
+            if (resizable)
+              Positioned(
+                right: 0,
+                top: 0,
+                bottom: 0,
+                child: _ColumnResizeHandle(
+                  initialWidth: widget.column.width,
+                  onResize: widget.onResize,
                 ),
               ),
-            ),
-            Positioned(
-              right: 0,
-              top: 0,
-              bottom: 0,
-              child: MouseRegion(
-                cursor: SystemMouseCursors.resizeColumn,
-                onEnter: (_) => setState(() => _isHovering = true),
-                onExit: (_) => setState(() => _isHovering = false),
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onHorizontalDragStart: (_) {
-                    setState(() => _isResizing = true);
-                  },
-                  onHorizontalDragUpdate: (details) {
-                    if (_isResizing) {
-                      final theme = DataGridTheme.of(context);
-                      // Clamp per-event delta to prevent jarring jumps from
-                      // coalesced or late-arriving pointer events.
-                      final delta = details.delta.dx.clamp(-80.0, 80.0);
-                      _currentWidth = (_currentWidth + delta).clamp(
-                        theme.dimensions.columnMinWidth,
-                        theme.dimensions.columnMaxWidth,
-                      );
-                      widget.onResize(_currentWidth);
-                    }
-                  },
-                  onHorizontalDragEnd: (_) {
-                    setState(() => _isResizing = false);
-                  },
-                  // Use a wider hit area (16 px) than the visual indicator so
-                  // the handle is easy to grab without pixel-perfect aiming.
-                  child: SizedBox(
-                    width: 16.0,
-                    child: Center(
-                      child: Container(
-                        width: theme.dimensions.resizeHandleWidth,
-                        color: _isResizing
-                            ? theme.colors.resizeHandleActiveColor
-                            : _isHovering
-                            ? theme.colors.resizeHandleActiveColor.withValues(
-                                alpha: 0.45,
-                              )
-                            : Colors.transparent,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// The drag handle on a resizable column's trailing edge.
+///
+/// Split out of [DataGridHeaderCell] so its hover/drag `setState` repaints only
+/// the handle. While this lived in the header cell, every pointer enter/exit
+/// and every drag frame rebuilt the title text, the sort icon and the cell's
+/// container decoration too — none of which depend on that state.
+class _ColumnResizeHandle extends StatefulWidget {
+  final double initialWidth;
+  final void Function(double newWidth) onResize;
+
+  const _ColumnResizeHandle({
+    required this.initialWidth,
+    required this.onResize,
+  });
+
+  @override
+  State<_ColumnResizeHandle> createState() => _ColumnResizeHandleState();
+}
+
+class _ColumnResizeHandleState extends State<_ColumnResizeHandle> {
+  bool _isResizing = false;
+  bool _isHovering = false;
+
+  /// Locally-tracked width so every drag-update delta is applied to the
+  /// most-recent value rather than a potentially stale rebuild value.
+  late double _currentWidth = widget.initialWidth;
+
+  @override
+  void didUpdateWidget(_ColumnResizeHandle oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Sync from the widget tree only when the user is not actively dragging;
+    // during a drag we own the width value.
+    if (!_isResizing) {
+      _currentWidth = widget.initialWidth;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = DataGridTheme.of(context);
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.resizeColumn,
+      onEnter: (_) => setState(() => _isHovering = true),
+      onExit: (_) => setState(() => _isHovering = false),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onHorizontalDragStart: (_) {
+          setState(() => _isResizing = true);
+        },
+        onHorizontalDragUpdate: (details) {
+          if (!_isResizing) return;
+          // Clamp per-event delta to prevent jarring jumps from coalesced or
+          // late-arriving pointer events.
+          final delta = details.delta.dx.clamp(-80.0, 80.0);
+          _currentWidth = (_currentWidth + delta).clamp(
+            theme.dimensions.columnMinWidth,
+            theme.dimensions.columnMaxWidth,
+          );
+          widget.onResize(_currentWidth);
+        },
+        onHorizontalDragEnd: (_) {
+          setState(() => _isResizing = false);
+        },
+        // Use a wider hit area (16 px) than the visual indicator so the handle
+        // is easy to grab without pixel-perfect aiming.
+        child: SizedBox(
+          width: 16.0,
+          child: Center(
+            child: Container(
+              width: theme.dimensions.resizeHandleWidth,
+              color: _isResizing
+                  ? theme.colors.resizeHandleActiveColor
+                  : _isHovering
+                  ? theme.colors.resizeHandleActiveColor.withValues(alpha: 0.45)
+                  : Colors.transparent,
+            ),
+          ),
         ),
       ),
     );

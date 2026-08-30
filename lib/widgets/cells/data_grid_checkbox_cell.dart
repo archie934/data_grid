@@ -115,26 +115,34 @@ class _DataGridCheckboxHeaderCellState<T extends DataGridRow>
               border: theme.borders.headerBorder,
             ),
             padding: theme.padding.checkboxPadding,
-            alignment: Alignment.center,
-            child: Checkbox(
-              value: headerState.someSelected
-                  ? null
-                  : headerState.allVisibleSelected,
-              tristate: true,
-              onChanged: (value) {
-                if (headerState.allVisibleSelected ||
-                    headerState.someSelected) {
-                  controller.addEvent(ClearSelectionEvent());
-                } else {
-                  controller.addEvent(
-                    SelectAllRowsEvent(
-                      rowIds: headerState.visibleRowIds.isEmpty
-                          ? null
-                          : headerState.visibleRowIds,
-                    ),
-                  );
-                }
-              },
+            // Align explicitly (with heightFactor: 1.0) rather than via
+            // Container's `alignment` param: a plain Align/Center expands to
+            // fill any bounded incoming height, so under
+            // DataGrid.autoHeaderHeight's loose measurement pass it would
+            // report maxHeight as the header's measured height.
+            child: Align(
+              alignment: Alignment.center,
+              heightFactor: 1.0,
+              child: Checkbox(
+                value: headerState.someSelected
+                    ? null
+                    : headerState.allVisibleSelected,
+                tristate: true,
+                onChanged: (value) {
+                  if (headerState.allVisibleSelected ||
+                      headerState.someSelected) {
+                    controller.addEvent(ClearSelectionEvent());
+                  } else {
+                    controller.addEvent(
+                      SelectAllRowsEvent(
+                        rowIds: headerState.visibleRowIds.isEmpty
+                            ? null
+                            : headerState.visibleRowIds,
+                      ),
+                    );
+                  }
+                },
+              ),
             ),
           ),
         );

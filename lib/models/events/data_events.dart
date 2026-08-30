@@ -336,6 +336,69 @@ class UpdateRowEvent extends DataGridEvent {
   }
 }
 
+/// Asks cells to re-read their value, without changing any state.
+///
+/// The grid keeps edited rows out of the immutable state path on purpose — a
+/// `cellValueSetter` mutates the [DataGridRow] in place and the affected cells
+/// are notified through [DataGridController.cellValueChanges] (see AGENTS.md's
+/// cell-edit fast path). Cells decide whether to rebuild by diffing what their
+/// own [DataGridColumn.valueAccessor] returns, which covers every value the
+/// grid can actually see.
+///
+/// Dispatch this event for the cases it can't:
+///
+/// * a row was mutated by application code rather than through
+///   [UpdateCellEvent] / an inline edit, so no notification was ever emitted;
+/// * a column has no `valueAccessor`, or its `cellWidget` reads fields straight
+///   off `CellScope.row`, so there is nothing to diff.
+///
+/// Refreshing is strictly a render concern: no state is produced, `rowsById`
+/// and `displayOrder` keep their identity, and the virtualization window is
+/// untouched. Only the cells named here rebuild.
+///
+/// ```dart
+/// order.applyDiscount(0.1);            // mutates several fields at once
+/// controller.refreshCells(rowIds: [order.id]);
+/// ```
+class RefreshCellsEvent extends DataGridEvent {
+  /// Rows to refresh. Empty means every row currently held by the grid.
+  final List<double> rowIds;
+
+  /// Columns to refresh within [rowIds]. Null refreshes every column of those
+  /// rows — the usual case, since the point is that the caller doesn't know
+  /// which columns derive from what changed.
+  final List<int>? columnIds;
+
+  const RefreshCellsEvent({this.rowIds = const [], this.columnIds});
+
+  @override
+  DataGridState<T>? apply<T extends DataGridRow>(EventContext<T> context) {
+    final notify = context.notifyCellValueChanged;
+    if (notify == null) return null;
+
+    final rows = rowIds.isEmpty ? context.state.rowsById.keys : rowIds;
+    final columns =
+        columnIds ?? context.state.columns.map((c) => c.id).toList();
+
+    for (final rowId in rows) {
+      for (final columnId in columns) {
+        notify(
+          CellValueChange(
+            rowId: rowId,
+            columnId: columnId,
+            value: null,
+            source: CellValueChangeSource.refresh,
+          ),
+        );
+      }
+    }
+
+    // Deliberately no state change: this event exists precisely so a render
+    // refresh doesn't have to cost a state emission.
+    return null;
+  }
+}
+
 /// Updates a single cell value on an existing row.
 class UpdateCellEvent extends DataGridEvent {
   final double rowId;

@@ -10,7 +10,7 @@ import 'renderers/cell_renderers.dart';
 import 'interceptors/logging_interceptor.dart';
 import 'widgets/column_visibility_menu.dart';
 
-const exampleRows = 1000000;
+const exampleRows = 100000;
 
 void main() {
   runApp(const MainApp());
@@ -139,7 +139,11 @@ class _MainAppState extends State<MainApp> {
         body: DataGrid<ProductRow>(
           controller: controller,
           theme: purpleTheme,
-          cacheExtent: 0,
+          // Pre-render ~16 rows past the viewport in each direction so a fling
+          // doesn't have to build cells on the frame they become visible.
+          // Debug builds clamp this to 500px to keep hot reload snappy.
+          cacheExtent: 800.0,
+          autoHeaderHeight: const AutoHeaderHeight(),
         ),
       ),
     );

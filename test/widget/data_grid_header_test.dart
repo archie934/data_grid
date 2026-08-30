@@ -241,6 +241,70 @@ void main() {
       expect(resizeDelta, isNotNull);
     });
 
+    testWidgets(
+      'does not dispatch sort or show sort affordance for a non-sortable column',
+      (tester) async {
+        final column = DataGridColumn<TestRow>(
+          id: 1,
+          title: 'Test Column',
+          width: 150,
+          sortable: false,
+          valueAccessor: (row) => row.name,
+        );
+        var sortCalled = false;
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: DataGridHeaderCell(
+                column: column,
+                sortState: SortState.initial(),
+                onSort: (_) => sortCalled = true,
+                onResize: (_) {},
+              ),
+            ),
+          ),
+        );
+
+        // No InkWell (sort ripple/tap target) is wired up at all.
+        expect(find.byType(InkWell), findsNothing);
+
+        await tester.tap(find.text('Test Column'));
+        await tester.pump();
+        expect(sortCalled, isFalse);
+      },
+    );
+
+    testWidgets('does not show a resize handle for a non-resizable column', (
+      tester,
+    ) async {
+      final column = DataGridColumn<TestRow>(
+        id: 1,
+        title: 'Test Column',
+        width: 150,
+        resizable: false,
+        valueAccessor: (row) => row.name,
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: DataGridHeaderCell(
+              column: column,
+              sortState: SortState.initial(),
+              onSort: (_) {},
+              onResize: (_) {},
+            ),
+          ),
+        ),
+      );
+
+      final resizeHandle = find.byWidgetPredicate(
+        (w) => w is MouseRegion && w.cursor == SystemMouseCursors.resizeColumn,
+      );
+      expect(resizeHandle, findsNothing);
+    });
+
     testWidgets('shows resize cursor on hover', (tester) async {
       final column = DataGridColumn<TestRow>(
         id: 1,

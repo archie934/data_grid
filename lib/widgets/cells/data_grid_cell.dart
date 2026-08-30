@@ -96,6 +96,13 @@ class _DataGridCellState<T extends DataGridRow> extends State<DataGridCell<T>> {
   // avoid allocating a new String object for every visible cell per update.
   late String _cellId;
 
+  /// The value this cell last rendered, and whether it has rendered yet.
+  ///
+  /// Used to decide whether a row mutation actually changed anything *this*
+  /// cell displays — see [_shouldRefreshValue].
+  Object? _lastValue;
+  bool _hasRenderedValue = false;
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -123,9 +130,14 @@ class _DataGridCellState<T extends DataGridRow> extends State<DataGridCell<T>> {
       _cellWidget = widget.column.cellWidget ?? _DefaultTextCell<T>();
     }
     // Re-subscribe if the cell now represents a different row or column.
-    // With ValueKey this shouldn't happen, but guard defensively.
+    // This is the normal path on a scroll jump, where cells are keyed by
+    // viewport slot so elements are reused rather than re-inflated (see
+    // GridUnpinnedQuadrant._buildCell).
     if (oldWidget.rowId != widget.rowId ||
         oldWidget.column.id != widget.column.id) {
+      // Whatever was rendered belonged to the previous row.
+      _hasRenderedValue = false;
+      _lastValue = null;
       final controller = _subscribedController;
       if (controller != null) {
         _cancelSubscription();
@@ -154,11 +166,40 @@ class _DataGridCellState<T extends DataGridRow> extends State<DataGridCell<T>> {
         .listen((ds) {
           if (mounted) setState(() => _displayState = ds);
         });
+    // Row-level, not cell-level: a cellValueSetter mutates the row object, and
+    // any column's valueAccessor may read what it changed. See
+    // CellValueChange.affectsRow.
+    // Row-level candidate filter, then a per-cell value diff — see
+    // CellValueChange.affectsRow and _shouldRefreshValue.
     _valueSubscription = controller.cellValueChanges
-        .where((change) => change.affectsCell(rowId, columnId))
-        .listen((_) {
-          if (mounted) setState(() {});
+        .where((change) => change.affectsRow(rowId))
+        .listen((change) {
+          if (!mounted) return;
+          if (!_shouldRefreshValue(change)) return;
+          setState(() {});
         });
+  }
+
+  /// Whether a mutation of this cell's row changed what this cell renders.
+  ///
+  /// A `cellValueSetter` mutates the whole row object, so *any* column may be
+  /// affected — the example's Quantity setter recalculates `total`, which the
+  /// Total column reads. But blindly rebuilding the row's every cell would cost
+  /// 60 rebuilds on a 60-column grid for a one-field edit, so instead each cell
+  /// re-runs its own `valueAccessor` and rebuilds only if the result differs
+  /// from what it last rendered. Accessors are cheap pure getters — they
+  /// already run on every build — so this is far cheaper than the rebuild it
+  /// avoids, and it is correct without the column having to declare anything.
+  ///
+  /// Two cases fall outside the diff and rebuild unconditionally: a column with
+  /// no `valueAccessor` (a custom `cellWidget` may be reading arbitrary fields
+  /// off `CellScope.row`, which the grid can't see), and an explicit
+  /// [RefreshCellsEvent], whose whole purpose is to bypass this.
+  bool _shouldRefreshValue(CellValueChange change) {
+    if (change.forcesRefresh) return true;
+    final accessor = widget.column.valueAccessor;
+    if (accessor == null || !_hasRenderedValue) return true;
+    return accessor(widget.row) != _lastValue;
   }
 
   void _cancelSubscription() {
@@ -201,6 +242,10 @@ class _DataGridCellState<T extends DataGridRow> extends State<DataGridCell<T>> {
     }
 
     final value = widget.column.valueAccessor?.call(widget.row);
+    // Remember what this build renders, so a later row mutation can be diffed
+    // against it rather than assumed to matter. See _shouldRefreshValue.
+    _lastValue = value;
+    _hasRenderedValue = true;
 
     final isEven = widget.rowIndex % 2 == 0;
     final decoration = (ds.isCellInPath || ds.isCellActive)

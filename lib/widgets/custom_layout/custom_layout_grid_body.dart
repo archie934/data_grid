@@ -99,6 +99,58 @@ class _CustomLayoutGridBodyState<T extends DataGridRow>
     _scrollPointerCancel(event);
   }
 
+  // -- Column partition ------------------------------------------------------
+  // Split once per column-list change rather than per build: the quadrants
+  // clear their cell caches when these lists change *identity*, so rebuilding
+  // them every frame would keep those caches permanently cold.
+  List<DataGridColumn<T>>? _partitionedColumnsRef;
+  List<int> _pinnedIndices = const [];
+  List<int> _unpinnedIndices = const [];
+  double _pinnedWidth = 0;
+  double _unpinnedWidth = 0;
+
+  void _syncColumnPartition(List<DataGridColumn<T>> columns) {
+    if (identical(_partitionedColumnsRef, columns)) return;
+    _partitionedColumnsRef = columns;
+
+    final pinned = <int>[];
+    final unpinned = <int>[];
+    double pinnedWidth = 0;
+    double unpinnedWidth = 0;
+
+    for (int i = 0; i < columns.length; i++) {
+      if (!columns[i].visible) continue;
+      if (columns[i].pinned) {
+        pinned.add(i);
+        pinnedWidth += columns[i].width;
+      } else {
+        unpinned.add(i);
+        unpinnedWidth += columns[i].width;
+      }
+    }
+
+    _pinnedIndices = pinned;
+    _unpinnedIndices = unpinned;
+    _pinnedWidth = pinnedWidth;
+    _unpinnedWidth = unpinnedWidth;
+  }
+
+  // -- Band builder ----------------------------------------------------------
+
+  /// Full-width band for a group-header slot, or `null` for ordinary data rows.
+  ///
+  /// Deliberately a named method so `FullWidthRowBandLayer` sees a stable
+  /// callback identity across builds and can keep its band cache.
+  Widget? _buildGroupBand(GridDisplayRow<T> entry, int rowIndex) {
+    if (entry is GridGroupHeaderRow<T>) {
+      return GroupHeaderBand<T>(
+        key: ValueKey('group_${entry.groupKey}'),
+        header: entry,
+      );
+    }
+    return null;
+  }
+
   // -- Build -----------------------------------------------------------------
 
   @override
@@ -117,6 +169,12 @@ class _CustomLayoutGridBodyState<T extends DataGridRow>
     final rows = context.dataGridDisplayRows<T>();
     if (rows == null || rows.isEmpty) return const SizedBox.expand();
 
+    // Latched by DataGrid: reading state.rowsById here would hand the
+    // quadrants a fresh EqualUnmodifiableMapView every build and clear their
+    // cell caches. See DataGridStateScope.rowsById.
+    final rowsById = context.dataGridRowsById<T>();
+    if (rowsById == null) return const SizedBox.expand();
+
     final scrollbarWidth = theme.dimensions.scrollbarWidth;
     final scrollController = _cachedScrollController;
 
@@ -125,24 +183,15 @@ class _CustomLayoutGridBodyState<T extends DataGridRow>
         final viewportWidth = constraints.maxWidth;
         final viewportHeight = constraints.maxHeight;
 
-        final pinnedIndices = <int>[];
-        final unpinnedIndices = <int>[];
-        double pinnedWidth = 0;
-        double unpinnedWidth = 0;
-
-        for (int i = 0; i < columns.length; i++) {
-          if (!columns[i].visible) continue;
-          if (columns[i].pinned) {
-            pinnedIndices.add(i);
-            pinnedWidth += columns[i].width;
-          } else {
-            unpinnedIndices.add(i);
-            unpinnedWidth += columns[i].width;
-          }
-        }
+        _syncColumnPartition(columns);
+        final pinnedIndices = _pinnedIndices;
+        final unpinnedIndices = _unpinnedIndices;
+        final pinnedWidth = _pinnedWidth;
+        final unpinnedWidth = _unpinnedWidth;
 
         final rowCount = rows.length;
-        final totalHeight = rowCount * widget.rowHeight;
+        final rowHeight = widget.rowHeight;
+        final totalHeight = rowCount * rowHeight;
         final scrollableViewportWidth = viewportWidth - pinnedWidth;
 
         _syncScrollDimensions(
@@ -174,9 +223,9 @@ class _CustomLayoutGridBodyState<T extends DataGridRow>
                   viewportWidth: viewportWidth,
                   viewportHeight: viewportHeight,
                   rows: rows,
-                  rowsById: state.rowsById,
+                  rowsById: rowsById,
                   rowCount: rowCount,
-                  rowHeight: widget.rowHeight,
+                  rowHeight: rowHeight,
                   cacheExtent: widget.cacheExtent,
                   hOffset: _hOffset,
                   vOffset: _vOffset,
@@ -193,9 +242,9 @@ class _CustomLayoutGridBodyState<T extends DataGridRow>
                     pinnedIndices: pinnedIndices,
                     viewportHeight: viewportHeight,
                     rows: rows,
-                    rowsById: state.rowsById,
+                    rowsById: rowsById,
                     rowCount: rowCount,
-                    rowHeight: widget.rowHeight,
+                    rowHeight: rowHeight,
                     cacheExtent: widget.cacheExtent,
                     backgroundColor: theme.colors.evenRowColor,
                     vOffset: _vOffset,
@@ -207,18 +256,13 @@ class _CustomLayoutGridBodyState<T extends DataGridRow>
                     rows: rows,
                     viewportWidth: viewportWidth,
                     viewportHeight: viewportHeight,
-                    rowHeight: widget.rowHeight,
+                    rowHeight: rowHeight,
                     cacheExtent: widget.cacheExtent,
                     vOffset: _vOffset,
-                    bandBuilder: (entry, rowIndex) {
-                      if (entry is GridGroupHeaderRow<T>) {
-                        return GroupHeaderBand<T>(
-                          key: ValueKey('group_${entry.groupKey}'),
-                          header: entry,
-                        );
-                      }
-                      return null;
-                    },
+                    // Method tear-off, not an inline closure: FullWidthRowBandLayer
+                    // clears its band cache when bandBuilder's identity changes,
+                    // and a closure literal is a new object on every build.
+                    bandBuilder: _buildGroupBand,
                   ),
                 ),
               if (scrollController != null && _maxVScroll > 0)
