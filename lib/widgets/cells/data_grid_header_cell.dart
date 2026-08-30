@@ -69,10 +69,7 @@ class _DataGridHeaderCellState extends State<DataGridHeaderCell> {
           Expanded(
             child: Text(
               widget.column.title,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
               overflow: TextOverflow.ellipsis,
             ),
           ),

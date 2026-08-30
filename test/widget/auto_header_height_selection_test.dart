@@ -71,9 +71,8 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        double headerHeight() => tester
-            .getSize(find.byType(DataGridHeaderViewport<_Row>))
-            .height;
+        double headerHeight() =>
+            tester.getSize(find.byType(DataGridHeaderViewport<_Row>)).height;
 
         final single = headerHeight();
         expect(
@@ -196,9 +195,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      double headerHeight() => tester
-          .getSize(find.byType(DataGridHeaderViewport<_Row>))
-          .height;
+      double headerHeight() =>
+          tester.getSize(find.byType(DataGridHeaderViewport<_Row>)).height;
 
       expect(headerHeight(), closeTo(56, 0.5));
       controller.setSelectionMode(SelectionMode.multiple);

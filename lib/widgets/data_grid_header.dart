@@ -24,13 +24,20 @@ class DataGridHeader<T extends DataGridRow> extends StatefulWidget {
   /// [autoHeaderHeight] is null.
   final ValueChanged<double>? onHeightChanged;
 
-  const DataGridHeader({super.key, required this.defaultFilterWidget, required this.headerHeight, this.autoHeaderHeight, this.onHeightChanged});
+  const DataGridHeader({
+    super.key,
+    required this.defaultFilterWidget,
+    required this.headerHeight,
+    this.autoHeaderHeight,
+    this.onHeightChanged,
+  });
 
   @override
   State<DataGridHeader<T>> createState() => _DataGridHeaderState<T>();
 }
 
-class _DataGridHeaderState<T extends DataGridRow> extends State<DataGridHeader<T>> {
+class _DataGridHeaderState<T extends DataGridRow>
+    extends State<DataGridHeader<T>> {
   // The header row is cached rather than rebuilt, so that when this widget is
   // rebuilt by its parent (which happens on every state emission) Flutter's
   // `child.widget == newWidget` check short-circuits and skips `_HeaderRow` and
@@ -44,25 +51,37 @@ class _DataGridHeaderState<T extends DataGridRow> extends State<DataGridHeader<T
   Widget _resolveHeaderRow() {
     final auto = widget.autoHeaderHeight;
     final cached = _headerRow;
-    if (cached != null && _cachedAutoHeaderHeight == auto && _cachedOnHeightChanged == widget.onHeightChanged) {
+    if (cached != null &&
+        _cachedAutoHeaderHeight == auto &&
+        _cachedOnHeightChanged == widget.onHeightChanged) {
       return cached;
     }
     _cachedAutoHeaderHeight = auto;
     _cachedOnHeightChanged = widget.onHeightChanged;
-    return _headerRow = auto != null ? _HeaderRow<T>(autoHeaderHeight: auto, onHeightChanged: widget.onHeightChanged) : _HeaderRow<T>();
+    return _headerRow = auto != null
+        ? _HeaderRow<T>(
+            autoHeaderHeight: auto,
+            onHeightChanged: widget.onHeightChanged,
+          )
+        : _HeaderRow<T>();
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = DataGridTheme.of(context);
     final state = context.dataGridState<T>({DataGridAspect.columns})!;
-    final hasFilterableColumns = state.columns.any((col) => col.filterable && col.visible);
+    final hasFilterableColumns = state.columns.any(
+      (col) => col.filterable && col.visible,
+    );
 
     final autoHeaderHeight = widget.autoHeaderHeight;
     final headerRowChild = _resolveHeaderRow();
     final headerRow = autoHeaderHeight != null
         ? ConstrainedBox(
-            constraints: BoxConstraints(minHeight: autoHeaderHeight.minHeight, maxHeight: autoHeaderHeight.maxHeight),
+            constraints: BoxConstraints(
+              minHeight: autoHeaderHeight.minHeight,
+              maxHeight: autoHeaderHeight.maxHeight,
+            ),
             child: headerRowChild,
           )
         : SizedBox(height: widget.headerHeight, child: headerRowChild);
@@ -74,7 +93,9 @@ class _DataGridHeaderState<T extends DataGridRow> extends State<DataGridHeader<T
         if (hasFilterableColumns)
           SizedBox(
             height: theme.dimensions.filterRowHeight,
-            child: DataGridFilterRow<T>(defaultFilterWidget: widget.defaultFilterWidget),
+            child: DataGridFilterRow<T>(
+              defaultFilterWidget: widget.defaultFilterWidget,
+            ),
           ),
       ],
     );
@@ -89,13 +110,20 @@ class _HeaderRow<T extends DataGridRow> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final state = context.dataGridState<T>({DataGridAspect.columns, DataGridAspect.sort, DataGridAspect.group})!;
+    final state = context.dataGridState<T>({
+      DataGridAspect.columns,
+      DataGridAspect.sort,
+      DataGridAspect.group,
+    })!;
     final scrollController = context.gridScrollController<T>()!;
     final theme = DataGridTheme.of(context);
 
     final columns = context.dataGridEffectiveColumns<T>()!;
     final visibleColumns = columns.where((c) => c.visible).toList();
-    final unpinnedFirst = [...visibleColumns.where((c) => !c.pinned), ...visibleColumns.where((c) => c.pinned)];
+    final unpinnedFirst = [
+      ...visibleColumns.where((c) => !c.pinned),
+      ...visibleColumns.where((c) => c.pinned),
+    ];
 
     return DataGridHeaderViewport<T>(
       columns: columns,
@@ -108,7 +136,15 @@ class _HeaderRow<T extends DataGridRow> extends StatelessWidget {
       // text-scale change rebuilds this row and invalidates the header's
       // measured-height memo.
       textScaler: MediaQuery.textScalerOf(context),
-      children: [for (var column in unpinnedFirst) _HeaderCellWrapper<T>(key: ValueKey('header_${column.id}'), column: column, sortState: state.sort, groupState: state.group)],
+      children: [
+        for (var column in unpinnedFirst)
+          _HeaderCellWrapper<T>(
+            key: ValueKey('header_${column.id}'),
+            column: column,
+            sortState: state.sort,
+            groupState: state.group,
+          ),
+      ],
     );
   }
 }
@@ -126,20 +162,30 @@ class _HeaderCellWrapper<T extends DataGridRow> extends StatefulWidget {
   final SortState sortState;
   final GroupState groupState;
 
-  const _HeaderCellWrapper({super.key, required this.column, required this.sortState, required this.groupState});
+  const _HeaderCellWrapper({
+    super.key,
+    required this.column,
+    required this.sortState,
+    required this.groupState,
+  });
 
   @override
   State<_HeaderCellWrapper<T>> createState() => _HeaderCellWrapperState<T>();
 }
 
-class _HeaderCellWrapperState<T extends DataGridRow> extends State<_HeaderCellWrapper<T>> {
+class _HeaderCellWrapperState<T extends DataGridRow>
+    extends State<_HeaderCellWrapper<T>> {
   void _handleSort(SortDirection? direction) {
-    context.dataGridController<T>()!.addEvent(SortEvent(columnId: widget.column.id, direction: direction));
+    context.dataGridController<T>()!.addEvent(
+      SortEvent(columnId: widget.column.id, direction: direction),
+    );
   }
 
   /// newWidth is already clamped by the cell — just dispatch the event.
   void _handleResize(double newWidth) {
-    context.dataGridController<T>()!.addEvent(ColumnResizeEvent(columnId: widget.column.id, newWidth: newWidth));
+    context.dataGridController<T>()!.addEvent(
+      ColumnResizeEvent(columnId: widget.column.id, newWidth: newWidth),
+    );
   }
 
   void _handleSecondaryTap(TapDownDetails details) {
@@ -177,18 +223,30 @@ class _HeaderCellWrapperState<T extends DataGridRow> extends State<_HeaderCellWr
     } else {
       // For pinned columns suppress the inner right border — the outer
       // wrapper Container already draws pinnedBorder on the right edge.
-      final effectiveBorder = column.pinned ? Border(bottom: theme.borders.headerBorder.bottom) : null;
+      final effectiveBorder = column.pinned
+          ? Border(bottom: theme.borders.headerBorder.bottom)
+          : null;
 
       cell = GestureDetector(
         onSecondaryTapDown: _handleSecondaryTap,
-        child: DataGridHeaderCell(column: column, sortState: widget.sortState, borderOverride: effectiveBorder, onSort: _handleSort, onResize: _handleResize),
+        child: DataGridHeaderCell(
+          column: column,
+          sortState: widget.sortState,
+          borderOverride: effectiveBorder,
+          onSort: _handleSort,
+          onResize: _handleResize,
+        ),
       );
     }
 
     // Add pinned column styling
     if (column.pinned) {
       return Container(
-        decoration: BoxDecoration(color: theme.colors.headerColor, border: theme.borders.pinnedBorder, boxShadow: theme.borders.pinnedShadow),
+        decoration: BoxDecoration(
+          color: theme.colors.headerColor,
+          border: theme.borders.pinnedBorder,
+          boxShadow: theme.borders.pinnedShadow,
+        ),
         child: cell,
       );
     }

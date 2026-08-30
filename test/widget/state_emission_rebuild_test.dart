@@ -144,37 +144,34 @@ void main() {
       );
     });
 
-    testWidgets(
-      'the same holds under multi-select '
-      '(regression: effectiveColumns allocated a new list per access, so the '
-      'columns identity check also failed every emission)',
-      (tester) async {
-        tester.view.physicalSize = const Size(900, 600);
-        tester.view.devicePixelRatio = 1.0;
-        addTearDown(tester.view.resetPhysicalSize);
+    testWidgets('the same holds under multi-select '
+        '(regression: effectiveColumns allocated a new list per access, so the '
+        'columns identity check also failed every emission)', (tester) async {
+      tester.view.physicalSize = const Size(900, 600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
 
-        final g = makeGrid(rowCount: 400);
-        addTearDown(g.controller.dispose);
-        g.controller.setSelectionMode(SelectionMode.multiple);
+      final g = makeGrid(rowCount: 400);
+      addTearDown(g.controller.dispose);
+      g.controller.setSelectionMode(SelectionMode.multiple);
 
-        await tester.pumpWidget(wrap(g.controller));
-        await tester.pumpAndSettle();
+      await tester.pumpWidget(wrap(g.controller));
+      await tester.pumpAndSettle();
 
-        final before = Map<String, int>.from(g.counts);
+      final before = Map<String, int>.from(g.counts);
 
-        g.controller.setTotalItems(1234);
-        await tester.pumpAndSettle();
-        g.controller.setTotalItems(4321);
-        await tester.pumpAndSettle();
+      g.controller.setTotalItems(1234);
+      await tester.pumpAndSettle();
+      g.controller.setTotalItems(4321);
+      await tester.pumpAndSettle();
 
-        expect(
-          totalBuilds(before, g.counts),
-          0,
-          reason:
-              'Multi-select must not make every emission rebuild the '
-              'viewport. Got ${totalBuilds(before, g.counts)}.',
-        );
-      },
-    );
+      expect(
+        totalBuilds(before, g.counts),
+        0,
+        reason:
+            'Multi-select must not make every emission rebuild the '
+            'viewport. Got ${totalBuilds(before, g.counts)}.',
+      );
+    });
   });
 }

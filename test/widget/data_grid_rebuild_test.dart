@@ -245,7 +245,11 @@ void main() {
       // accessor once to decide. The Name cell then rebuilds (a second call
       // from build()); the Value cell stops at the diff.
       expect(nameCalls, equals(2), reason: 'row 3 Name: one diff, one rebuild');
-      expect(valueCalls, equals(1), reason: 'row 3 Value: diff only, no rebuild');
+      expect(
+        valueCalls,
+        equals(1),
+        reason: 'row 3 Value: diff only, no rebuild',
+      );
     });
   });
 }
