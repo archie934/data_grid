@@ -61,7 +61,10 @@ class DataGridStateScope<T extends DataGridRow>
     extends InheritedModel<DataGridAspect> {
   final DataGridState<T> state;
 
-  /// Pre-computed effective columns (cached once per state change).
+  /// Effective columns for the current state, memoized by the caller so the
+  /// list keeps its identity across emissions — `state.effectiveColumns` is a
+  /// getter that allocates a new list on every access under multi-select, and
+  /// the quadrants gate their cell caches on that identity.
   final List<DataGridColumn<T>> effectiveColumns;
 
   /// The flattened, grouping-aware list of visual row slots for the current
@@ -69,16 +72,28 @@ class DataGridStateScope<T extends DataGridRow>
   /// than recomputed here, so every dependent reuses the same list.
   final List<GridDisplayRow<T>> displayRows;
 
-  DataGridStateScope({
+  /// `state.rowsById` latched by the caller. Freezed re-wraps its collection
+  /// getters in a fresh `EqualUnmodifiableMapView` on *every* access, so
+  /// reading `state.rowsById` directly would hand every consumer a different
+  /// object each build and defeat their identity-based caches. Read this.
+  final Map<double, T> rowsById;
+
+  const DataGridStateScope({
     super.key,
     required this.state,
     required this.displayRows,
+    required this.effectiveColumns,
+    required this.rowsById,
     required super.child,
-  }) : effectiveColumns = state.effectiveColumns;
+  });
 
   @override
   bool updateShouldNotify(DataGridStateScope<T> oldWidget) {
-    return oldWidget.state != state;
+    // Identity, not `==`: DataGridState's generated equality deep-compares
+    // `rowsById`/`displayOrder`, which is O(row count) on every rebuild. This
+    // is only the coarse gate — `updateShouldNotifyDependent` below does the
+    // real per-aspect filtering — so erring towards "changed" is free.
+    return !identical(oldWidget.state, state);
   }
 
   @override
@@ -127,6 +142,8 @@ class DataGridInherited<T extends DataGridRow> extends StatelessWidget {
   final GridScrollController scrollController;
   final DataGridState<T> state;
   final List<GridDisplayRow<T>> displayRows;
+  final List<DataGridColumn<T>> effectiveColumns;
+  final Map<double, T> rowsById;
   final FocusNode gridFocusNode;
   final Widget child;
 
@@ -136,6 +153,8 @@ class DataGridInherited<T extends DataGridRow> extends StatelessWidget {
     required this.scrollController,
     required this.state,
     required this.displayRows,
+    required this.effectiveColumns,
+    required this.rowsById,
     required this.gridFocusNode,
     required this.child,
   });
@@ -149,6 +168,8 @@ class DataGridInherited<T extends DataGridRow> extends StatelessWidget {
       child: DataGridStateScope<T>(
         state: state,
         displayRows: displayRows,
+        effectiveColumns: effectiveColumns,
+        rowsById: rowsById,
         child: child,
       ),
     );
@@ -196,6 +217,16 @@ extension DataGridContext on BuildContext {
       this,
       aspect: DataGridAspect.columns,
     )?.effectiveColumns;
+  }
+
+  /// Depends on the [DataGridAspect.data] aspect only — the latched
+  /// `rowsById` map. Prefer this over `state.rowsById`, which allocates a new
+  /// view on every access (see [DataGridStateScope.rowsById]).
+  Map<double, T>? dataGridRowsById<T extends DataGridRow>() {
+    return InheritedModel.inheritFrom<DataGridStateScope<T>>(
+      this,
+      aspect: DataGridAspect.data,
+    )?.rowsById;
   }
 
   /// Depends on [DataGridAspect.data] and [DataGridAspect.group] — the

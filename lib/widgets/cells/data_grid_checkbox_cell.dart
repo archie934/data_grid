@@ -38,11 +38,7 @@ class DataGridCheckboxCell<T extends DataGridRow> extends StatelessWidget {
         ),
         child: Padding(
           padding: theme.padding.checkboxPadding,
-          // heightFactor: 1.0 — see DataGridCell's _DefaultTextCell for why
-          // Center (Align without heightFactor) needs this under
-          // DataGrid.autoRowHeight's loose measurement pass.
           child: Center(
-            heightFactor: 1.0,
             child: Checkbox(
               value: isSelected,
               onChanged: (value) => controller.addEvent(
@@ -120,9 +116,10 @@ class _DataGridCheckboxHeaderCellState<T extends DataGridRow>
             ),
             padding: theme.padding.checkboxPadding,
             // Align explicitly (with heightFactor: 1.0) rather than via
-            // Container's `alignment` param — see DataGridCell's
-            // _DefaultTextCell for why plain Align/Center needs this under
-            // DataGrid.autoHeaderHeight's loose measurement pass.
+            // Container's `alignment` param: a plain Align/Center expands to
+            // fill any bounded incoming height, so under
+            // DataGrid.autoHeaderHeight's loose measurement pass it would
+            // report maxHeight as the header's measured height.
             child: Align(
               alignment: Alignment.center,
               heightFactor: 1.0,

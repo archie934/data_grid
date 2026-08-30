@@ -3,9 +3,7 @@ import 'dart:ui';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_data_grid/models/auto_height.dart';
 import 'package:flutter_data_grid/models/data/column.dart';
 import 'package:flutter_data_grid/models/data/grid_display_row.dart';
 import 'package:flutter_data_grid/models/data/row.dart';
@@ -13,10 +11,8 @@ import 'package:flutter_data_grid/models/events/cell_selection_events.dart';
 import 'package:flutter_data_grid/theme/data_grid_theme.dart';
 import 'package:flutter_data_grid/widgets/custom_layout/external_scroll_position.dart';
 import 'package:flutter_data_grid/widgets/custom_layout/full_width_row_band_layer.dart';
-import 'package:flutter_data_grid/widgets/custom_layout/grid_layout_delegate.dart';
 import 'package:flutter_data_grid/widgets/custom_layout/grid_pinned_quadrant.dart';
 import 'package:flutter_data_grid/widgets/custom_layout/grid_unpinned_quadrant.dart';
-import 'package:flutter_data_grid/widgets/custom_layout/row_metrics.dart';
 import 'package:flutter_data_grid/widgets/overlays/group_header_band.dart';
 import 'package:flutter_data_grid/widgets/scroll/vertical_scrollbar.dart';
 import 'package:flutter_data_grid/widgets/scroll/horizontal_scrollbar.dart';
@@ -25,21 +21,15 @@ import 'package:flutter_data_grid/widgets/data_grid_inherited.dart';
 
 part 'grid_body_scroll_mixin.dart';
 part 'grid_body_drag_select_mixin.dart';
-part 'grid_body_row_height_mixin.dart';
 
 class CustomLayoutGridBody<T extends DataGridRow> extends StatefulWidget {
-  final RowMetrics rowMetrics;
+  final double rowHeight;
   final double cacheExtent;
-
-  /// Non-null enables auto row-height measurement; must be non-null iff
-  /// [rowMetrics] is an [AutoRowMetrics].
-  final AutoRowHeight? autoRowHeight;
 
   const CustomLayoutGridBody({
     super.key,
-    required this.rowMetrics,
+    required this.rowHeight,
     required this.cacheExtent,
-    this.autoRowHeight,
   });
 
   @override
@@ -52,8 +42,7 @@ class _CustomLayoutGridBodyState<T extends DataGridRow>
     with
         TickerProviderStateMixin,
         _GridBodyScrollMixin<T>,
-        _GridBodyDragSelectMixin<T>,
-        _GridBodyRowHeightMixin<T>
+        _GridBodyDragSelectMixin<T>
     implements ScrollContext {
   @override
   TickerProvider get vsync => this;
@@ -110,6 +99,58 @@ class _CustomLayoutGridBodyState<T extends DataGridRow>
     _scrollPointerCancel(event);
   }
 
+  // -- Column partition ------------------------------------------------------
+  // Split once per column-list change rather than per build: the quadrants
+  // clear their cell caches when these lists change *identity*, so rebuilding
+  // them every frame would keep those caches permanently cold.
+  List<DataGridColumn<T>>? _partitionedColumnsRef;
+  List<int> _pinnedIndices = const [];
+  List<int> _unpinnedIndices = const [];
+  double _pinnedWidth = 0;
+  double _unpinnedWidth = 0;
+
+  void _syncColumnPartition(List<DataGridColumn<T>> columns) {
+    if (identical(_partitionedColumnsRef, columns)) return;
+    _partitionedColumnsRef = columns;
+
+    final pinned = <int>[];
+    final unpinned = <int>[];
+    double pinnedWidth = 0;
+    double unpinnedWidth = 0;
+
+    for (int i = 0; i < columns.length; i++) {
+      if (!columns[i].visible) continue;
+      if (columns[i].pinned) {
+        pinned.add(i);
+        pinnedWidth += columns[i].width;
+      } else {
+        unpinned.add(i);
+        unpinnedWidth += columns[i].width;
+      }
+    }
+
+    _pinnedIndices = pinned;
+    _unpinnedIndices = unpinned;
+    _pinnedWidth = pinnedWidth;
+    _unpinnedWidth = unpinnedWidth;
+  }
+
+  // -- Band builder ----------------------------------------------------------
+
+  /// Full-width band for a group-header slot, or `null` for ordinary data rows.
+  ///
+  /// Deliberately a named method so `FullWidthRowBandLayer` sees a stable
+  /// callback identity across builds and can keep its band cache.
+  Widget? _buildGroupBand(GridDisplayRow<T> entry, int rowIndex) {
+    if (entry is GridGroupHeaderRow<T>) {
+      return GroupHeaderBand<T>(
+        key: ValueKey('group_${entry.groupKey}'),
+        header: entry,
+      );
+    }
+    return null;
+  }
+
   // -- Build -----------------------------------------------------------------
 
   @override
@@ -128,6 +169,12 @@ class _CustomLayoutGridBodyState<T extends DataGridRow>
     final rows = context.dataGridDisplayRows<T>();
     if (rows == null || rows.isEmpty) return const SizedBox.expand();
 
+    // Latched by DataGrid: reading state.rowsById here would hand the
+    // quadrants a fresh EqualUnmodifiableMapView every build and clear their
+    // cell caches. See DataGridStateScope.rowsById.
+    final rowsById = context.dataGridRowsById<T>();
+    if (rowsById == null) return const SizedBox.expand();
+
     final scrollbarWidth = theme.dimensions.scrollbarWidth;
     final scrollController = _cachedScrollController;
 
@@ -136,27 +183,16 @@ class _CustomLayoutGridBodyState<T extends DataGridRow>
         final viewportWidth = constraints.maxWidth;
         final viewportHeight = constraints.maxHeight;
 
-        final pinnedIndices = <int>[];
-        final unpinnedIndices = <int>[];
-        double pinnedWidth = 0;
-        double unpinnedWidth = 0;
-
-        for (int i = 0; i < columns.length; i++) {
-          if (!columns[i].visible) continue;
-          if (columns[i].pinned) {
-            pinnedIndices.add(i);
-            pinnedWidth += columns[i].width;
-          } else {
-            unpinnedIndices.add(i);
-            unpinnedWidth += columns[i].width;
-          }
-        }
+        _syncColumnPartition(columns);
+        final pinnedIndices = _pinnedIndices;
+        final unpinnedIndices = _unpinnedIndices;
+        final pinnedWidth = _pinnedWidth;
+        final unpinnedWidth = _unpinnedWidth;
 
         final rowCount = rows.length;
-        final rowMetrics = widget.rowMetrics;
-        final totalHeight = rowMetrics.offsetOf(rowCount);
+        final rowHeight = widget.rowHeight;
+        final totalHeight = rowCount * rowHeight;
         final scrollableViewportWidth = viewportWidth - pinnedWidth;
-        final rowHeightMeasurement = _buildRowHeightMeasurement(rowMetrics);
 
         _syncScrollDimensions(
           scrollableViewportWidth: scrollableViewportWidth,
@@ -187,13 +223,12 @@ class _CustomLayoutGridBodyState<T extends DataGridRow>
                   viewportWidth: viewportWidth,
                   viewportHeight: viewportHeight,
                   rows: rows,
-                  rowsById: state.rowsById,
+                  rowsById: rowsById,
                   rowCount: rowCount,
-                  rowMetrics: rowMetrics,
+                  rowHeight: rowHeight,
                   cacheExtent: widget.cacheExtent,
                   hOffset: _hOffset,
                   vOffset: _vOffset,
-                  measurement: rowHeightMeasurement,
                 ),
               ),
               if (pinnedWidth > 0)
@@ -207,13 +242,12 @@ class _CustomLayoutGridBodyState<T extends DataGridRow>
                     pinnedIndices: pinnedIndices,
                     viewportHeight: viewportHeight,
                     rows: rows,
-                    rowsById: state.rowsById,
+                    rowsById: rowsById,
                     rowCount: rowCount,
-                    rowMetrics: rowMetrics,
+                    rowHeight: rowHeight,
                     cacheExtent: widget.cacheExtent,
                     backgroundColor: theme.colors.evenRowColor,
                     vOffset: _vOffset,
-                    measurement: rowHeightMeasurement,
                   ),
                 ),
               if (state.group.hasGroups)
@@ -222,18 +256,13 @@ class _CustomLayoutGridBodyState<T extends DataGridRow>
                     rows: rows,
                     viewportWidth: viewportWidth,
                     viewportHeight: viewportHeight,
-                    rowMetrics: rowMetrics,
+                    rowHeight: rowHeight,
                     cacheExtent: widget.cacheExtent,
                     vOffset: _vOffset,
-                    bandBuilder: (entry, rowIndex) {
-                      if (entry is GridGroupHeaderRow<T>) {
-                        return GroupHeaderBand<T>(
-                          key: ValueKey('group_${entry.groupKey}'),
-                          header: entry,
-                        );
-                      }
-                      return null;
-                    },
+                    // Method tear-off, not an inline closure: FullWidthRowBandLayer
+                    // clears its band cache when bandBuilder's identity changes,
+                    // and a closure literal is a new object on every build.
+                    bandBuilder: _buildGroupBand,
                   ),
                 ),
               if (scrollController != null && _maxVScroll > 0)

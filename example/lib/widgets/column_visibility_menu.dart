@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_data_grid/data_grid.dart';
 
@@ -13,7 +14,13 @@ class ColumnVisibilityMenu<T extends DataGridRow> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<List<DataGridColumn<T>>>(
-      stream: controller.state$.map((s) => s.effectiveColumns).distinct(),
+      // listEquals, not the default `==`: `==` on a List is identity, and
+      // `effectiveColumns` builds a new list on every access, so the default
+      // predicate never filtered anything and this menu (plus every
+      // MenuItemButton and Checkbox in it) rebuilt on every state emission.
+      stream: controller.state$
+          .map((s) => s.effectiveColumns)
+          .distinct(listEquals),
       initialData: controller.state.effectiveColumns,
       builder: (context, snapshot) {
         final columns = (snapshot.data ?? const [])

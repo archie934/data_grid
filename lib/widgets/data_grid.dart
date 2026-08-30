@@ -4,16 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_data_grid/controllers/data_grid_controller.dart';
 import 'package:flutter_data_grid/controllers/grid_scroll_controller.dart';
-import 'package:flutter_data_grid/delegates/row_height_delegate.dart';
-import 'package:flutter_data_grid/models/auto_height.dart';
+import 'package:flutter_data_grid/models/auto_header_height.dart';
+import 'package:flutter_data_grid/models/data/column.dart';
 import 'package:flutter_data_grid/models/data/grid_display_row.dart';
 import 'package:flutter_data_grid/models/data/row.dart';
+import 'package:flutter_data_grid/models/enums/selection_mode.dart';
 import 'package:flutter_data_grid/models/state/grid_state.dart';
 import 'package:flutter_data_grid/models/events/grid_events.dart';
 import 'package:flutter_data_grid/utils/grid_display_rows.dart';
 import 'package:flutter_data_grid/widgets/data_grid_header.dart';
 import 'package:flutter_data_grid/widgets/custom_layout/custom_layout_grid_body.dart';
-import 'package:flutter_data_grid/widgets/custom_layout/row_metrics.dart';
 import 'package:flutter_data_grid/widgets/data_grid_inherited.dart';
 import 'package:flutter_data_grid/widgets/data_grid_pagination.dart';
 import 'package:flutter_data_grid/widgets/overlays/loading_overlay.dart';
@@ -47,12 +47,7 @@ class DataGrid<T extends DataGridRow> extends StatefulWidget {
   final double? headerHeight;
 
   /// Height of each data row. Defaults to theme value if not specified.
-  /// Ignored when [autoRowHeight] is set.
   final double? rowHeight;
-
-  /// Opts rows into content-measured height instead of the fixed [rowHeight]
-  /// scalar. See [AutoRowHeight] for details and limitations.
-  final AutoRowHeight? autoRowHeight;
 
   /// Opts the header row into content-measured height instead of the fixed
   /// [headerHeight] scalar. See [AutoHeaderHeight] for details.
@@ -68,8 +63,7 @@ class DataGrid<T extends DataGridRow> extends StatefulWidget {
   final bool showLoadingOverlay;
 
   /// Custom loading overlay builder. If null, uses default overlay.
-  final Widget Function(BuildContext context, String? message)?
-  loadingOverlayBuilder;
+  final Widget Function(BuildContext context, String? message)? loadingOverlayBuilder;
 
   /// Backdrop color for the loading overlay (default: black with 30% opacity)
   final Color? loadingBackdropColor;
@@ -85,8 +79,7 @@ class DataGrid<T extends DataGridRow> extends StatefulWidget {
   final bool showPagination;
 
   /// Custom pagination widget builder. If null, uses default pagination widget.
-  final Widget Function(BuildContext context, DataGridState<T> state)?
-  paginationBuilder;
+  final Widget Function(BuildContext context, DataGridState<T> state)? paginationBuilder;
 
   /// Cache extent for the scroll view. Controls how many pixels of content
   /// are pre-rendered beyond the visible viewport in each direction.
@@ -101,7 +94,6 @@ class DataGrid<T extends DataGridRow> extends StatefulWidget {
     this.scrollController,
     this.headerHeight,
     this.rowHeight,
-    this.autoRowHeight,
     this.autoHeaderHeight,
     this.filterWidget,
     this.showLoadingOverlay = true,
@@ -128,17 +120,118 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
   StreamSubscription<bool>? _editSubscription;
   double _viewportHeight = 0;
   double _viewportWidth = 0;
-  RowMetrics _rowMetrics = const FixedRowMetrics(48.0);
-  List<GridDisplayRow<T>> _lastDisplayRows = const [];
+  double _rowHeight = 48.0;
 
-  // -- Auto row height ---------------------------------------------------
-  RowHeightDelegate? _rowHeightDelegate;
-  List<double>? _lastDisplayOrderRef;
-  GroupState? _lastGroupStateRef;
-  Map<double, T>? _lastRowsByIdRef;
+  // -- Derived-view memoization ---------------------------------------------
+  // `computeDisplayRows` and `state.effectiveColumns` both allocate a fresh
+  // list on every call. The quadrants key their `_cellCache` on list
+  // *identity* (see GridUnpinnedQuadrant.didUpdateWidget), so recomputing
+  // these per emission would leave the cache permanently cold and rebuild the
+  // whole viewport for state changes the cells don't even depend on. Memoize
+  // each on exactly the state slices it derives from.
+  List<GridDisplayRow<T>> _displayRows = const [];
+  List<double>? _displayRowsOrderRef;
+  Map<double, T>? _displayRowsByIdRef;
+  GroupState? _displayRowsGroupRef;
+  List<DataGridColumn<T>>? _displayRowsColumnsRef;
+
+  List<DataGridColumn<T>> _effectiveColumns = const [];
+  List<DataGridColumn<T>>? _effectiveColumnsRef;
+  SelectionMode? _effectiveColumnsModeRef;
+
+  // -- Stable views over the Freezed collections -----------------------------
+  // `DataGridState.columns` / `rowsById` / `displayOrder` are Freezed
+  // collection getters, and Freezed wraps those in a **fresh**
+  // `EqualUnmodifiable*View` on every single access:
+  //
+  //   Map<double, T> get rowsById {
+  //     if (_rowsById is EqualUnmodifiableMapView) return _rowsById;
+  //     return EqualUnmodifiableMapView(_rowsById);   // new object, every call
+  //   }
+  //
+  // So `identical(state.rowsById, state.rowsById)` is **false**, and every
+  // identity-based reuse check downstream (the quadrants' `_cellCache`, the
+  // row-height delegate's structural-change guard) silently always fired.
+  // These views do override `==` to compare their *sources*, which for a plain
+  // List/Map is identity — so `==` is an O(1) "same underlying collection?"
+  // test. Latch the view whenever that test says the source is unchanged, and
+  // hand the latched instance downstream so `identical` works again.
+  List<DataGridColumn<T>> _columnsView = const [];
+  Map<double, T> _rowsByIdView = const {};
+  List<double> _displayOrderView = const [];
+
+  void _syncStateViews(DataGridState<T> state) {
+    final columns = state.columns;
+    if (_columnsView != columns) _columnsView = columns;
+    final rowsById = state.rowsById;
+    if (_rowsByIdView != rowsById) _rowsByIdView = rowsById;
+    final displayOrder = state.displayOrder;
+    if (_displayOrderView != displayOrder) _displayOrderView = displayOrder;
+  }
 
   // -- Auto header height --------------------------------------------------
   double _headerHeight = 48.0;
+
+  /// The flattened display-row list for [state], reusing the previous list
+  /// whenever every input it derives from is unchanged. Preserving list
+  /// identity is what keeps the quadrants' cell caches warm across emissions.
+  List<GridDisplayRow<T>> _resolveDisplayRows(DataGridState<T> state) {
+    if (identical(_displayRowsOrderRef, _displayOrderView) &&
+        identical(_displayRowsByIdRef, _rowsByIdView) &&
+        identical(_displayRowsGroupRef, state.group) &&
+        identical(_displayRowsColumnsRef, _columnsView)) {
+      return _displayRows;
+    }
+    _displayRowsOrderRef = _displayOrderView;
+    _displayRowsByIdRef = _rowsByIdView;
+    _displayRowsGroupRef = state.group;
+    _displayRowsColumnsRef = _columnsView;
+    return _displayRows = computeDisplayRows<T>(
+      displayOrder: _displayOrderView,
+      rowsById: _rowsByIdView,
+      columns: _columnsView,
+      group: state.group,
+    );
+  }
+
+  /// [DataGridState.effectiveColumns] is a getter that allocates a new list
+  /// (and a new selection column) on every access under multi-select. Memoize
+  /// it on the two slices it actually depends on.
+  List<DataGridColumn<T>> _resolveEffectiveColumns(DataGridState<T> state) {
+    if (identical(_effectiveColumnsRef, _columnsView) &&
+        _effectiveColumnsModeRef == state.selection.mode) {
+      return _effectiveColumns;
+    }
+    _effectiveColumnsRef = _columnsView;
+    _effectiveColumnsModeRef = state.selection.mode;
+    return _effectiveColumns = state.selection.mode == SelectionMode.multiple
+        ? [DataGridColumn<T>.selection(pinned: true), ..._columnsView]
+        : _columnsView;
+  }
+
+  /// [DataGridState]'s generated `==` deep-compares `columns`, `rowsById` and
+  /// `displayOrder` with [DeepCollectionEquality] — an O(n) walk of every row,
+  /// run on every emission if used as the stream's `distinct` predicate. These
+  /// three are replaced wholesale on a real change and never mutated in place,
+  /// so identity decides them correctly and in constant time; the small
+  /// sub-states keep value equality.
+  bool _stateUnchanged(DataGridState<T> a, DataGridState<T> b) {
+    if (identical(a, b)) return true;
+    // `==` on these three is a source-identity check (see _syncStateViews),
+    // not the O(n) deep compare Freezed's own `==` would do.
+    return a.columns == b.columns &&
+        a.rowsById == b.rowsById &&
+        a.displayOrder == b.displayOrder &&
+        a.selection == b.selection &&
+        a.sort == b.sort &&
+        a.filter == b.filter &&
+        a.group == b.group &&
+        a.edit == b.edit &&
+        a.pagination == b.pagination &&
+        a.totalItems == b.totalItems &&
+        a.isLoading == b.isLoading &&
+        a.loadingMessage == b.loadingMessage;
+  }
 
   @override
   void initState() {
@@ -151,35 +244,24 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
     _scrollController = widget.scrollController ?? GridScrollController();
     _filterWidget = widget.filterWidget ?? const DefaultFilterWidget();
     _themeData = widget.theme ?? DataGridThemeData.defaultTheme();
-    _headerHeight =
-        widget.autoHeaderHeight?.estimatedHeight ??
-        _themeData.dimensions.headerHeight;
-    _activeCellSubscription = widget.controller.state$
-        .map((s) => s.selection.activeCellId)
-        .distinct()
-        .skip(1)
-        .listen((cellId) {
-          if (cellId != null && mounted) {
-            WidgetsBinding.instance.addPostFrameCallback(
-              (_) => _ensureCellVisible(cellId),
-            );
-          }
-        });
+    _headerHeight = widget.autoHeaderHeight?.estimatedHeight ?? _themeData.dimensions.headerHeight;
+    _activeCellSubscription = widget.controller.state$.map((s) => s.selection.activeCellId).distinct().skip(1).listen((cellId) {
+      if (cellId != null && mounted) {
+        WidgetsBinding.instance.addPostFrameCallback((_) => _ensureCellVisible(cellId));
+      }
+    });
     // On WASM web the browser's focus system does not automatically return
     // keyboard focus to Flutter when the editing TextField is removed from the
     // widget tree.  Explicitly reclaim focus on the grid's Focus node so that
     // keyboard navigation (arrow keys, Ctrl+C, etc.) keeps working after an
     // edit is committed or cancelled.
-    _editSubscription = widget.controller.state$
-        .map((s) => s.edit.isEditing)
-        .distinct()
-        .listen((isEditing) {
-          if (!isEditing && mounted) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (mounted) _gridFocusNode.requestFocus();
-            });
-          }
+    _editSubscription = widget.controller.state$.map((s) => s.edit.isEditing).distinct().listen((isEditing) {
+      if (!isEditing && mounted) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _gridFocusNode.requestFocus();
         });
+      }
+    });
   }
 
   @override
@@ -214,44 +296,30 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
     // scrolling stays correct when grouping reorders/interleaves rows. If the
     // row is hidden inside a collapsed group it isn't in this list at all —
     // skip the scroll rather than guessing a position (known v1 limitation).
-    final rowIndex = _lastDisplayRows.indexWhere(
-      (r) => r is GridDataRow<T> && r.rowId == rowId,
-    );
+    final rowIndex = _displayRows.indexWhere((r) => r is GridDataRow<T> && r.rowId == rowId);
     if (rowIndex >= 0) {
       final vCtrl = _scrollController.verticalController;
       if (vCtrl.hasClients) {
-        final cellTop = _rowMetrics.offsetOf(rowIndex);
-        final cellBottom = cellTop + _rowMetrics.heightOf(rowIndex);
+        final cellTop = rowIndex * _rowHeight;
+        final cellBottom = cellTop + _rowHeight;
         final vOffset = vCtrl.offset;
         final maxV = vCtrl.position.maxScrollExtent;
         if (cellTop < vOffset) {
-          vCtrl.animateTo(
-            cellTop.clamp(0.0, maxV),
-            duration: const Duration(milliseconds: 150),
-            curve: Curves.easeOut,
-          );
+          vCtrl.animateTo(cellTop.clamp(0.0, maxV), duration: const Duration(milliseconds: 150), curve: Curves.easeOut);
         } else if (cellBottom > vOffset + _viewportHeight) {
-          vCtrl.animateTo(
-            (cellBottom - _viewportHeight).clamp(0.0, maxV),
-            duration: const Duration(milliseconds: 150),
-            curve: Curves.easeOut,
-          );
+          vCtrl.animateTo((cellBottom - _viewportHeight).clamp(0.0, maxV), duration: const Duration(milliseconds: 150), curve: Curves.easeOut);
         }
       }
     }
 
     // --- Horizontal ---
-    final visibleColumns = state.effectiveColumns
-        .where((c) => c.visible)
-        .toList();
+    final visibleColumns = _resolveEffectiveColumns(state).where((c) => c.visible).toList();
     final colIndex = visibleColumns.indexWhere((c) => c.id == colId);
     if (colIndex < 0) return;
 
     if (visibleColumns[colIndex].pinned) return; // always visible
 
-    final pinnedWidth = visibleColumns
-        .where((c) => c.pinned)
-        .fold(0.0, (sum, c) => sum + c.width);
+    final pinnedWidth = visibleColumns.where((c) => c.pinned).fold(0.0, (sum, c) => sum + c.width);
 
     final unpinnedColumns = visibleColumns.where((c) => !c.pinned).toList();
     final unpinnedColIndex = unpinnedColumns.indexWhere((c) => c.id == colId);
@@ -269,17 +337,9 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
       final hOffset = hCtrl.offset;
       final maxH = hCtrl.position.maxScrollExtent;
       if (cellLeft < hOffset) {
-        hCtrl.animateTo(
-          cellLeft.clamp(0.0, maxH),
-          duration: const Duration(milliseconds: 150),
-          curve: Curves.easeOut,
-        );
+        hCtrl.animateTo(cellLeft.clamp(0.0, maxH), duration: const Duration(milliseconds: 150), curve: Curves.easeOut);
       } else if (cellRight > hOffset + scrollableWidth) {
-        hCtrl.animateTo(
-          (cellRight - scrollableWidth).clamp(0.0, maxH),
-          duration: const Duration(milliseconds: 150),
-          curve: Curves.easeOut,
-        );
+        hCtrl.animateTo((cellRight - scrollableWidth).clamp(0.0, maxH), duration: const Duration(milliseconds: 150), curve: Curves.easeOut);
       }
     }
   }
@@ -292,29 +352,19 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
     }
 
     final isShift = HardwareKeyboard.instance.isShiftPressed;
-    final isCtrlOrMeta =
-        HardwareKeyboard.instance.isControlPressed ||
-        HardwareKeyboard.instance.isMetaPressed;
+    final isCtrlOrMeta = HardwareKeyboard.instance.isControlPressed || HardwareKeyboard.instance.isMetaPressed;
 
     if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
-      widget.controller.addEvent(
-        NavigateCellEvent(CellNavDirection.up, extend: isShift),
-      );
+      widget.controller.addEvent(NavigateCellEvent(CellNavDirection.up, extend: isShift));
       return KeyEventResult.handled;
     } else if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
-      widget.controller.addEvent(
-        NavigateCellEvent(CellNavDirection.down, extend: isShift),
-      );
+      widget.controller.addEvent(NavigateCellEvent(CellNavDirection.down, extend: isShift));
       return KeyEventResult.handled;
     } else if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
-      widget.controller.addEvent(
-        NavigateCellEvent(CellNavDirection.left, extend: isShift),
-      );
+      widget.controller.addEvent(NavigateCellEvent(CellNavDirection.left, extend: isShift));
       return KeyEventResult.handled;
     } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
-      widget.controller.addEvent(
-        NavigateCellEvent(CellNavDirection.right, extend: isShift),
-      );
+      widget.controller.addEvent(NavigateCellEvent(CellNavDirection.right, extend: isShift));
       return KeyEventResult.handled;
     } else if (event.logicalKey == LogicalKeyboardKey.escape) {
       widget.controller.addEvent(ClearCellSelectionEvent());
@@ -353,67 +403,34 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
   @override
   Widget build(BuildContext context) {
     final autoHeaderHeight = widget.autoHeaderHeight;
-    final effectiveHeaderHeight = autoHeaderHeight != null
-        ? _headerHeight
-        : widget.headerHeight ?? _themeData.dimensions.headerHeight;
-    final effectiveRowHeight =
-        widget.rowHeight ?? _themeData.dimensions.rowHeight;
+    final effectiveHeaderHeight = autoHeaderHeight != null ? _headerHeight : widget.headerHeight ?? _themeData.dimensions.headerHeight;
+    final effectiveRowHeight = widget.rowHeight ?? _themeData.dimensions.rowHeight;
 
     return DataGridTheme(
       data: _themeData,
       child: StreamBuilder<DataGridState<T>>(
-        stream: widget.controller.state$.debounceTime(
-          (const Duration(milliseconds: 16)),
-        ),
+        stream: widget.controller.state$.debounceTime(const Duration(milliseconds: 10)).distinct(_stateUnchanged),
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
           }
 
           final state = snapshot.data!;
-          final displayRows = computeDisplayRows<T>(
-            displayOrder: state.displayOrder,
-            rowsById: state.rowsById,
-            columns: state.columns,
-            group: state.group,
-          );
-          _lastDisplayRows = displayRows;
+          _syncStateViews(state);
+          final displayRows = _resolveDisplayRows(state);
+          final effectiveColumns = _resolveEffectiveColumns(state);
           final rowCount = displayRows.length;
-          final columnCount = state.effectiveColumns.length;
+          final columnCount = effectiveColumns.length;
 
-          final autoRowHeight = widget.autoRowHeight;
-          if (autoRowHeight != null) {
-            final delegate =
-                _rowHeightDelegate ??=
-                    autoRowHeight.delegate ?? IndexedRowHeightDelegate();
-            final structuralChange =
-                !identical(_lastDisplayOrderRef, state.displayOrder) ||
-                !identical(_lastGroupStateRef, state.group) ||
-                !identical(_lastRowsByIdRef, state.rowsById);
-            if (structuralChange) {
-              _lastDisplayOrderRef = state.displayOrder;
-              _lastGroupStateRef = state.group;
-              _lastRowsByIdRef = state.rowsById;
-              final rowIds = <double?>[
-                for (final r in displayRows)
-                  if (r is GridDataRow<T>) r.rowId else null,
-              ];
-              delegate.rebuild(
-                rowIds,
-                estimatedHeight: autoRowHeight.estimatedHeight,
-              );
-            }
-            _rowMetrics = AutoRowMetrics(delegate);
-          } else {
-            _rowHeightDelegate = null;
-            _rowMetrics = FixedRowMetrics(effectiveRowHeight);
-          }
+          _rowHeight = effectiveRowHeight;
 
           return DataGridInherited<T>(
             controller: widget.controller,
             scrollController: _scrollController,
             state: state,
             displayRows: displayRows,
+            effectiveColumns: effectiveColumns,
+            rowsById: _rowsByIdView,
             gridFocusNode: _gridFocusNode,
             child: Focus(
               autofocus: true,
@@ -421,69 +438,33 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
               onKeyEvent: (node, event) => _handleKeyEvent(event),
               child: LayoutBuilder(
                 builder: (context, constraints) {
-                  final paginationHeight =
-                      (widget.showPagination && state.pagination.enabled)
-                      ? 56.0
-                      : 0.0;
-                  final hasFilterableColumns = state.columns.any(
-                    (col) => col.filterable && col.visible,
-                  );
-                  final filterRowHeight = hasFilterableColumns
-                      ? _themeData.dimensions.filterRowHeight
-                      : 0.0;
-                  final availableHeight =
-                      constraints.maxHeight -
-                      effectiveHeaderHeight -
-                      filterRowHeight -
-                      paginationHeight;
+                  final paginationHeight = (widget.showPagination && state.pagination.enabled) ? 56.0 : 0.0;
+                  final hasFilterableColumns = state.columns.any((col) => col.filterable && col.visible);
+                  final filterRowHeight = hasFilterableColumns ? _themeData.dimensions.filterRowHeight : 0.0;
+                  final availableHeight = constraints.maxHeight - effectiveHeaderHeight - filterRowHeight - paginationHeight;
 
                   final double bodyHeight;
 
-                  final contentHeight = _rowMetrics.offsetOf(rowCount);
-                  if (state.pagination.enabled &&
-                      state.displayOrder.isNotEmpty) {
-                    // Auto row-height can't know an unmeasured page's real
-                    // height without pre-measuring it (which would defeat
-                    // virtualization), so this falls back to the estimate —
-                    // the body itself stays fully virtualized regardless.
-                    final approxRowHeightForPagination =
-                        autoRowHeight?.estimatedHeight ?? effectiveRowHeight;
-                    final requiredHeight =
-                        state.pagination.pageSize *
-                        approxRowHeightForPagination;
-                    bodyHeight = requiredHeight <= availableHeight
-                        ? requiredHeight
-                        : availableHeight;
+                  final contentHeight = rowCount * effectiveRowHeight;
+                  if (state.pagination.enabled && state.displayOrder.isNotEmpty) {
+                    final requiredHeight = state.pagination.pageSize * effectiveRowHeight;
+                    bodyHeight = requiredHeight <= availableHeight ? requiredHeight : availableHeight;
                   } else {
-                    bodyHeight = contentHeight < availableHeight
-                        ? contentHeight
-                        : availableHeight;
+                    bodyHeight = contentHeight < availableHeight ? contentHeight : availableHeight;
                   }
 
-                  final Widget bodyChild = CustomLayoutGridBody<T>(
-                    rowMetrics: _rowMetrics,
-                    cacheExtent: widget.cacheExtent,
-                    autoRowHeight: autoRowHeight,
-                  );
+                  final Widget bodyChild = CustomLayoutGridBody<T>(rowHeight: effectiveRowHeight, cacheExtent: widget.cacheExtent);
 
-                  final bodyWidget = SizedBox(
-                    height: bodyHeight,
-                    child: bodyChild,
-                  );
+                  final bodyWidget = SizedBox(height: bodyHeight, child: bodyChild);
 
-                  final totalColumnWidth = state.effectiveColumns
-                      .where((col) => col.visible)
-                      .fold<double>(0.0, (sum, col) => sum + col.width);
-                  final bodyWidth = totalColumnWidth < constraints.maxWidth
-                      ? totalColumnWidth
-                      : constraints.maxWidth;
+                  final totalColumnWidth = effectiveColumns.where((col) => col.visible).fold<double>(0.0, (sum, col) => sum + col.width);
+                  final bodyWidth = totalColumnWidth < constraints.maxWidth ? totalColumnWidth : constraints.maxWidth;
 
                   _viewportHeight = bodyHeight;
                   _viewportWidth = bodyWidth;
 
                   return Semantics(
-                    label:
-                        'Data grid with $rowCount rows and $columnCount columns',
+                    label: 'Data grid with $rowCount rows and $columnCount columns',
                     child: SizedBox(
                       width: bodyWidth,
                       child: Stack(
@@ -495,23 +476,13 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
                                 defaultFilterWidget: _filterWidget,
                                 headerHeight: effectiveHeaderHeight,
                                 autoHeaderHeight: autoHeaderHeight,
-                                onHeightChanged: autoHeaderHeight != null
-                                    ? _onHeaderHeightChanged
-                                    : null,
+                                onHeightChanged: autoHeaderHeight != null ? _onHeaderHeightChanged : null,
                               ),
                               bodyWidget,
-                              if (widget.showPagination &&
-                                  state.pagination.enabled)
-                                widget.paginationBuilder != null
-                                    ? widget.paginationBuilder!(context, state)
-                                    : DataGridPagination<T>(),
+                              if (widget.showPagination && state.pagination.enabled) widget.paginationBuilder != null ? widget.paginationBuilder!(context, state) : DataGridPagination<T>(),
                             ],
                           ),
-                          DataGridLoadingScope<T>(
-                            loadingOverlayBuilder: widget.loadingOverlayBuilder,
-                            backdropColor: widget.loadingBackdropColor,
-                            indicatorColor: widget.loadingIndicatorColor,
-                          ),
+                          DataGridLoadingScope<T>(loadingOverlayBuilder: widget.loadingOverlayBuilder, backdropColor: widget.loadingBackdropColor, indicatorColor: widget.loadingIndicatorColor),
                         ],
                       ),
                     ),

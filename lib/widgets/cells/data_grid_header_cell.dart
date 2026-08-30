@@ -37,29 +37,6 @@ class DataGridHeaderCell extends StatefulWidget {
 }
 
 class _DataGridHeaderCellState extends State<DataGridHeaderCell> {
-  bool _isResizing = false;
-  bool _isHovering = false;
-
-  /// Locally-tracked width so every drag-update delta is applied to the
-  /// most-recent value rather than a potentially stale rebuild value.
-  late double _currentWidth;
-
-  @override
-  void initState() {
-    super.initState();
-    _currentWidth = widget.column.width;
-  }
-
-  @override
-  void didUpdateWidget(DataGridHeaderCell oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    // Sync from the widget tree only when the user is not actively dragging;
-    // during a drag we own the width value.
-    if (!_isResizing) {
-      _currentWidth = widget.column.width;
-    }
-  }
-
   void _handleSortTap(bool isSorted, SortColumn? sortColumn) {
     if (!isSorted) {
       widget.onSort(SortDirection.ascending);
@@ -138,51 +115,96 @@ class _DataGridHeaderCellState extends State<DataGridHeaderCell> {
                 right: 0,
                 top: 0,
                 bottom: 0,
-                child: MouseRegion(
-                  cursor: SystemMouseCursors.resizeColumn,
-                  onEnter: (_) => setState(() => _isHovering = true),
-                  onExit: (_) => setState(() => _isHovering = false),
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onHorizontalDragStart: (_) {
-                      setState(() => _isResizing = true);
-                    },
-                    onHorizontalDragUpdate: (details) {
-                      if (_isResizing) {
-                        final theme = DataGridTheme.of(context);
-                        // Clamp per-event delta to prevent jarring jumps from
-                        // coalesced or late-arriving pointer events.
-                        final delta = details.delta.dx.clamp(-80.0, 80.0);
-                        _currentWidth = (_currentWidth + delta).clamp(
-                          theme.dimensions.columnMinWidth,
-                          theme.dimensions.columnMaxWidth,
-                        );
-                        widget.onResize(_currentWidth);
-                      }
-                    },
-                    onHorizontalDragEnd: (_) {
-                      setState(() => _isResizing = false);
-                    },
-                    // Use a wider hit area (16 px) than the visual indicator so
-                    // the handle is easy to grab without pixel-perfect aiming.
-                    child: SizedBox(
-                      width: 16.0,
-                      child: Center(
-                        child: Container(
-                          width: theme.dimensions.resizeHandleWidth,
-                          color: _isResizing
-                              ? theme.colors.resizeHandleActiveColor
-                              : _isHovering
-                              ? theme.colors.resizeHandleActiveColor
-                                    .withValues(alpha: 0.45)
-                              : Colors.transparent,
-                        ),
-                      ),
-                    ),
-                  ),
+                child: _ColumnResizeHandle(
+                  initialWidth: widget.column.width,
+                  onResize: widget.onResize,
                 ),
               ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// The drag handle on a resizable column's trailing edge.
+///
+/// Split out of [DataGridHeaderCell] so its hover/drag `setState` repaints only
+/// the handle. While this lived in the header cell, every pointer enter/exit
+/// and every drag frame rebuilt the title text, the sort icon and the cell's
+/// container decoration too — none of which depend on that state.
+class _ColumnResizeHandle extends StatefulWidget {
+  final double initialWidth;
+  final void Function(double newWidth) onResize;
+
+  const _ColumnResizeHandle({
+    required this.initialWidth,
+    required this.onResize,
+  });
+
+  @override
+  State<_ColumnResizeHandle> createState() => _ColumnResizeHandleState();
+}
+
+class _ColumnResizeHandleState extends State<_ColumnResizeHandle> {
+  bool _isResizing = false;
+  bool _isHovering = false;
+
+  /// Locally-tracked width so every drag-update delta is applied to the
+  /// most-recent value rather than a potentially stale rebuild value.
+  late double _currentWidth = widget.initialWidth;
+
+  @override
+  void didUpdateWidget(_ColumnResizeHandle oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Sync from the widget tree only when the user is not actively dragging;
+    // during a drag we own the width value.
+    if (!_isResizing) {
+      _currentWidth = widget.initialWidth;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = DataGridTheme.of(context);
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.resizeColumn,
+      onEnter: (_) => setState(() => _isHovering = true),
+      onExit: (_) => setState(() => _isHovering = false),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onHorizontalDragStart: (_) {
+          setState(() => _isResizing = true);
+        },
+        onHorizontalDragUpdate: (details) {
+          if (!_isResizing) return;
+          // Clamp per-event delta to prevent jarring jumps from coalesced or
+          // late-arriving pointer events.
+          final delta = details.delta.dx.clamp(-80.0, 80.0);
+          _currentWidth = (_currentWidth + delta).clamp(
+            theme.dimensions.columnMinWidth,
+            theme.dimensions.columnMaxWidth,
+          );
+          widget.onResize(_currentWidth);
+        },
+        onHorizontalDragEnd: (_) {
+          setState(() => _isResizing = false);
+        },
+        // Use a wider hit area (16 px) than the visual indicator so the handle
+        // is easy to grab without pixel-perfect aiming.
+        child: SizedBox(
+          width: 16.0,
+          child: Center(
+            child: Container(
+              width: theme.dimensions.resizeHandleWidth,
+              color: _isResizing
+                  ? theme.colors.resizeHandleActiveColor
+                  : _isHovering
+                  ? theme.colors.resizeHandleActiveColor.withValues(alpha: 0.45)
+                  : Colors.transparent,
+            ),
+          ),
         ),
       ),
     );
