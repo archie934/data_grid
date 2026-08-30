@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import 'package:flutter_data_grid/delegates/row_height_delegate.dart';
 
 /// Identifies a single cell in the grid by its row and column indices.
 class CellLayoutId {
@@ -17,6 +18,31 @@ class CellLayoutId {
 
   @override
   String toString() => 'CellLayoutId($row, $column)';
+}
+
+/// Auto-row-height measurement hook for [GridLayoutDelegate].
+///
+/// For any cell whose row isn't yet [RowHeightDelegate.isMeasured], the
+/// delegate lays it out with a loose height constraint (up to
+/// [maxHeightClamp]) instead of the usual tight fit, and reports the
+/// resolved size back via [onMeasured] — the same technique Flutter's own
+/// `Table`/`IntrinsicHeight` use internally. Once a row is measured, its
+/// cells fall back to the ordinary tight-constraint fast path, so this cost
+/// is paid once per row rather than every frame.
+class RowHeightMeasurement {
+  RowHeightMeasurement({
+    required this.delegate,
+    required this.maxHeightClamp,
+    required this.onMeasured,
+  });
+
+  final RowHeightDelegate delegate;
+  final double maxHeightClamp;
+
+  /// Called (possibly many times per frame, once per measured cell) with the
+  /// row index and its cell's resolved height. Callers batch these and take
+  /// the max per row before patching [delegate].
+  final void Function(int row, double measuredHeight) onMeasured;
 }
 
 /// A [MultiChildLayoutDelegate] that positions grid cells in viewport space.
@@ -40,11 +66,16 @@ class GridLayoutDelegate extends MultiChildLayoutDelegate {
   /// Width of the pinned-column area; added to unpinned cells' x positions.
   final double pinnedWidth;
 
+  /// When non-null, enables auto-row-height measurement (see
+  /// [RowHeightMeasurement]) instead of always laying out tight to [contentRects].
+  final RowHeightMeasurement? measurement;
+
   GridLayoutDelegate({
     required this.contentRects,
     required this.vOffset,
     this.hOffset,
     this.pinnedWidth = 0.0,
+    this.measurement,
   }) : super(
          relayout: hOffset != null
              ? Listenable.merge([hOffset, vOffset])
@@ -55,6 +86,7 @@ class GridLayoutDelegate extends MultiChildLayoutDelegate {
   void performLayout(Size size) {
     final hScroll = hOffset?.value ?? 0.0;
     final vScroll = vOffset.value;
+    final measurement = this.measurement;
 
     for (final entry in contentRects.entries) {
       final id = entry.key;
@@ -64,8 +96,21 @@ class GridLayoutDelegate extends MultiChildLayoutDelegate {
       final x = rect.left - hScroll + pinnedWidth;
       final y = rect.top - vScroll;
 
-      layoutChild(id, BoxConstraints.tight(rect.size));
-      positionChild(id, Offset(x, y));
+      if (measurement != null && !measurement.delegate.isMeasured(id.row)) {
+        final resolvedSize = layoutChild(
+          id,
+          BoxConstraints(
+            minWidth: rect.width,
+            maxWidth: rect.width,
+            maxHeight: measurement.maxHeightClamp,
+          ),
+        );
+        positionChild(id, Offset(x, y));
+        measurement.onMeasured(id.row, resolvedSize.height);
+      } else {
+        layoutChild(id, BoxConstraints.tight(rect.size));
+        positionChild(id, Offset(x, y));
+      }
     }
   }
 
@@ -74,6 +119,7 @@ class GridLayoutDelegate extends MultiChildLayoutDelegate {
     return !identical(contentRects, oldDelegate.contentRects) ||
         !identical(hOffset, oldDelegate.hOffset) ||
         !identical(vOffset, oldDelegate.vOffset) ||
-        pinnedWidth != oldDelegate.pinnedWidth;
+        pinnedWidth != oldDelegate.pinnedWidth ||
+        !identical(measurement, oldDelegate.measurement);
   }
 }

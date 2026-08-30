@@ -1,5 +1,7 @@
 import 'package:flutter/rendering.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_data_grid/models/auto_height.dart';
 import 'package:flutter_data_grid/models/data/column.dart';
 import 'package:flutter_data_grid/models/data/row.dart';
 
@@ -15,6 +17,15 @@ class DataGridHeaderViewport<T extends DataGridRow>
   final BoxDecoration? pinnedDecoration;
   final List<int> childColumnIds;
 
+  /// When non-null, the header measures its content and sizes itself to fit
+  /// (clamped to [AutoHeaderHeight.minHeight]/[AutoHeaderHeight.maxHeight])
+  /// instead of filling the incoming tight height constraint.
+  final AutoHeaderHeight? autoHeaderHeight;
+
+  /// Called after every auto-height layout with the resolved height, only
+  /// when it differs from the previously reported value.
+  final ValueChanged<double>? onHeightChanged;
+
   const DataGridHeaderViewport({
     super.key,
     required this.columns,
@@ -23,6 +34,8 @@ class DataGridHeaderViewport<T extends DataGridRow>
     this.pinnedDecoration,
     required super.children,
     required this.childColumnIds,
+    this.autoHeaderHeight,
+    this.onHeightChanged,
   });
 
   @override
@@ -33,6 +46,8 @@ class DataGridHeaderViewport<T extends DataGridRow>
       pinnedBackgroundColor: pinnedBackgroundColor,
       pinnedDecoration: pinnedDecoration,
       childColumnIds: childColumnIds,
+      autoHeaderHeight: autoHeaderHeight,
+      onHeightChanged: onHeightChanged,
     );
   }
 
@@ -46,7 +61,9 @@ class DataGridHeaderViewport<T extends DataGridRow>
       ..horizontalController = horizontalController
       ..pinnedBackgroundColor = pinnedBackgroundColor
       ..pinnedDecoration = pinnedDecoration
-      ..childColumnIds = childColumnIds;
+      ..childColumnIds = childColumnIds
+      ..autoHeaderHeight = autoHeaderHeight
+      ..onHeightChanged = onHeightChanged;
   }
 }
 
@@ -60,11 +77,14 @@ class RenderDataGridHeader<T extends DataGridRow> extends RenderBox
     required Color pinnedBackgroundColor,
     BoxDecoration? pinnedDecoration,
     required List<int> childColumnIds,
+    AutoHeaderHeight? autoHeaderHeight,
+    this.onHeightChanged,
   }) : _columns = columns,
        _horizontalController = horizontalController,
        _pinnedBackgroundColor = pinnedBackgroundColor,
        _pinnedDecoration = pinnedDecoration,
-       _childColumnIds = childColumnIds;
+       _childColumnIds = childColumnIds,
+       _autoHeaderHeight = autoHeaderHeight;
 
   List<DataGridColumn<T>> _columns;
   List<DataGridColumn<T>> get columns => _columns;
@@ -114,6 +134,21 @@ class RenderDataGridHeader<T extends DataGridRow> extends RenderBox
     _childColumnIds = value;
     markNeedsLayout();
   }
+
+  AutoHeaderHeight? _autoHeaderHeight;
+  AutoHeaderHeight? get autoHeaderHeight => _autoHeaderHeight;
+  set autoHeaderHeight(AutoHeaderHeight? value) {
+    if (_autoHeaderHeight == value) return;
+    _autoHeaderHeight = value;
+    markNeedsLayout();
+  }
+
+  /// Called after every auto-height layout with the resolved height, only
+  /// when it differs from the previously reported value. Reassigning this
+  /// doesn't require a relayout.
+  ValueChanged<double>? onHeightChanged;
+
+  double _lastReportedHeight = -1;
 
   double get _horizontalOffset =>
       _horizontalController.hasClients ? _horizontalController.offset : 0.0;
@@ -170,7 +205,10 @@ class RenderDataGridHeader<T extends DataGridRow> extends RenderBox
 
   @override
   void performLayout() {
-    final height = constraints.maxHeight;
+    final autoHeaderHeight = _autoHeaderHeight;
+    final height = autoHeaderHeight != null
+        ? _measureAutoHeight(autoHeaderHeight)
+        : constraints.maxHeight;
 
     _pinnedWidth = 0;
     for (final col in _columns) {
@@ -201,6 +239,54 @@ class RenderDataGridHeader<T extends DataGridRow> extends RenderBox
     }
 
     size = constraints.constrain(Size(constraints.maxWidth, height));
+  }
+
+  /// Pass 1 of the two-pass auto-height layout: lays out each header cell
+  /// with a loose height (up to [AutoHeaderHeight.maxHeight]) and takes the
+  /// max resolved height. The second, tight-constraint pass that makes every
+  /// cell fill that resolved height happens in the caller ([performLayout]).
+  double _measureAutoHeight(AutoHeaderHeight autoHeaderHeight) {
+    double measured = 0;
+    RenderBox? child = firstChild;
+    int childIndex = 0;
+    while (child != null) {
+      final parentData = child.parentData! as HeaderChildData;
+      final columnId = _childColumnIds[childIndex];
+      parentData.columnId = columnId;
+
+      final column = columnById[columnId];
+      if (column != null && column.visible) {
+        child.layout(
+          BoxConstraints(
+            minWidth: column.width,
+            maxWidth: column.width,
+            maxHeight: autoHeaderHeight.maxHeight,
+          ),
+          parentUsesSize: true,
+        );
+        if (child.size.height > measured) measured = child.size.height;
+      }
+
+      child = parentData.nextSibling;
+      childIndex++;
+    }
+
+    final resolved = measured.clamp(
+      autoHeaderHeight.minHeight,
+      autoHeaderHeight.maxHeight,
+    );
+
+    if ((resolved - _lastReportedHeight).abs() > 0.5) {
+      _lastReportedHeight = resolved;
+      final callback = onHeightChanged;
+      if (callback != null) {
+        SchedulerBinding.instance.addPostFrameCallback((_) {
+          callback(resolved);
+        });
+      }
+    }
+
+    return resolved;
   }
 
   @override

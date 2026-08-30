@@ -3,7 +3,9 @@ import 'dart:ui';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_data_grid/models/auto_height.dart';
 import 'package:flutter_data_grid/models/data/column.dart';
 import 'package:flutter_data_grid/models/data/grid_display_row.dart';
 import 'package:flutter_data_grid/models/data/row.dart';
@@ -11,8 +13,10 @@ import 'package:flutter_data_grid/models/events/cell_selection_events.dart';
 import 'package:flutter_data_grid/theme/data_grid_theme.dart';
 import 'package:flutter_data_grid/widgets/custom_layout/external_scroll_position.dart';
 import 'package:flutter_data_grid/widgets/custom_layout/full_width_row_band_layer.dart';
+import 'package:flutter_data_grid/widgets/custom_layout/grid_layout_delegate.dart';
 import 'package:flutter_data_grid/widgets/custom_layout/grid_pinned_quadrant.dart';
 import 'package:flutter_data_grid/widgets/custom_layout/grid_unpinned_quadrant.dart';
+import 'package:flutter_data_grid/widgets/custom_layout/row_metrics.dart';
 import 'package:flutter_data_grid/widgets/overlays/group_header_band.dart';
 import 'package:flutter_data_grid/widgets/scroll/vertical_scrollbar.dart';
 import 'package:flutter_data_grid/widgets/scroll/horizontal_scrollbar.dart';
@@ -21,15 +25,21 @@ import 'package:flutter_data_grid/widgets/data_grid_inherited.dart';
 
 part 'grid_body_scroll_mixin.dart';
 part 'grid_body_drag_select_mixin.dart';
+part 'grid_body_row_height_mixin.dart';
 
 class CustomLayoutGridBody<T extends DataGridRow> extends StatefulWidget {
-  final double rowHeight;
+  final RowMetrics rowMetrics;
   final double cacheExtent;
+
+  /// Non-null enables auto row-height measurement; must be non-null iff
+  /// [rowMetrics] is an [AutoRowMetrics].
+  final AutoRowHeight? autoRowHeight;
 
   const CustomLayoutGridBody({
     super.key,
-    required this.rowHeight,
+    required this.rowMetrics,
     required this.cacheExtent,
+    this.autoRowHeight,
   });
 
   @override
@@ -42,7 +52,8 @@ class _CustomLayoutGridBodyState<T extends DataGridRow>
     with
         TickerProviderStateMixin,
         _GridBodyScrollMixin<T>,
-        _GridBodyDragSelectMixin<T>
+        _GridBodyDragSelectMixin<T>,
+        _GridBodyRowHeightMixin<T>
     implements ScrollContext {
   @override
   TickerProvider get vsync => this;
@@ -142,8 +153,10 @@ class _CustomLayoutGridBodyState<T extends DataGridRow>
         }
 
         final rowCount = rows.length;
-        final totalHeight = rowCount * widget.rowHeight;
+        final rowMetrics = widget.rowMetrics;
+        final totalHeight = rowMetrics.offsetOf(rowCount);
         final scrollableViewportWidth = viewportWidth - pinnedWidth;
+        final rowHeightMeasurement = _buildRowHeightMeasurement(rowMetrics);
 
         _syncScrollDimensions(
           scrollableViewportWidth: scrollableViewportWidth,
@@ -176,10 +189,11 @@ class _CustomLayoutGridBodyState<T extends DataGridRow>
                   rows: rows,
                   rowsById: state.rowsById,
                   rowCount: rowCount,
-                  rowHeight: widget.rowHeight,
+                  rowMetrics: rowMetrics,
                   cacheExtent: widget.cacheExtent,
                   hOffset: _hOffset,
                   vOffset: _vOffset,
+                  measurement: rowHeightMeasurement,
                 ),
               ),
               if (pinnedWidth > 0)
@@ -195,10 +209,11 @@ class _CustomLayoutGridBodyState<T extends DataGridRow>
                     rows: rows,
                     rowsById: state.rowsById,
                     rowCount: rowCount,
-                    rowHeight: widget.rowHeight,
+                    rowMetrics: rowMetrics,
                     cacheExtent: widget.cacheExtent,
                     backgroundColor: theme.colors.evenRowColor,
                     vOffset: _vOffset,
+                    measurement: rowHeightMeasurement,
                   ),
                 ),
               if (state.group.hasGroups)
@@ -207,7 +222,7 @@ class _CustomLayoutGridBodyState<T extends DataGridRow>
                     rows: rows,
                     viewportWidth: viewportWidth,
                     viewportHeight: viewportHeight,
-                    rowHeight: widget.rowHeight,
+                    rowMetrics: rowMetrics,
                     cacheExtent: widget.cacheExtent,
                     vOffset: _vOffset,
                     bandBuilder: (entry, rowIndex) {

@@ -5,6 +5,7 @@ import 'package:flutter_data_grid/models/data/grid_display_row.dart';
 import 'package:flutter_data_grid/models/data/row.dart';
 import 'package:flutter_data_grid/widgets/custom_layout/layout_grid_cell.dart';
 import 'package:flutter_data_grid/widgets/custom_layout/grid_layout_delegate.dart';
+import 'package:flutter_data_grid/widgets/custom_layout/row_metrics.dart';
 
 /// Tracks which row and column index ranges are currently inside the viewport
 /// (including cache extent buffer). Used to detect when the visible cell set
@@ -62,10 +63,11 @@ class GridUnpinnedQuadrant<T extends DataGridRow> extends StatefulWidget {
   final List<GridDisplayRow<T>> rows;
   final Map<double, T> rowsById;
   final int rowCount;
-  final double rowHeight;
+  final RowMetrics rowMetrics;
   final double cacheExtent;
   final ValueNotifier<double> hOffset;
   final ValueNotifier<double> vOffset;
+  final RowHeightMeasurement? measurement;
 
   const GridUnpinnedQuadrant({
     super.key,
@@ -77,10 +79,11 @@ class GridUnpinnedQuadrant<T extends DataGridRow> extends StatefulWidget {
     required this.rows,
     required this.rowsById,
     required this.rowCount,
-    required this.rowHeight,
+    required this.rowMetrics,
     required this.cacheExtent,
     required this.hOffset,
     required this.vOffset,
+    this.measurement,
   });
 
   @override
@@ -136,7 +139,7 @@ class _GridUnpinnedQuadrantState<T extends DataGridRow>
     if (old.viewportWidth != widget.viewportWidth ||
         old.viewportHeight != widget.viewportHeight ||
         old.pinnedWidth != widget.pinnedWidth ||
-        old.rowHeight != widget.rowHeight ||
+        old.rowMetrics != widget.rowMetrics ||
         old.rowCount != widget.rowCount ||
         old.cacheExtent != widget.cacheExtent ||
         !identical(old.columns, widget.columns) ||
@@ -166,19 +169,12 @@ class _GridUnpinnedQuadrantState<T extends DataGridRow>
         : widget.cacheExtent;
 
     // Row range
-    final firstVisibleRow = (vScroll / widget.rowHeight).floor().clamp(
-      0,
-      widget.rowCount,
+    final rowRange = widget.rowMetrics.visibleRowRange(
+      scrollOffset: vScroll,
+      viewportExtent: widget.viewportHeight,
+      cacheExtent: widget.cacheExtent,
+      rowCount: widget.rowCount,
     );
-    final visibleRowCount =
-        (widget.viewportHeight / widget.rowHeight).ceil() + 1;
-    final lastVisibleRow = (firstVisibleRow + visibleRowCount).clamp(
-      0,
-      widget.rowCount,
-    );
-    final bufferRows = (effectiveCacheExtent / widget.rowHeight).ceil();
-    final firstRow = (firstVisibleRow - bufferRows).clamp(0, widget.rowCount);
-    final lastRow = (lastVisibleRow + bufferRows).clamp(0, widget.rowCount);
 
     // Column range
     final scrollableViewportWidth = widget.viewportWidth - widget.pinnedWidth;
@@ -207,7 +203,12 @@ class _GridUnpinnedQuadrantState<T extends DataGridRow>
       }
     }
 
-    return _VisibleRange(firstRow, lastRow, firstColIdx, lastColIdx);
+    return _VisibleRange(
+      rowRange.firstRow,
+      rowRange.lastRow,
+      firstColIdx,
+      lastColIdx,
+    );
   }
 
   /// Computes [_children] and [_contentRects] for the current visible range.
@@ -246,9 +247,9 @@ class _GridUnpinnedQuadrantState<T extends DataGridRow>
           // space by subtracting the current scroll offsets.
           contentRects[cellId] = Rect.fromLTWH(
             contentX,
-            row * widget.rowHeight,
+            widget.rowMetrics.offsetOf(row),
             colWidth,
-            widget.rowHeight,
+            widget.rowMetrics.heightOf(row),
           );
 
           // Reuse the cached LayoutId for carry-over cells. Flutter detects the
@@ -312,6 +313,7 @@ class _GridUnpinnedQuadrantState<T extends DataGridRow>
           hOffset: widget.hOffset,
           vOffset: widget.vOffset,
           pinnedWidth: widget.pinnedWidth,
+          measurement: widget.measurement,
         ),
         children: _children,
       ),

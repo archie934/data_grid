@@ -30,6 +30,7 @@ class _MainAppState extends State<MainApp> {
 
   bool _paginationEnabled = true;
   bool _serverSidePagination = false;
+  bool _autoHeightEnabled = true;
   int _lastPage = 1;
 
   @override
@@ -139,7 +140,24 @@ class _MainAppState extends State<MainApp> {
         body: DataGrid<ProductRow>(
           controller: controller,
           theme: purpleTheme,
-          cacheExtent: 0,
+          // autoRowHeight relies on the cache-extent buffer to measure rows
+          // while they're still off-screen (see GridLayoutDelegate) — a zero
+          // buffer means every row's first layout happens exactly when it
+          // scrolls into view, so it visibly pops from the estimated height
+          // to the real one. Only pay for the buffer when auto height is on;
+          // the fixed-height path keeps the zero-buffer, exact-viewport-only
+          // rendering this example otherwise demonstrates.
+          cacheExtent: _autoHeightEnabled ? 800.0 : 0,
+          autoRowHeight: _autoHeightEnabled
+              ? const AutoRowHeight(
+                  estimatedHeight: 48.0,
+                  minHeight: 40.0,
+                  maxHeight: 260.0,
+                )
+              : null,
+          autoHeaderHeight: _autoHeightEnabled
+              ? const AutoHeaderHeight()
+              : null,
         ),
       ),
     );
@@ -159,6 +177,8 @@ class _MainAppState extends State<MainApp> {
             _buildPaginationToggle(),
             const SizedBox(width: 8),
             _buildServerSideToggle(),
+            const SizedBox(width: 8),
+            _buildAutoHeightToggle(),
             const SizedBox(width: 16),
           ],
         );
@@ -193,6 +213,21 @@ class _MainAppState extends State<MainApp> {
         Switch(
           value: _serverSidePagination,
           onChanged: _paginationEnabled ? _toggleServerSide : null,
+        ),
+      ],
+    );
+  }
+
+  /// Toggles `autoRowHeight`/`autoHeaderHeight` on the grid so the Photo and
+  /// Notes columns' effect on row height can be compared side by side with
+  /// the fixed-height behavior (which just clips/compresses that content).
+  Widget _buildAutoHeightToggle() {
+    return Row(
+      children: [
+        const Text('Auto height'),
+        Switch(
+          value: _autoHeightEnabled,
+          onChanged: (value) => setState(() => _autoHeightEnabled = value),
         ),
       ],
     );

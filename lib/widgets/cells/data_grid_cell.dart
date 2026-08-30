@@ -284,8 +284,15 @@ class _DefaultTextCell<T extends DataGridRow> extends StatelessWidget {
 
     return Padding(
       padding: theme.padding.cellPadding,
+      // heightFactor: 1.0 shrink-wraps Align to the text's actual height.
+      // Without it, Align expands to fill any bounded incoming height —
+      // harmless under the fixed row height (tight constraints always win
+      // over heightFactor), but under DataGrid.autoRowHeight's loose-but-
+      // bounded measurement pass it would report maxHeight as this cell's
+      // "measured" height regardless of content, defeating measurement.
       child: Align(
         alignment: Alignment.centerLeft,
+        heightFactor: 1.0,
         child: Text(
           scope.value?.toString() ?? '',
           overflow: TextOverflow.ellipsis,

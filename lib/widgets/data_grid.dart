@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_data_grid/controllers/data_grid_controller.dart';
 import 'package:flutter_data_grid/controllers/grid_scroll_controller.dart';
+import 'package:flutter_data_grid/delegates/row_height_delegate.dart';
+import 'package:flutter_data_grid/models/auto_height.dart';
 import 'package:flutter_data_grid/models/data/grid_display_row.dart';
 import 'package:flutter_data_grid/models/data/row.dart';
 import 'package:flutter_data_grid/models/state/grid_state.dart';
@@ -11,6 +13,7 @@ import 'package:flutter_data_grid/models/events/grid_events.dart';
 import 'package:flutter_data_grid/utils/grid_display_rows.dart';
 import 'package:flutter_data_grid/widgets/data_grid_header.dart';
 import 'package:flutter_data_grid/widgets/custom_layout/custom_layout_grid_body.dart';
+import 'package:flutter_data_grid/widgets/custom_layout/row_metrics.dart';
 import 'package:flutter_data_grid/widgets/data_grid_inherited.dart';
 import 'package:flutter_data_grid/widgets/data_grid_pagination.dart';
 import 'package:flutter_data_grid/widgets/overlays/loading_overlay.dart';
@@ -44,7 +47,16 @@ class DataGrid<T extends DataGridRow> extends StatefulWidget {
   final double? headerHeight;
 
   /// Height of each data row. Defaults to theme value if not specified.
+  /// Ignored when [autoRowHeight] is set.
   final double? rowHeight;
+
+  /// Opts rows into content-measured height instead of the fixed [rowHeight]
+  /// scalar. See [AutoRowHeight] for details and limitations.
+  final AutoRowHeight? autoRowHeight;
+
+  /// Opts the header row into content-measured height instead of the fixed
+  /// [headerHeight] scalar. See [AutoHeaderHeight] for details.
+  final AutoHeaderHeight? autoHeaderHeight;
 
   /// Default filter widget used for all filterable columns.
   ///
@@ -89,6 +101,8 @@ class DataGrid<T extends DataGridRow> extends StatefulWidget {
     this.scrollController,
     this.headerHeight,
     this.rowHeight,
+    this.autoRowHeight,
+    this.autoHeaderHeight,
     this.filterWidget,
     this.showLoadingOverlay = true,
     this.loadingOverlayBuilder,
@@ -114,8 +128,17 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
   StreamSubscription<bool>? _editSubscription;
   double _viewportHeight = 0;
   double _viewportWidth = 0;
-  double _effectiveRowHeight = 48.0;
+  RowMetrics _rowMetrics = const FixedRowMetrics(48.0);
   List<GridDisplayRow<T>> _lastDisplayRows = const [];
+
+  // -- Auto row height ---------------------------------------------------
+  RowHeightDelegate? _rowHeightDelegate;
+  List<double>? _lastDisplayOrderRef;
+  GroupState? _lastGroupStateRef;
+  Map<double, T>? _lastRowsByIdRef;
+
+  // -- Auto header height --------------------------------------------------
+  double _headerHeight = 48.0;
 
   @override
   void initState() {
@@ -128,6 +151,9 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
     _scrollController = widget.scrollController ?? GridScrollController();
     _filterWidget = widget.filterWidget ?? const DefaultFilterWidget();
     _themeData = widget.theme ?? DataGridThemeData.defaultTheme();
+    _headerHeight =
+        widget.autoHeaderHeight?.estimatedHeight ??
+        _themeData.dimensions.headerHeight;
     _activeCellSubscription = widget.controller.state$
         .map((s) => s.selection.activeCellId)
         .distinct()
@@ -194,8 +220,8 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
     if (rowIndex >= 0) {
       final vCtrl = _scrollController.verticalController;
       if (vCtrl.hasClients) {
-        final cellTop = rowIndex * _effectiveRowHeight;
-        final cellBottom = cellTop + _effectiveRowHeight;
+        final cellTop = _rowMetrics.offsetOf(rowIndex);
+        final cellBottom = cellTop + _rowMetrics.heightOf(rowIndex);
         final vOffset = vCtrl.offset;
         final maxV = vCtrl.position.maxScrollExtent;
         if (cellTop < vOffset) {
@@ -318,13 +344,20 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
     return KeyEventResult.ignored;
   }
 
+  void _onHeaderHeightChanged(double newHeight) {
+    if (!mounted) return;
+    if ((newHeight - _headerHeight).abs() < 0.5) return;
+    setState(() => _headerHeight = newHeight);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final effectiveHeaderHeight =
-        widget.headerHeight ?? _themeData.dimensions.headerHeight;
+    final autoHeaderHeight = widget.autoHeaderHeight;
+    final effectiveHeaderHeight = autoHeaderHeight != null
+        ? _headerHeight
+        : widget.headerHeight ?? _themeData.dimensions.headerHeight;
     final effectiveRowHeight =
         widget.rowHeight ?? _themeData.dimensions.rowHeight;
-    _effectiveRowHeight = effectiveRowHeight;
 
     return DataGridTheme(
       data: _themeData,
@@ -347,6 +380,34 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
           _lastDisplayRows = displayRows;
           final rowCount = displayRows.length;
           final columnCount = state.effectiveColumns.length;
+
+          final autoRowHeight = widget.autoRowHeight;
+          if (autoRowHeight != null) {
+            final delegate =
+                _rowHeightDelegate ??=
+                    autoRowHeight.delegate ?? IndexedRowHeightDelegate();
+            final structuralChange =
+                !identical(_lastDisplayOrderRef, state.displayOrder) ||
+                !identical(_lastGroupStateRef, state.group) ||
+                !identical(_lastRowsByIdRef, state.rowsById);
+            if (structuralChange) {
+              _lastDisplayOrderRef = state.displayOrder;
+              _lastGroupStateRef = state.group;
+              _lastRowsByIdRef = state.rowsById;
+              final rowIds = <double?>[
+                for (final r in displayRows)
+                  if (r is GridDataRow<T>) r.rowId else null,
+              ];
+              delegate.rebuild(
+                rowIds,
+                estimatedHeight: autoRowHeight.estimatedHeight,
+              );
+            }
+            _rowMetrics = AutoRowMetrics(delegate);
+          } else {
+            _rowHeightDelegate = null;
+            _rowMetrics = FixedRowMetrics(effectiveRowHeight);
+          }
 
           return DataGridInherited<T>(
             controller: widget.controller,
@@ -378,11 +439,18 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
 
                   final double bodyHeight;
 
-                  final contentHeight = rowCount * effectiveRowHeight;
+                  final contentHeight = _rowMetrics.offsetOf(rowCount);
                   if (state.pagination.enabled &&
                       state.displayOrder.isNotEmpty) {
+                    // Auto row-height can't know an unmeasured page's real
+                    // height without pre-measuring it (which would defeat
+                    // virtualization), so this falls back to the estimate —
+                    // the body itself stays fully virtualized regardless.
+                    final approxRowHeightForPagination =
+                        autoRowHeight?.estimatedHeight ?? effectiveRowHeight;
                     final requiredHeight =
-                        state.pagination.pageSize * effectiveRowHeight;
+                        state.pagination.pageSize *
+                        approxRowHeightForPagination;
                     bodyHeight = requiredHeight <= availableHeight
                         ? requiredHeight
                         : availableHeight;
@@ -393,8 +461,9 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
                   }
 
                   final Widget bodyChild = CustomLayoutGridBody<T>(
-                    rowHeight: effectiveRowHeight,
+                    rowMetrics: _rowMetrics,
                     cacheExtent: widget.cacheExtent,
+                    autoRowHeight: autoRowHeight,
                   );
 
                   final bodyWidget = SizedBox(
@@ -425,6 +494,10 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
                               DataGridHeader<T>(
                                 defaultFilterWidget: _filterWidget,
                                 headerHeight: effectiveHeaderHeight,
+                                autoHeaderHeight: autoHeaderHeight,
+                                onHeightChanged: autoHeaderHeight != null
+                                    ? _onHeaderHeightChanged
+                                    : null,
                               ),
                               bodyWidget,
                               if (widget.showPagination &&

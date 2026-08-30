@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_data_grid/models/auto_height.dart';
 import 'package:flutter_data_grid/models/data/row.dart';
 import 'package:flutter_data_grid/models/data/column.dart';
 import 'package:flutter_data_grid/models/state/grid_state.dart';
@@ -14,10 +15,20 @@ class DataGridHeader<T extends DataGridRow> extends StatelessWidget {
   final Widget defaultFilterWidget;
   final double headerHeight;
 
+  /// When non-null, the header row measures its content and sizes itself
+  /// (clamped to its min/max) instead of using the fixed [headerHeight].
+  final AutoHeaderHeight? autoHeaderHeight;
+
+  /// Called when the auto-measured header height changes. Ignored when
+  /// [autoHeaderHeight] is null.
+  final ValueChanged<double>? onHeightChanged;
+
   const DataGridHeader({
     super.key,
     required this.defaultFilterWidget,
     required this.headerHeight,
+    this.autoHeaderHeight,
+    this.onHeightChanged,
   });
 
   @override
@@ -28,10 +39,24 @@ class DataGridHeader<T extends DataGridRow> extends StatelessWidget {
       (col) => col.filterable && col.visible,
     );
 
+    final autoHeaderHeight = this.autoHeaderHeight;
+    final headerRow = autoHeaderHeight != null
+        ? ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: autoHeaderHeight.minHeight,
+              maxHeight: autoHeaderHeight.maxHeight,
+            ),
+            child: _HeaderRow<T>(
+              autoHeaderHeight: autoHeaderHeight,
+              onHeightChanged: onHeightChanged,
+            ),
+          )
+        : SizedBox(height: headerHeight, child: _HeaderRow<T>());
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        SizedBox(height: headerHeight, child: _HeaderRow<T>()),
+        headerRow,
         if (hasFilterableColumns)
           SizedBox(
             height: theme.dimensions.filterRowHeight,
@@ -45,7 +70,10 @@ class DataGridHeader<T extends DataGridRow> extends StatelessWidget {
 }
 
 class _HeaderRow<T extends DataGridRow> extends StatelessWidget {
-  const _HeaderRow();
+  final AutoHeaderHeight? autoHeaderHeight;
+  final ValueChanged<double>? onHeightChanged;
+
+  const _HeaderRow({this.autoHeaderHeight, this.onHeightChanged});
 
   @override
   Widget build(BuildContext context) {
@@ -69,6 +97,8 @@ class _HeaderRow<T extends DataGridRow> extends StatelessWidget {
       horizontalController: scrollController.horizontalController,
       pinnedBackgroundColor: theme.colors.headerColor,
       childColumnIds: unpinnedFirst.map((c) => c.id).toList(),
+      autoHeaderHeight: autoHeaderHeight,
+      onHeightChanged: onHeightChanged,
       children: [
         for (var column in unpinnedFirst)
           _HeaderCellWrapper<T>(

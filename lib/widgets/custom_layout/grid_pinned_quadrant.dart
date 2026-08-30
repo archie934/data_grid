@@ -1,10 +1,10 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_data_grid/models/data/column.dart';
 import 'package:flutter_data_grid/models/data/grid_display_row.dart';
 import 'package:flutter_data_grid/models/data/row.dart';
 import 'package:flutter_data_grid/widgets/custom_layout/layout_grid_cell.dart';
 import 'package:flutter_data_grid/widgets/custom_layout/grid_layout_delegate.dart';
+import 'package:flutter_data_grid/widgets/custom_layout/row_metrics.dart';
 
 /// Renders the pinned (frozen) columns quadrant of the custom layout grid.
 ///
@@ -21,10 +21,11 @@ class GridPinnedQuadrant<T extends DataGridRow> extends StatefulWidget {
   final List<GridDisplayRow<T>> rows;
   final Map<double, T> rowsById;
   final int rowCount;
-  final double rowHeight;
+  final RowMetrics rowMetrics;
   final double cacheExtent;
   final Color backgroundColor;
   final ValueNotifier<double> vOffset;
+  final RowHeightMeasurement? measurement;
 
   const GridPinnedQuadrant({
     super.key,
@@ -34,10 +35,11 @@ class GridPinnedQuadrant<T extends DataGridRow> extends StatefulWidget {
     required this.rows,
     required this.rowsById,
     required this.rowCount,
-    required this.rowHeight,
+    required this.rowMetrics,
     required this.cacheExtent,
     required this.backgroundColor,
     required this.vOffset,
+    this.measurement,
   });
 
   @override
@@ -86,7 +88,7 @@ class _GridPinnedQuadrantState<T extends DataGridRow>
 
     // Recompute row range when structural parameters change.
     if (old.viewportHeight != widget.viewportHeight ||
-        old.rowHeight != widget.rowHeight ||
+        old.rowMetrics != widget.rowMetrics ||
         old.rowCount != widget.rowCount ||
         old.cacheExtent != widget.cacheExtent) {
       _computeRowRange();
@@ -107,24 +109,15 @@ class _GridPinnedQuadrantState<T extends DataGridRow>
 
   void _computeRowRange() {
     final vScroll = widget.vOffset.value;
-    final effectiveCacheExtent = kDebugMode
-        ? widget.cacheExtent.clamp(0.0, 500.0)
-        : widget.cacheExtent;
-
-    final firstVisibleRow = (vScroll / widget.rowHeight).floor().clamp(
-      0,
-      widget.rowCount,
+    final rowRange = widget.rowMetrics.visibleRowRange(
+      scrollOffset: vScroll,
+      viewportExtent: widget.viewportHeight,
+      cacheExtent: widget.cacheExtent,
+      rowCount: widget.rowCount,
     );
-    final visibleRowCount =
-        (widget.viewportHeight / widget.rowHeight).ceil() + 1;
-    final lastVisibleRow = (firstVisibleRow + visibleRowCount).clamp(
-      0,
-      widget.rowCount,
-    );
-    final bufferRows = (effectiveCacheExtent / widget.rowHeight).ceil();
 
-    _firstRow = (firstVisibleRow - bufferRows).clamp(0, widget.rowCount);
-    _lastRow = (lastVisibleRow + bufferRows).clamp(0, widget.rowCount);
+    _firstRow = rowRange.firstRow;
+    _lastRow = rowRange.lastRow;
   }
 
   /// Computes [_children] and [_contentRects] for the current row range.
@@ -157,9 +150,9 @@ class _GridPinnedQuadrantState<T extends DataGridRow>
 
         contentRects[cellId] = Rect.fromLTWH(
           xOffset,
-          row * widget.rowHeight,
+          widget.rowMetrics.offsetOf(row),
           colWidth,
-          widget.rowHeight,
+          widget.rowMetrics.heightOf(row),
         );
 
         // Reuse the cached LayoutId for carry-over cells. Flutter detects the
@@ -218,6 +211,7 @@ class _GridPinnedQuadrantState<T extends DataGridRow>
             contentRects: _contentRects,
             vOffset: widget.vOffset,
             // hOffset intentionally omitted: pinned columns don't scroll horizontally.
+            measurement: widget.measurement,
           ),
           children: _children,
         ),

@@ -1,8 +1,8 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_data_grid/models/data/grid_display_row.dart';
 import 'package:flutter_data_grid/models/data/row.dart';
 import 'package:flutter_data_grid/widgets/custom_layout/grid_layout_delegate.dart';
+import 'package:flutter_data_grid/widgets/custom_layout/row_metrics.dart';
 
 /// Builds the full-width band widget for [entry] at [rowIndex], or `null` if
 /// this row should render as ordinary cells instead (no band overlay).
@@ -23,7 +23,7 @@ class FullWidthRowBandLayer<T extends DataGridRow> extends StatefulWidget {
   final List<GridDisplayRow<T>> rows;
   final double viewportWidth;
   final double viewportHeight;
-  final double rowHeight;
+  final RowMetrics rowMetrics;
   final double cacheExtent;
   final ValueNotifier<double> vOffset;
   final RowBandBuilder<T> bandBuilder;
@@ -33,7 +33,7 @@ class FullWidthRowBandLayer<T extends DataGridRow> extends StatefulWidget {
     required this.rows,
     required this.viewportWidth,
     required this.viewportHeight,
-    required this.rowHeight,
+    required this.rowMetrics,
     required this.cacheExtent,
     required this.vOffset,
     required this.bandBuilder,
@@ -71,7 +71,7 @@ class _FullWidthRowBandLayerState<T extends DataGridRow>
 
     if (old.viewportHeight != widget.viewportHeight ||
         old.viewportWidth != widget.viewportWidth ||
-        old.rowHeight != widget.rowHeight ||
+        old.rowMetrics != widget.rowMetrics ||
         old.cacheExtent != widget.cacheExtent ||
         !identical(old.rows, widget.rows) ||
         !identical(old.bandBuilder, widget.bandBuilder)) {
@@ -89,25 +89,17 @@ class _FullWidthRowBandLayerState<T extends DataGridRow>
 
   void _computeRowRange() {
     final vScroll = widget.vOffset.value;
-    final effectiveCacheExtent = kDebugMode
-        ? widget.cacheExtent.clamp(0.0, 500.0)
-        : widget.cacheExtent;
     final rowCount = widget.rows.length;
 
-    final firstVisibleRow = (vScroll / widget.rowHeight).floor().clamp(
-      0,
-      rowCount,
+    final rowRange = widget.rowMetrics.visibleRowRange(
+      scrollOffset: vScroll,
+      viewportExtent: widget.viewportHeight,
+      cacheExtent: widget.cacheExtent,
+      rowCount: rowCount,
     );
-    final visibleRowCount =
-        (widget.viewportHeight / widget.rowHeight).ceil() + 1;
-    final lastVisibleRow = (firstVisibleRow + visibleRowCount).clamp(
-      0,
-      rowCount,
-    );
-    final bufferRows = (effectiveCacheExtent / widget.rowHeight).ceil();
 
-    _firstRow = (firstVisibleRow - bufferRows).clamp(0, rowCount);
-    _lastRow = (lastVisibleRow + bufferRows).clamp(0, rowCount);
+    _firstRow = rowRange.firstRow;
+    _lastRow = rowRange.lastRow;
   }
 
   void _rebuildBandList() {
@@ -122,9 +114,9 @@ class _FullWidthRowBandLayerState<T extends DataGridRow>
       final cellId = CellLayoutId(row, 0);
       contentRects[cellId] = Rect.fromLTWH(
         0,
-        row * widget.rowHeight,
+        widget.rowMetrics.offsetOf(row),
         widget.viewportWidth,
-        widget.rowHeight,
+        widget.rowMetrics.heightOf(row),
       );
       children.add(LayoutId(key: ValueKey(cellId), id: cellId, child: band));
     }

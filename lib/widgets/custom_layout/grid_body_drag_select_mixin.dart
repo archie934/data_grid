@@ -79,7 +79,7 @@ mixin _GridBodyDragSelectMixin<T extends DataGridRow>
     final vcols = _visualColumns;
     if (rows.isEmpty || vcols.isEmpty) return null;
 
-    int rowIdx = ((local.dy + _vOffset.value) / widget.rowHeight).floor();
+    int rowIdx = widget.rowMetrics.indexAtOffset(local.dy + _vOffset.value);
     rowIdx = rowIdx.clamp(0, rows.length - 1);
     // A group header band isn't a selectable cell.
     if (rows[rowIdx] is! GridDataRow<T>) return null;

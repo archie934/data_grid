@@ -38,7 +38,11 @@ class DataGridCheckboxCell<T extends DataGridRow> extends StatelessWidget {
         ),
         child: Padding(
           padding: theme.padding.checkboxPadding,
+          // heightFactor: 1.0 — see DataGridCell's _DefaultTextCell for why
+          // Center (Align without heightFactor) needs this under
+          // DataGrid.autoRowHeight's loose measurement pass.
           child: Center(
+            heightFactor: 1.0,
             child: Checkbox(
               value: isSelected,
               onChanged: (value) => controller.addEvent(
@@ -115,26 +119,33 @@ class _DataGridCheckboxHeaderCellState<T extends DataGridRow>
               border: theme.borders.headerBorder,
             ),
             padding: theme.padding.checkboxPadding,
-            alignment: Alignment.center,
-            child: Checkbox(
-              value: headerState.someSelected
-                  ? null
-                  : headerState.allVisibleSelected,
-              tristate: true,
-              onChanged: (value) {
-                if (headerState.allVisibleSelected ||
-                    headerState.someSelected) {
-                  controller.addEvent(ClearSelectionEvent());
-                } else {
-                  controller.addEvent(
-                    SelectAllRowsEvent(
-                      rowIds: headerState.visibleRowIds.isEmpty
-                          ? null
-                          : headerState.visibleRowIds,
-                    ),
-                  );
-                }
-              },
+            // Align explicitly (with heightFactor: 1.0) rather than via
+            // Container's `alignment` param — see DataGridCell's
+            // _DefaultTextCell for why plain Align/Center needs this under
+            // DataGrid.autoHeaderHeight's loose measurement pass.
+            child: Align(
+              alignment: Alignment.center,
+              heightFactor: 1.0,
+              child: Checkbox(
+                value: headerState.someSelected
+                    ? null
+                    : headerState.allVisibleSelected,
+                tristate: true,
+                onChanged: (value) {
+                  if (headerState.allVisibleSelected ||
+                      headerState.someSelected) {
+                    controller.addEvent(ClearSelectionEvent());
+                  } else {
+                    controller.addEvent(
+                      SelectAllRowsEvent(
+                        rowIds: headerState.visibleRowIds.isEmpty
+                            ? null
+                            : headerState.visibleRowIds,
+                      ),
+                    );
+                  }
+                },
+              ),
             ),
           ),
         );

@@ -75,6 +75,25 @@ List<DataGridColumn<ProductRow>> createColumns(
       editable: false,
       valueAccessor: (row) => '\$${row.total.toStringAsFixed(2)}',
     ),
+    DataGridColumn<ProductRow>(
+      id: 90,
+      title: 'Photo',
+      width: 90,
+      editable: false,
+      filterable: false,
+      sortable: false,
+      cellWidget: const PhotoThumbnailCell(),
+      valueAccessor: (row) => row.hasPhoto ? 'photo' : '',
+    ),
+    DataGridColumn<ProductRow>(
+      id: 91,
+      title: 'Notes',
+      width: 260,
+      editable: false,
+      sortable: false,
+      cellWidget: const NotesCell(),
+      valueAccessor: (row) => row.notes,
+    ),
     ...List.generate(50, (index) {
       final columnId = index + 5;
       return DataGridColumn<ProductRow>(
