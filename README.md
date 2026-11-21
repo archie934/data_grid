@@ -37,8 +37,10 @@ Add this to your package's `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  flutter_data_grid: ^0.0.24
+  flutter_data_grid: ^0.1.0
 ```
+
+Requires **Flutter 3.47+** (Dart 3.13+). The grid is built on the standalone [`material_ui`](https://pub.dev/packages/material_ui) package rather than the deprecated in-SDK `package:flutter/material.dart`, so your app's `MaterialApp` must come from `material_ui` too — see the [Migration Guide](#-migration-guide) if you're upgrading from 0.0.x.
 
 Then run:
 
@@ -203,6 +205,20 @@ lib/
 ```
 
 ## ⚡ Migration Guide
+
+### v0.0.25 → v0.1.0: Standalone `material_ui` package
+
+**Breaking change:** the package now imports `package:material_ui/material_ui.dart` instead of `package:flutter/material.dart`, and requires Flutter 3.47+ (Dart 3.13+). The public API is unchanged — no `DataGrid`, `DataGridColumn`, controller or theme signatures changed.
+
+**Why:** Flutter 3.50 deprecates the Material library bundled with the SDK in favour of the standalone `material_ui` package. Dart treats the two libraries' types as distinct, so the grid's internal `TextField`, `InkWell`, `showMenu` and `DropdownButton` look for a `Material`, `Theme` and `MaterialLocalizations` from `material_ui`. An app still built with the old `MaterialApp` doesn't provide those, which fails with "No Material widget found" / "No MaterialLocalizations found".
+
+**Migration checklist:**
+- [ ] Upgrade to Flutter 3.47 or newer
+- [ ] `flutter pub add material_ui`
+- [ ] `dart fix --apply --code=migrate_design_widgets` to rewrite `package:flutter/material.dart` imports
+- [ ] Make sure the `MaterialApp` / `Scaffold` / `Theme` above every `DataGrid` come from `material_ui`
+
+---
 
 ### v0.0.16 → v0.0.17: Removed TwoDimensional renderer
 

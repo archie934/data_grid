@@ -18,14 +18,11 @@ class DefaultSortDelegate<T extends DataGridRow> extends SortDelegate<T> {
   Timer? _debounceTimer;
 
   DefaultSortDelegate({
-    required DataIndexer<T> dataIndexer,
+    required this._dataIndexer,
     required Duration sortDebounce,
-    int isolateThreshold = 10000,
-    FilterDelegate<T>? filterDelegate,
-  }) : _dataIndexer = dataIndexer,
-       _filterDelegate = filterDelegate,
-       _debounce = sortDebounce,
-       _isolateThreshold = isolateThreshold;
+    this._isolateThreshold = 10000,
+    this._filterDelegate,
+  }) : _debounce = sortDebounce;
 
   @override
   Future<SortResult?> handleSort(

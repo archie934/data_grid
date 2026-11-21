@@ -1,3 +1,10 @@
+## 0.1.0 - 2026-11-21
+
+* **Breaking**: migrated from the in-SDK `package:flutter/material.dart` (deprecated in Flutter 3.50) to the standalone [`material_ui`](https://pub.dev/packages/material_ui) package. Apps must build their `MaterialApp`/`Scaffold`/`Theme` from `material_ui` as well — the two libraries' types are distinct, so an old-library `MaterialApp` doesn't satisfy the grid's `Material`/`MaterialLocalizations` lookups. The public API is otherwise unchanged. See README's Migration Guide (v0.0.25 → v0.1.0).
+* **Breaking**: now requires Flutter 3.47+ / Dart 3.13+
+* Upgraded Freezed to 4.x and regenerated `grid_state.freezed.dart` — the 3.x output emits `required final` constructor parameters, which Dart 3.14 rejects
+* Developed and tested against Flutter 3.50.1 / Dart 3.14.0
+
 ## 0.0.25 - 2026-08-30
 
 * Added `AutoHeaderHeight` and `DataGrid.autoHeaderHeight` — the header row measures its content and sizes itself between `minHeight`/`maxHeight` instead of using the fixed `headerHeight`. Header cells are laid out loose once to find the tallest, then tight at that height; the result is memoized on the constraint width and `TextScaler`. Data rows remain a fixed `rowHeight`.

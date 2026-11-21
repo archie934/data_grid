@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_data_grid/theme/data_grid_theme_data.dart';
 
 /// An inherited widget that provides [DataGridThemeData] to descendant widgets.

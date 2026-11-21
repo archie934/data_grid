@@ -123,4 +123,5 @@ cd example && flutter pub get && flutter run                 # run the example a
 
 - Lint rules are just `package:flutter_lints/flutter.yaml` via `analysis_options.yaml` — no custom rules.
 - Freezed is the only codegen in use; `mockito` is used for test mocks.
+- Material comes from the standalone `material_ui` package: import `package:material_ui/material_ui.dart`, never the deprecated `package:flutter/material.dart` (in `lib/`, `test/` and `example/` alike). Mixing the two breaks at runtime — the grid's `TextField`/`InkWell`/`showMenu` won't find a `material_ui` `Material`/`Theme`/`MaterialLocalizations` ancestor under an old-library `MaterialApp`.
 - Breaking API changes are documented in README's "Migration Guide" section — follow that precedent (old API → new API, with a short rationale) when introducing one.

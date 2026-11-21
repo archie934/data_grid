@@ -15,12 +15,10 @@ class DefaultFilterDelegate<T extends DataGridRow> extends FilterDelegate<T> {
   Timer? _debounceTimer;
 
   DefaultFilterDelegate({
-    required DataIndexer<T> dataIndexer,
+    required this._dataIndexer,
     required Duration filterDebounce,
-    int isolateThreshold = 10000,
-  }) : _dataIndexer = dataIndexer,
-       _debounce = filterDebounce,
-       _isolateThreshold = isolateThreshold;
+    this._isolateThreshold = 10000,
+  }) : _debounce = filterDebounce;
 
   @override
   Future<List<double>> applyFilters({

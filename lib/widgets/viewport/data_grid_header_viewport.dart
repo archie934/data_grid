@@ -82,21 +82,15 @@ class RenderDataGridHeader<T extends DataGridRow> extends RenderBox
         ContainerRenderObjectMixin<RenderBox, HeaderChildData>,
         RenderBoxContainerDefaultsMixin<RenderBox, HeaderChildData> {
   RenderDataGridHeader({
-    required List<DataGridColumn<T>> columns,
-    required ScrollController horizontalController,
-    required Color pinnedBackgroundColor,
-    BoxDecoration? pinnedDecoration,
-    required List<int> childColumnIds,
-    AutoHeaderHeight? autoHeaderHeight,
+    required this._columns,
+    required this._horizontalController,
+    required this._pinnedBackgroundColor,
+    this._pinnedDecoration,
+    required this._childColumnIds,
+    this._autoHeaderHeight,
     this.onHeightChanged,
-    TextScaler textScaler = TextScaler.noScaling,
-  }) : _columns = columns,
-       _textScaler = textScaler,
-       _horizontalController = horizontalController,
-       _pinnedBackgroundColor = pinnedBackgroundColor,
-       _pinnedDecoration = pinnedDecoration,
-       _childColumnIds = childColumnIds,
-       _autoHeaderHeight = autoHeaderHeight;
+    this._textScaler = TextScaler.noScaling,
+  });
 
   List<DataGridColumn<T>> _columns;
   List<DataGridColumn<T>> get columns => _columns;
