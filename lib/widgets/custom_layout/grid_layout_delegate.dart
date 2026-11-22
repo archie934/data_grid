@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_data_grid/delegates/row_height_delegate.dart';
+import 'package:flutter_data_grid/widgets/custom_layout/row_metrics.dart';
 
 /// Identifies a single cell in the grid by its row and column indices.
 class CellLayoutId {
@@ -18,6 +19,26 @@ class CellLayoutId {
 
   @override
   String toString() => 'CellLayoutId($row, $column)';
+}
+
+/// A column's horizontal placement in content space (scroll-independent).
+///
+/// Stored once per column rather than once per cell: a cell's x/width depends
+/// only on its column, and its y/height only on its row (via [RowMetrics]),
+/// so neither needs a per-cell record.
+class ColumnSpan {
+  final double x;
+  final double width;
+
+  const ColumnSpan(this.x, this.width);
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ColumnSpan && x == other.x && width == other.width;
+
+  @override
+  int get hashCode => Object.hash(x, width);
 }
 
 /// Auto-row-height measurement hook for [GridLayoutDelegate].
@@ -47,15 +68,26 @@ class RowHeightMeasurement {
 
 /// A [MultiChildLayoutDelegate] that positions grid cells in viewport space.
 ///
-/// [contentRects] stores each cell's rect in **content space** (i.e. relative
-/// to the top-left of the full scrollable content, before any scroll offset is
-/// applied). [performLayout] reads the current scroll offsets directly from the
-/// [ValueNotifier]s and converts to viewport coordinates, so repositioning on
-/// scroll never requires a widget rebuild — only a [markNeedsLayout] call via
-/// the [relayout] listenable.
+/// Cell geometry is resolved *here*, at layout time, from two scroll-
+/// independent inputs — [columnSpans] for the horizontal axis and
+/// [rowMetrics] for the vertical one — rather than being precomputed into
+/// per-cell rects by the widget layer. That's what lets scrolling reposition
+/// every cell through [relayout] → `markNeedsLayout` alone, with no widget
+/// rebuild.
 class GridLayoutDelegate extends MultiChildLayoutDelegate {
-  /// Cell positions in content space (scroll-independent).
-  final Map<CellLayoutId, Rect> contentRects;
+  /// The cells currently built, in child order.
+  final List<CellLayoutId> cellIds;
+
+  /// Horizontal placement per column index (content space).
+  final Map<int, ColumnSpan> columnSpans;
+
+  /// Row offsets/heights (content space). Fixed or auto-measured.
+  final RowMetrics rowMetrics;
+
+  /// Bumped whenever [rowMetrics]' underlying heights change without its
+  /// identity changing (an auto-height measurement batch was applied), so
+  /// [shouldRelayout] can tell that positions moved.
+  final int rowMetricsVersion;
 
   /// Horizontal scroll offset notifier. Pass `null` for the pinned quadrant.
   final ValueNotifier<double>? hOffset;
@@ -67,48 +99,69 @@ class GridLayoutDelegate extends MultiChildLayoutDelegate {
   final double pinnedWidth;
 
   /// When non-null, enables auto-row-height measurement (see
-  /// [RowHeightMeasurement]) instead of always laying out tight to [contentRects].
+  /// [RowHeightMeasurement]) for rows that haven't been measured yet.
   final RowHeightMeasurement? measurement;
 
   GridLayoutDelegate({
-    required this.contentRects,
+    required this.cellIds,
+    required this.columnSpans,
+    required this.rowMetrics,
     required this.vOffset,
+    required Listenable relayout,
+    this.rowMetricsVersion = 0,
     this.hOffset,
     this.pinnedWidth = 0.0,
     this.measurement,
-  }) : super(
-         relayout: hOffset != null
-             ? Listenable.merge([hOffset, vOffset])
-             : vOffset,
-       );
+  }) : super(relayout: relayout);
+
+  /// Builds the merged relayout listenable for a quadrant.
+  ///
+  /// Call this **once**, from the quadrant's `State`, and hold the result:
+  /// `RenderCustomMultiChildLayoutBox`'s delegate setter detaches and
+  /// reattaches `markNeedsLayout` whenever the listenable's identity changes,
+  /// so merging per build would rebind listeners on every build.
+  static Listenable buildRelayout({
+    ValueNotifier<double>? hOffset,
+    required ValueNotifier<double> vOffset,
+  }) {
+    if (hOffset == null) return vOffset;
+    return Listenable.merge([hOffset, vOffset]);
+  }
 
   @override
   void performLayout(Size size) {
+    if (cellIds.isEmpty) return;
+
     final hScroll = hOffset?.value ?? 0.0;
     final vScroll = vOffset.value;
     final measurement = this.measurement;
 
-    for (final entry in contentRects.entries) {
-      final id = entry.key;
+    for (final id in cellIds) {
       if (!hasChild(id)) continue;
+      final span = columnSpans[id.column];
+      if (span == null) continue;
 
-      final rect = entry.value;
-      final x = rect.left - hScroll + pinnedWidth;
-      final y = rect.top - vScroll;
+      final x = span.x - hScroll + pinnedWidth;
+      final y = rowMetrics.offsetOf(id.row) - vScroll;
 
       if (measurement != null && !measurement.delegate.isMeasured(id.row)) {
         final resolvedSize = layoutChild(
           id,
           BoxConstraints(
-            minWidth: rect.width,
-            maxWidth: rect.width,
+            minWidth: span.width,
+            maxWidth: span.width,
             maxHeight: measurement.maxHeightClamp,
           ),
         );
         positionChild(id, Offset(x, y));
         measurement.onMeasured(id.row, resolvedSize.height);
       } else {
-        layoutChild(id, BoxConstraints.tight(rect.size));
+        // Tight constraints make each cell its own relayout boundary, so an
+        // invalidation inside one cell can't dirty the whole quadrant.
+        layoutChild(
+          id,
+          BoxConstraints.tight(Size(span.width, rowMetrics.heightOf(id.row))),
+        );
         positionChild(id, Offset(x, y));
       }
     }
@@ -116,9 +169,12 @@ class GridLayoutDelegate extends MultiChildLayoutDelegate {
 
   @override
   bool shouldRelayout(GridLayoutDelegate oldDelegate) {
-    return !identical(contentRects, oldDelegate.contentRects) ||
+    return !identical(cellIds, oldDelegate.cellIds) ||
+        !identical(columnSpans, oldDelegate.columnSpans) ||
         !identical(hOffset, oldDelegate.hOffset) ||
         !identical(vOffset, oldDelegate.vOffset) ||
+        rowMetrics != oldDelegate.rowMetrics ||
+        rowMetricsVersion != oldDelegate.rowMetricsVersion ||
         pinnedWidth != oldDelegate.pinnedWidth ||
         !identical(measurement, oldDelegate.measurement);
   }

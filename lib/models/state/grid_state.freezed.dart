@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'grid_state.dart';
@@ -9,13 +9,14 @@ part of 'grid_state.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$DataGridState<T extends DataGridRow> {
 
-/// Create a copy of DataGridState
  List<DataGridColumn<T>> get columns; Map<double, T> get rowsById; List<double> get displayOrder; SelectionState get selection; SortState get sort; FilterState get filter; GroupState get group; EditState get edit; PaginationState get pagination; int get totalItems; bool get isLoading; String? get loadingMessage;
+/// Create a copy of DataGridState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
@@ -25,16 +26,21 @@ $DataGridStateCopyWith<T, DataGridState<T>> get copyWith => _$DataGridStateCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is DataGridState<T>&&const DeepCollectionEquality().equals(other.columns, columns)&&const DeepCollectionEquality().equals(other.rowsById, rowsById)&&const DeepCollectionEquality().equals(other.displayOrder, displayOrder)&&(identical(other.selection, selection) || other.selection == selection)&&(identical(other.sort, sort) || other.sort == sort)&&(identical(other.filter, filter) || other.filter == filter)&&(identical(other.group, group) || other.group == group)&&(identical(other.edit, edit) || other.edit == edit)&&(identical(other.pagination, pagination) || other.pagination == pagination)&&(identical(other.totalItems, totalItems) || other.totalItems == totalItems)&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading)&&(identical(other.loadingMessage, loadingMessage) || other.loadingMessage == loadingMessage));
+  final _this = this as DataGridState<T>;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DataGridState<T>&&const DeepCollectionEquality().equals(other.columns, _this.columns)&&const DeepCollectionEquality().equals(other.rowsById, _this.rowsById)&&const DeepCollectionEquality().equals(other.displayOrder, _this.displayOrder)&&(identical(other.selection, _this.selection) || other.selection == _this.selection)&&(identical(other.sort, _this.sort) || other.sort == _this.sort)&&(identical(other.filter, _this.filter) || other.filter == _this.filter)&&(identical(other.group, _this.group) || other.group == _this.group)&&(identical(other.edit, _this.edit) || other.edit == _this.edit)&&(identical(other.pagination, _this.pagination) || other.pagination == _this.pagination)&&(identical(other.totalItems, _this.totalItems) || other.totalItems == _this.totalItems)&&(identical(other.isLoading, _this.isLoading) || other.isLoading == _this.isLoading)&&(identical(other.loadingMessage, _this.loadingMessage) || other.loadingMessage == _this.loadingMessage));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(columns),const DeepCollectionEquality().hash(rowsById),const DeepCollectionEquality().hash(displayOrder),selection,sort,filter,group,edit,pagination,totalItems,isLoading,loadingMessage);
+int get hashCode {
+  final _this = this as DataGridState<T>;
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.columns),const DeepCollectionEquality().hash(_this.rowsById),const DeepCollectionEquality().hash(_this.displayOrder),_this.selection,_this.sort,_this.filter,_this.group,_this.edit,_this.pagination,_this.totalItems,_this.isLoading,_this.loadingMessage);
+}
 
 @override
 String toString() {
-  return 'DataGridState<$T>(columns: $columns, rowsById: $rowsById, displayOrder: $displayOrder, selection: $selection, sort: $sort, filter: $filter, group: $group, edit: $edit, pagination: $pagination, totalItems: $totalItems, isLoading: $isLoading, loadingMessage: $loadingMessage)';
+  final _this = this as DataGridState<T>;
+  return 'DataGridState<$T>(columns: ${_this.columns}, rowsById: ${_this.rowsById}, displayOrder: ${_this.displayOrder}, selection: ${_this.selection}, sort: ${_this.sort}, filter: ${_this.filter}, group: ${_this.group}, edit: ${_this.edit}, pagination: ${_this.pagination}, totalItems: ${_this.totalItems}, isLoading: ${_this.isLoading}, loadingMessage: ${_this.loadingMessage})';
 }
 
 
@@ -63,7 +69,7 @@ class _$DataGridStateCopyWithImpl<T extends DataGridRow,$Res>
 /// Create a copy of DataGridState
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? columns = null,Object? rowsById = null,Object? displayOrder = null,Object? selection = null,Object? sort = null,Object? filter = null,Object? group = null,Object? edit = null,Object? pagination = null,Object? totalItems = null,Object? isLoading = null,Object? loadingMessage = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(DataGridState(
 columns: null == columns ? _self.columns : columns // ignore: cast_nullable_to_non_nullable
 as List<DataGridColumn<T>>,rowsById: null == rowsById ? _self.rowsById : rowsById // ignore: cast_nullable_to_non_nullable
 as Map<double, T>,displayOrder: null == displayOrder ? _self.displayOrder : displayOrder // ignore: cast_nullable_to_non_nullable
@@ -271,7 +277,7 @@ return $default(_that.columns,_that.rowsById,_that.displayOrder,_that.selection,
 
 
 class _DataGridState<T extends DataGridRow> extends DataGridState<T> {
-  const _DataGridState({required final  List<DataGridColumn<T>> columns, required final  Map<double, T> rowsById, required final  List<double> displayOrder, required this.selection, required this.sort, required this.filter, required this.group, required this.edit, required this.pagination, this.totalItems = 0, this.isLoading = false, this.loadingMessage}): _columns = columns,_rowsById = rowsById,_displayOrder = displayOrder,super._();
+  const _DataGridState({required  List<DataGridColumn<T>> columns, required  Map<double, T> rowsById, required  List<double> displayOrder, required this.selection, required this.sort, required this.filter, required this.group, required this.edit, required this.pagination, this.totalItems = 0, this.isLoading = false, this.loadingMessage}): _columns = columns,_rowsById = rowsById,_displayOrder = displayOrder,super._();
   
 
  final  List<DataGridColumn<T>> _columns;
@@ -315,16 +321,18 @@ _$DataGridStateCopyWith<T, _DataGridState<T>> get copyWith => __$DataGridStateCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _DataGridState<T>&&const DeepCollectionEquality().equals(other._columns, _columns)&&const DeepCollectionEquality().equals(other._rowsById, _rowsById)&&const DeepCollectionEquality().equals(other._displayOrder, _displayOrder)&&(identical(other.selection, selection) || other.selection == selection)&&(identical(other.sort, sort) || other.sort == sort)&&(identical(other.filter, filter) || other.filter == filter)&&(identical(other.group, group) || other.group == group)&&(identical(other.edit, edit) || other.edit == edit)&&(identical(other.pagination, pagination) || other.pagination == pagination)&&(identical(other.totalItems, totalItems) || other.totalItems == totalItems)&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading)&&(identical(other.loadingMessage, loadingMessage) || other.loadingMessage == loadingMessage));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _DataGridState<T>&&const DeepCollectionEquality().equals(other.columns, _columns)&&const DeepCollectionEquality().equals(other.rowsById, _rowsById)&&const DeepCollectionEquality().equals(other.displayOrder, _displayOrder)&&(identical(other.selection, selection) || other.selection == selection)&&(identical(other.sort, sort) || other.sort == sort)&&(identical(other.filter, filter) || other.filter == filter)&&(identical(other.group, group) || other.group == group)&&(identical(other.edit, edit) || other.edit == edit)&&(identical(other.pagination, pagination) || other.pagination == pagination)&&(identical(other.totalItems, totalItems) || other.totalItems == totalItems)&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading)&&(identical(other.loadingMessage, loadingMessage) || other.loadingMessage == loadingMessage));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_columns),const DeepCollectionEquality().hash(_rowsById),const DeepCollectionEquality().hash(_displayOrder),selection,sort,filter,group,edit,pagination,totalItems,isLoading,loadingMessage);
+int get hashCode {
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_columns),const DeepCollectionEquality().hash(_rowsById),const DeepCollectionEquality().hash(_displayOrder),selection,sort,filter,group,edit,pagination,totalItems,isLoading,loadingMessage);
+}
 
 @override
 String toString() {
-  return 'DataGridState<$T>(columns: $columns, rowsById: $rowsById, displayOrder: $displayOrder, selection: $selection, sort: $sort, filter: $filter, group: $group, edit: $edit, pagination: $pagination, totalItems: $totalItems, isLoading: $isLoading, loadingMessage: $loadingMessage)';
+    return 'DataGridState<$T>(columns: $columns, rowsById: $rowsById, displayOrder: $displayOrder, selection: $selection, sort: $sort, filter: $filter, group: $group, edit: $edit, pagination: $pagination, totalItems: $totalItems, isLoading: $isLoading, loadingMessage: $loadingMessage)';
 }
 
 
@@ -441,16 +449,21 @@ $SelectionStateCopyWith<SelectionState> get copyWith => _$SelectionStateCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SelectionState&&const DeepCollectionEquality().equals(other.selectedRowIds, selectedRowIds)&&(identical(other.focusedRowId, focusedRowId) || other.focusedRowId == focusedRowId)&&const DeepCollectionEquality().equals(other.focusedCells, focusedCells)&&(identical(other.mode, mode) || other.mode == mode));
+  final _this = this as SelectionState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SelectionState&&const DeepCollectionEquality().equals(other.selectedRowIds, _this.selectedRowIds)&&(identical(other.focusedRowId, _this.focusedRowId) || other.focusedRowId == _this.focusedRowId)&&const DeepCollectionEquality().equals(other.focusedCells, _this.focusedCells)&&(identical(other.mode, _this.mode) || other.mode == _this.mode));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(selectedRowIds),focusedRowId,const DeepCollectionEquality().hash(focusedCells),mode);
+int get hashCode {
+  final _this = this as SelectionState;
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.selectedRowIds),_this.focusedRowId,const DeepCollectionEquality().hash(_this.focusedCells),_this.mode);
+}
 
 @override
 String toString() {
-  return 'SelectionState(selectedRowIds: $selectedRowIds, focusedRowId: $focusedRowId, focusedCells: $focusedCells, mode: $mode)';
+  final _this = this as SelectionState;
+  return 'SelectionState(selectedRowIds: ${_this.selectedRowIds}, focusedRowId: ${_this.focusedRowId}, focusedCells: ${_this.focusedCells}, mode: ${_this.mode})';
 }
 
 
@@ -479,7 +492,7 @@ class _$SelectionStateCopyWithImpl<$Res>
 /// Create a copy of SelectionState
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? selectedRowIds = null,Object? focusedRowId = freezed,Object? focusedCells = null,Object? mode = null,}) {
-  return _then(_self.copyWith(
+  return _then(SelectionState(
 selectedRowIds: null == selectedRowIds ? _self.selectedRowIds : selectedRowIds // ignore: cast_nullable_to_non_nullable
 as Set<double>,focusedRowId: freezed == focusedRowId ? _self.focusedRowId : focusedRowId // ignore: cast_nullable_to_non_nullable
 as double?,focusedCells: null == focusedCells ? _self.focusedCells : focusedCells // ignore: cast_nullable_to_non_nullable
@@ -625,7 +638,7 @@ return $default(_that.selectedRowIds,_that.focusedRowId,_that.focusedCells,_that
 
 
 class _SelectionState extends SelectionState {
-  const _SelectionState({required final  Set<double> selectedRowIds, this.focusedRowId, final  List<String> focusedCells = const [], required this.mode}): _selectedRowIds = selectedRowIds,_focusedCells = focusedCells,super._();
+  const _SelectionState({required  Set<double> selectedRowIds, this.focusedRowId,  List<String> focusedCells = const [], required this.mode}): _selectedRowIds = selectedRowIds,_focusedCells = focusedCells,super._();
   
 
  final  Set<double> _selectedRowIds;
@@ -655,16 +668,18 @@ _$SelectionStateCopyWith<_SelectionState> get copyWith => __$SelectionStateCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SelectionState&&const DeepCollectionEquality().equals(other._selectedRowIds, _selectedRowIds)&&(identical(other.focusedRowId, focusedRowId) || other.focusedRowId == focusedRowId)&&const DeepCollectionEquality().equals(other._focusedCells, _focusedCells)&&(identical(other.mode, mode) || other.mode == mode));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SelectionState&&const DeepCollectionEquality().equals(other.selectedRowIds, _selectedRowIds)&&(identical(other.focusedRowId, focusedRowId) || other.focusedRowId == focusedRowId)&&const DeepCollectionEquality().equals(other.focusedCells, _focusedCells)&&(identical(other.mode, mode) || other.mode == mode));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_selectedRowIds),focusedRowId,const DeepCollectionEquality().hash(_focusedCells),mode);
+int get hashCode {
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_selectedRowIds),focusedRowId,const DeepCollectionEquality().hash(_focusedCells),mode);
+}
 
 @override
 String toString() {
-  return 'SelectionState(selectedRowIds: $selectedRowIds, focusedRowId: $focusedRowId, focusedCells: $focusedCells, mode: $mode)';
+    return 'SelectionState(selectedRowIds: $selectedRowIds, focusedRowId: $focusedRowId, focusedCells: $focusedCells, mode: $mode)';
 }
 
 
@@ -719,16 +734,21 @@ $SortStateCopyWith<SortState> get copyWith => _$SortStateCopyWithImpl<SortState>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SortState&&(identical(other.sortColumn, sortColumn) || other.sortColumn == sortColumn));
+  final _this = this as SortState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SortState&&(identical(other.sortColumn, _this.sortColumn) || other.sortColumn == _this.sortColumn));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,sortColumn);
+int get hashCode {
+  final _this = this as SortState;
+  return Object.hash(runtimeType,_this.sortColumn);
+}
 
 @override
 String toString() {
-  return 'SortState(sortColumn: $sortColumn)';
+  final _this = this as SortState;
+  return 'SortState(sortColumn: ${_this.sortColumn})';
 }
 
 
@@ -757,7 +777,7 @@ class _$SortStateCopyWithImpl<$Res>
 /// Create a copy of SortState
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? sortColumn = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(SortState(
 sortColumn: freezed == sortColumn ? _self.sortColumn : sortColumn // ignore: cast_nullable_to_non_nullable
 as SortColumn?,
   ));
@@ -927,16 +947,18 @@ _$SortStateCopyWith<_SortState> get copyWith => __$SortStateCopyWithImpl<_SortSt
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SortState&&(identical(other.sortColumn, sortColumn) || other.sortColumn == sortColumn));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SortState&&(identical(other.sortColumn, sortColumn) || other.sortColumn == sortColumn));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,sortColumn);
+int get hashCode {
+    return Object.hash(runtimeType,sortColumn);
+}
 
 @override
 String toString() {
-  return 'SortState(sortColumn: $sortColumn)';
+    return 'SortState(sortColumn: $sortColumn)';
 }
 
 
@@ -1000,16 +1022,21 @@ $SortColumnCopyWith<SortColumn> get copyWith => _$SortColumnCopyWithImpl<SortCol
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SortColumn&&(identical(other.columnId, columnId) || other.columnId == columnId)&&(identical(other.direction, direction) || other.direction == direction));
+  final _this = this as SortColumn;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SortColumn&&(identical(other.columnId, _this.columnId) || other.columnId == _this.columnId)&&(identical(other.direction, _this.direction) || other.direction == _this.direction));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,columnId,direction);
+int get hashCode {
+  final _this = this as SortColumn;
+  return Object.hash(runtimeType,_this.columnId,_this.direction);
+}
 
 @override
 String toString() {
-  return 'SortColumn(columnId: $columnId, direction: $direction)';
+  final _this = this as SortColumn;
+  return 'SortColumn(columnId: ${_this.columnId}, direction: ${_this.direction})';
 }
 
 
@@ -1038,7 +1065,7 @@ class _$SortColumnCopyWithImpl<$Res>
 /// Create a copy of SortColumn
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? columnId = null,Object? direction = null,}) {
-  return _then(_self.copyWith(
+  return _then(SortColumn(
 columnId: null == columnId ? _self.columnId : columnId // ignore: cast_nullable_to_non_nullable
 as int,direction: null == direction ? _self.direction : direction // ignore: cast_nullable_to_non_nullable
 as SortDirection,
@@ -1198,16 +1225,18 @@ _$SortColumnCopyWith<_SortColumn> get copyWith => __$SortColumnCopyWithImpl<_Sor
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SortColumn&&(identical(other.columnId, columnId) || other.columnId == columnId)&&(identical(other.direction, direction) || other.direction == direction));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SortColumn&&(identical(other.columnId, columnId) || other.columnId == columnId)&&(identical(other.direction, direction) || other.direction == direction));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,columnId,direction);
+int get hashCode {
+    return Object.hash(runtimeType,columnId,direction);
+}
 
 @override
 String toString() {
-  return 'SortColumn(columnId: $columnId, direction: $direction)';
+    return 'SortColumn(columnId: $columnId, direction: $direction)';
 }
 
 
@@ -1260,16 +1289,21 @@ $FilterStateCopyWith<FilterState> get copyWith => _$FilterStateCopyWithImpl<Filt
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is FilterState&&const DeepCollectionEquality().equals(other.columnFilters, columnFilters));
+  final _this = this as FilterState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is FilterState&&const DeepCollectionEquality().equals(other.columnFilters, _this.columnFilters));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(columnFilters));
+int get hashCode {
+  final _this = this as FilterState;
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.columnFilters));
+}
 
 @override
 String toString() {
-  return 'FilterState(columnFilters: $columnFilters)';
+  final _this = this as FilterState;
+  return 'FilterState(columnFilters: ${_this.columnFilters})';
 }
 
 
@@ -1298,7 +1332,7 @@ class _$FilterStateCopyWithImpl<$Res>
 /// Create a copy of FilterState
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? columnFilters = null,}) {
-  return _then(_self.copyWith(
+  return _then(FilterState(
 columnFilters: null == columnFilters ? _self.columnFilters : columnFilters // ignore: cast_nullable_to_non_nullable
 as Map<int, ColumnFilter>,
   ));
@@ -1441,7 +1475,7 @@ return $default(_that.columnFilters);case _:
 
 
 class _FilterState extends FilterState {
-  const _FilterState({required final  Map<int, ColumnFilter> columnFilters}): _columnFilters = columnFilters,super._();
+  const _FilterState({required  Map<int, ColumnFilter> columnFilters}): _columnFilters = columnFilters,super._();
   
 
  final  Map<int, ColumnFilter> _columnFilters;
@@ -1462,16 +1496,18 @@ _$FilterStateCopyWith<_FilterState> get copyWith => __$FilterStateCopyWithImpl<_
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _FilterState&&const DeepCollectionEquality().equals(other._columnFilters, _columnFilters));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _FilterState&&const DeepCollectionEquality().equals(other.columnFilters, _columnFilters));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_columnFilters));
+int get hashCode {
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_columnFilters));
+}
 
 @override
 String toString() {
-  return 'FilterState(columnFilters: $columnFilters)';
+    return 'FilterState(columnFilters: $columnFilters)';
 }
 
 
@@ -1523,16 +1559,21 @@ $ColumnFilterCopyWith<ColumnFilter> get copyWith => _$ColumnFilterCopyWithImpl<C
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ColumnFilter&&(identical(other.columnId, columnId) || other.columnId == columnId)&&(identical(other.operator, operator) || other.operator == operator)&&const DeepCollectionEquality().equals(other.value, value));
+  final _this = this as ColumnFilter;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ColumnFilter&&(identical(other.columnId, _this.columnId) || other.columnId == _this.columnId)&&(identical(other.operator, _this.operator) || other.operator == _this.operator)&&const DeepCollectionEquality().equals(other.value, _this.value));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,columnId,operator,const DeepCollectionEquality().hash(value));
+int get hashCode {
+  final _this = this as ColumnFilter;
+  return Object.hash(runtimeType,_this.columnId,_this.operator,const DeepCollectionEquality().hash(_this.value));
+}
 
 @override
 String toString() {
-  return 'ColumnFilter(columnId: $columnId, operator: $operator, value: $value)';
+  final _this = this as ColumnFilter;
+  return 'ColumnFilter(columnId: ${_this.columnId}, operator: ${_this.operator}, value: ${_this.value})';
 }
 
 
@@ -1561,7 +1602,7 @@ class _$ColumnFilterCopyWithImpl<$Res>
 /// Create a copy of ColumnFilter
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? columnId = null,Object? operator = null,Object? value = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(ColumnFilter(
 columnId: null == columnId ? _self.columnId : columnId // ignore: cast_nullable_to_non_nullable
 as int,operator: null == operator ? _self.operator : operator // ignore: cast_nullable_to_non_nullable
 as FilterOperator,value: freezed == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
@@ -1723,16 +1764,18 @@ _$ColumnFilterCopyWith<_ColumnFilter> get copyWith => __$ColumnFilterCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ColumnFilter&&(identical(other.columnId, columnId) || other.columnId == columnId)&&(identical(other.operator, operator) || other.operator == operator)&&const DeepCollectionEquality().equals(other.value, value));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ColumnFilter&&(identical(other.columnId, columnId) || other.columnId == columnId)&&(identical(other.operator, operator) || other.operator == operator)&&const DeepCollectionEquality().equals(other.value, value));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,columnId,operator,const DeepCollectionEquality().hash(value));
+int get hashCode {
+    return Object.hash(runtimeType,columnId,operator,const DeepCollectionEquality().hash(value));
+}
 
 @override
 String toString() {
-  return 'ColumnFilter(columnId: $columnId, operator: $operator, value: $value)';
+    return 'ColumnFilter(columnId: $columnId, operator: $operator, value: $value)';
 }
 
 
@@ -1786,16 +1829,21 @@ $GroupStateCopyWith<GroupState> get copyWith => _$GroupStateCopyWithImpl<GroupSt
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is GroupState&&const DeepCollectionEquality().equals(other.groupedColumnIds, groupedColumnIds)&&const DeepCollectionEquality().equals(other.expandedGroups, expandedGroups));
+  final _this = this as GroupState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is GroupState&&const DeepCollectionEquality().equals(other.groupedColumnIds, _this.groupedColumnIds)&&const DeepCollectionEquality().equals(other.expandedGroups, _this.expandedGroups));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(groupedColumnIds),const DeepCollectionEquality().hash(expandedGroups));
+int get hashCode {
+  final _this = this as GroupState;
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.groupedColumnIds),const DeepCollectionEquality().hash(_this.expandedGroups));
+}
 
 @override
 String toString() {
-  return 'GroupState(groupedColumnIds: $groupedColumnIds, expandedGroups: $expandedGroups)';
+  final _this = this as GroupState;
+  return 'GroupState(groupedColumnIds: ${_this.groupedColumnIds}, expandedGroups: ${_this.expandedGroups})';
 }
 
 
@@ -1824,7 +1872,7 @@ class _$GroupStateCopyWithImpl<$Res>
 /// Create a copy of GroupState
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? groupedColumnIds = null,Object? expandedGroups = null,}) {
-  return _then(_self.copyWith(
+  return _then(GroupState(
 groupedColumnIds: null == groupedColumnIds ? _self.groupedColumnIds : groupedColumnIds // ignore: cast_nullable_to_non_nullable
 as List<int>,expandedGroups: null == expandedGroups ? _self.expandedGroups : expandedGroups // ignore: cast_nullable_to_non_nullable
 as Map<String, bool>,
@@ -1968,7 +2016,7 @@ return $default(_that.groupedColumnIds,_that.expandedGroups);case _:
 
 
 class _GroupState extends GroupState {
-  const _GroupState({required final  List<int> groupedColumnIds, required final  Map<String, bool> expandedGroups}): _groupedColumnIds = groupedColumnIds,_expandedGroups = expandedGroups,super._();
+  const _GroupState({required  List<int> groupedColumnIds, required  Map<String, bool> expandedGroups}): _groupedColumnIds = groupedColumnIds,_expandedGroups = expandedGroups,super._();
   
 
  final  List<int> _groupedColumnIds;
@@ -1996,16 +2044,18 @@ _$GroupStateCopyWith<_GroupState> get copyWith => __$GroupStateCopyWithImpl<_Gro
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _GroupState&&const DeepCollectionEquality().equals(other._groupedColumnIds, _groupedColumnIds)&&const DeepCollectionEquality().equals(other._expandedGroups, _expandedGroups));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _GroupState&&const DeepCollectionEquality().equals(other.groupedColumnIds, _groupedColumnIds)&&const DeepCollectionEquality().equals(other.expandedGroups, _expandedGroups));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_groupedColumnIds),const DeepCollectionEquality().hash(_expandedGroups));
+int get hashCode {
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_groupedColumnIds),const DeepCollectionEquality().hash(_expandedGroups));
+}
 
 @override
 String toString() {
-  return 'GroupState(groupedColumnIds: $groupedColumnIds, expandedGroups: $expandedGroups)';
+    return 'GroupState(groupedColumnIds: $groupedColumnIds, expandedGroups: $expandedGroups)';
 }
 
 
@@ -2058,16 +2108,21 @@ $EditStateCopyWith<EditState> get copyWith => _$EditStateCopyWithImpl<EditState>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is EditState&&(identical(other.editingCellId, editingCellId) || other.editingCellId == editingCellId)&&const DeepCollectionEquality().equals(other.editingValue, editingValue));
+  final _this = this as EditState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is EditState&&(identical(other.editingCellId, _this.editingCellId) || other.editingCellId == _this.editingCellId)&&const DeepCollectionEquality().equals(other.editingValue, _this.editingValue));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,editingCellId,const DeepCollectionEquality().hash(editingValue));
+int get hashCode {
+  final _this = this as EditState;
+  return Object.hash(runtimeType,_this.editingCellId,const DeepCollectionEquality().hash(_this.editingValue));
+}
 
 @override
 String toString() {
-  return 'EditState(editingCellId: $editingCellId, editingValue: $editingValue)';
+  final _this = this as EditState;
+  return 'EditState(editingCellId: ${_this.editingCellId}, editingValue: ${_this.editingValue})';
 }
 
 
@@ -2096,7 +2151,7 @@ class _$EditStateCopyWithImpl<$Res>
 /// Create a copy of EditState
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? editingCellId = freezed,Object? editingValue = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(EditState(
 editingCellId: freezed == editingCellId ? _self.editingCellId : editingCellId // ignore: cast_nullable_to_non_nullable
 as String?,editingValue: freezed == editingValue ? _self.editingValue : editingValue // ignore: cast_nullable_to_non_nullable
 as dynamic,
@@ -2256,16 +2311,18 @@ _$EditStateCopyWith<_EditState> get copyWith => __$EditStateCopyWithImpl<_EditSt
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _EditState&&(identical(other.editingCellId, editingCellId) || other.editingCellId == editingCellId)&&const DeepCollectionEquality().equals(other.editingValue, editingValue));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _EditState&&(identical(other.editingCellId, editingCellId) || other.editingCellId == editingCellId)&&const DeepCollectionEquality().equals(other.editingValue, editingValue));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,editingCellId,const DeepCollectionEquality().hash(editingValue));
+int get hashCode {
+    return Object.hash(runtimeType,editingCellId,const DeepCollectionEquality().hash(editingValue));
+}
 
 @override
 String toString() {
-  return 'EditState(editingCellId: $editingCellId, editingValue: $editingValue)';
+    return 'EditState(editingCellId: $editingCellId, editingValue: $editingValue)';
 }
 
 
@@ -2318,16 +2375,21 @@ $PaginationStateCopyWith<PaginationState> get copyWith => _$PaginationStateCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PaginationState&&(identical(other.currentPage, currentPage) || other.currentPage == currentPage)&&(identical(other.pageSize, pageSize) || other.pageSize == pageSize)&&(identical(other.enabled, enabled) || other.enabled == enabled)&&(identical(other.serverSide, serverSide) || other.serverSide == serverSide));
+  final _this = this as PaginationState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PaginationState&&(identical(other.currentPage, _this.currentPage) || other.currentPage == _this.currentPage)&&(identical(other.pageSize, _this.pageSize) || other.pageSize == _this.pageSize)&&(identical(other.enabled, _this.enabled) || other.enabled == _this.enabled)&&(identical(other.serverSide, _this.serverSide) || other.serverSide == _this.serverSide));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,currentPage,pageSize,enabled,serverSide);
+int get hashCode {
+  final _this = this as PaginationState;
+  return Object.hash(runtimeType,_this.currentPage,_this.pageSize,_this.enabled,_this.serverSide);
+}
 
 @override
 String toString() {
-  return 'PaginationState(currentPage: $currentPage, pageSize: $pageSize, enabled: $enabled, serverSide: $serverSide)';
+  final _this = this as PaginationState;
+  return 'PaginationState(currentPage: ${_this.currentPage}, pageSize: ${_this.pageSize}, enabled: ${_this.enabled}, serverSide: ${_this.serverSide})';
 }
 
 
@@ -2356,7 +2418,7 @@ class _$PaginationStateCopyWithImpl<$Res>
 /// Create a copy of PaginationState
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? currentPage = null,Object? pageSize = null,Object? enabled = null,Object? serverSide = null,}) {
-  return _then(_self.copyWith(
+  return _then(PaginationState(
 currentPage: null == currentPage ? _self.currentPage : currentPage // ignore: cast_nullable_to_non_nullable
 as int,pageSize: null == pageSize ? _self.pageSize : pageSize // ignore: cast_nullable_to_non_nullable
 as int,enabled: null == enabled ? _self.enabled : enabled // ignore: cast_nullable_to_non_nullable
@@ -2520,16 +2582,18 @@ _$PaginationStateCopyWith<_PaginationState> get copyWith => __$PaginationStateCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PaginationState&&(identical(other.currentPage, currentPage) || other.currentPage == currentPage)&&(identical(other.pageSize, pageSize) || other.pageSize == pageSize)&&(identical(other.enabled, enabled) || other.enabled == enabled)&&(identical(other.serverSide, serverSide) || other.serverSide == serverSide));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PaginationState&&(identical(other.currentPage, currentPage) || other.currentPage == currentPage)&&(identical(other.pageSize, pageSize) || other.pageSize == pageSize)&&(identical(other.enabled, enabled) || other.enabled == enabled)&&(identical(other.serverSide, serverSide) || other.serverSide == serverSide));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,currentPage,pageSize,enabled,serverSide);
+int get hashCode {
+    return Object.hash(runtimeType,currentPage,pageSize,enabled,serverSide);
+}
 
 @override
 String toString() {
-  return 'PaginationState(currentPage: $currentPage, pageSize: $pageSize, enabled: $enabled, serverSide: $serverSide)';
+    return 'PaginationState(currentPage: $currentPage, pageSize: $pageSize, enabled: $enabled, serverSide: $serverSide)';
 }
 
 

@@ -4,6 +4,7 @@ export 'controllers/grid_scroll_controller.dart';
 
 // Models
 export 'models/auto_height.dart';
+export 'models/auto_header_height.dart';
 export 'models/data/cell_value_change.dart';
 export 'models/data/column.dart';
 export 'models/data/grid_display_row.dart';

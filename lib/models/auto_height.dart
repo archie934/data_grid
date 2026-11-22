@@ -54,21 +54,3 @@ class AutoRowHeight {
   /// [IndexedRowHeightDelegate] (exact, Fenwick-tree-backed) when null.
   final RowHeightDelegate? delegate;
 }
-
-/// Opts the header row into content-measured height instead of a fixed
-/// scalar. Headers aren't virtualized, so this is measured synchronously
-/// every layout pass — no indexing/estimation machinery needed.
-class AutoHeaderHeight {
-  const AutoHeaderHeight({
-    this.estimatedHeight = 48.0,
-    this.minHeight = 0.0,
-    this.maxHeight = 300.0,
-  });
-
-  /// Seed height used for the very first layout, before the header has been
-  /// measured once.
-  final double estimatedHeight;
-
-  final double minHeight;
-  final double maxHeight;
-}

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_data_grid/models/data/column.dart';
 import 'package:flutter_data_grid/models/data/grid_display_row.dart';
 import 'package:flutter_data_grid/models/data/row.dart';
@@ -66,8 +66,20 @@ class _GridPinnedQuadrantState<T extends DataGridRow>
   final Map<CellLayoutId, Widget> _cellCache = {};
 
   // Pre-computed state consumed by build(). Updated by _rebuildCellList().
+  //
+  // Note there is no per-cell rect here: a cell's x/width comes from its
+  // column's [ColumnSpan] and its y/height from [rowMetrics], both resolved at
+  // layout time, so scrolling costs zero widget work.
   List<Widget> _children = const [];
-  Map<CellLayoutId, Rect> _contentRects = const {};
+  List<CellLayoutId> _cellIds = const [];
+  Map<int, ColumnSpan> _columnSpans = const {};
+
+  /// See the equivalent field in GridUnpinnedQuadrant.
+  late Listenable _relayout;
+
+  /// See the equivalent fields in GridUnpinnedQuadrant.
+  double _lastRangeVScroll = 0;
+  bool _jumped = false;
 
   @override
   void initState() {
@@ -76,6 +88,7 @@ class _GridPinnedQuadrantState<T extends DataGridRow>
     _rebuildCellList();
     widget.vOffset.addListener(_onVOffsetChanged);
     widget.rowHeightVersion?.addListener(_onRowHeightVersionChanged);
+    _relayout = GridLayoutDelegate.buildRelayout(vOffset: widget.vOffset);
   }
 
   @override
@@ -90,26 +103,36 @@ class _GridPinnedQuadrantState<T extends DataGridRow>
       old.rowHeightVersion?.removeListener(_onRowHeightVersionChanged);
       widget.rowHeightVersion?.addListener(_onRowHeightVersionChanged);
     }
+    if (!identical(old.vOffset, widget.vOffset)) {
+      _relayout = GridLayoutDelegate.buildRelayout(vOffset: widget.vOffset);
+    }
 
     // Clear cache when content-affecting parameters change.
-    if (!identical(old.rowsById, widget.rowsById) ||
+    final contentChanged =
+        !identical(old.rowsById, widget.rowsById) ||
         !identical(old.rows, widget.rows) ||
         !identical(old.columns, widget.columns) ||
-        !identical(old.pinnedIndices, widget.pinnedIndices)) {
+        !identical(old.pinnedIndices, widget.pinnedIndices);
+    if (contentChanged) {
       _cellCache.clear();
     }
 
     // Recompute row range when structural parameters change.
-    if (old.viewportHeight != widget.viewportHeight ||
+    final geometryChanged =
+        old.viewportHeight != widget.viewportHeight ||
         old.rowMetrics != widget.rowMetrics ||
         old.rowCount != widget.rowCount ||
-        old.cacheExtent != widget.cacheExtent) {
+        old.cacheExtent != widget.cacheExtent;
+    if (geometryChanged || contentChanged) {
       _computeRowRange();
     }
 
-    // Always rebuild the cell list — build() reads _children / _contentRects
-    // directly, so they must be current before the framework calls build().
-    _rebuildCellList();
+    // Only when something it derives from moved — see the equivalent comment
+    // in GridUnpinnedQuadrant: an unconditional rebuild forces a relayout via
+    // GridLayoutDelegate.shouldRelayout's identity check.
+    if (geometryChanged || contentChanged) {
+      _rebuildCellList();
+    }
   }
 
   @override
@@ -123,10 +146,18 @@ class _GridPinnedQuadrantState<T extends DataGridRow>
 
   void _computeRowRange() {
     final vScroll = widget.vOffset.value;
+    // See GridUnpinnedQuadrant._computeRange: on a discontinuous frame the
+    // cache-extent buffer can't prefetch anything, so it's skipped.
+    final jumped =
+        (vScroll - _lastRangeVScroll).abs() >= widget.viewportHeight &&
+        widget.viewportHeight > 0;
+    _lastRangeVScroll = vScroll;
+    _jumped = jumped;
+
     final rowRange = widget.rowMetrics.visibleRowRange(
       scrollOffset: vScroll,
       viewportExtent: widget.viewportHeight,
-      cacheExtent: widget.cacheExtent,
+      cacheExtent: jumped ? 0.0 : widget.cacheExtent,
       rowCount: widget.rowCount,
     );
 
@@ -134,12 +165,19 @@ class _GridPinnedQuadrantState<T extends DataGridRow>
     _lastRow = rowRange.lastRow;
   }
 
-  /// Computes [_children] and [_contentRects] for the current row range.
+  /// Computes [_children], [_cellIds] and [_columnSpans] for the current row
+  /// range.
   ///
   /// Carry-over cells are reused from [_cellCache]; new cells are created and
   /// added to the cache. Cells that are no longer visible are evicted.
+  ///
+  /// Vertical geometry is deliberately *not* computed here — [GridLayoutDelegate]
+  /// derives each row's y from its index during layout, so this only has to run
+  /// when the set of built cells changes.
   void _rebuildCellList() {
-    final contentRects = <CellLayoutId, Rect>{};
+    final jumped = _jumped;
+    final columnSpans = <int, ColumnSpan>{};
+    final cellIds = <CellLayoutId>[];
     final nextCache = <CellLayoutId, Widget>{};
     final children = <Widget>[];
 
@@ -149,6 +187,8 @@ class _GridPinnedQuadrantState<T extends DataGridRow>
 
       final colWidth = widget.columns[colIndex].width;
       final column = widget.columns[colIndex];
+
+      columnSpans[colIndex] = ColumnSpan(xOffset, colWidth);
 
       for (int row = _firstRow; row < _lastRow; row++) {
         if (row < 0 || row >= widget.rows.length) continue;
@@ -162,30 +202,33 @@ class _GridPinnedQuadrantState<T extends DataGridRow>
 
         final cellId = CellLayoutId(row, colIndex);
 
-        contentRects[cellId] = Rect.fromLTWH(
-          xOffset,
-          widget.rowMetrics.offsetOf(row),
-          colWidth,
-          widget.rowMetrics.heightOf(row),
-        );
-
         // Reuse the cached LayoutId for carry-over cells. Flutter detects the
         // identical instance and skips build() for that element entirely.
-        final cell =
-            _cellCache[cellId] ??
-            LayoutId(
-              key: ValueKey(cellId),
-              id: cellId,
-              child: LayoutGridCell<T>(
-                key: ValueKey('cell_${rowId}_${column.id}'),
-                row: rowData,
-                rowId: rowId,
-                column: column,
-                rowIndex: row,
-              ),
-            );
+        // On a jump frame nothing carries over, so cells are keyed by slot
+        // instead — see GridUnpinnedQuadrant._buildCell for the full rationale.
+        final Widget cell;
+        final cached = jumped ? null : _cellCache[cellId];
+        if (cached != null) {
+          cell = cached;
+        } else {
+          final key = jumped
+              ? ValueKey(CellLayoutId(row - _firstRow, colIndex))
+              : ValueKey(cellId);
+          cell = LayoutId(
+            key: key,
+            id: cellId,
+            child: LayoutGridCell<T>(
+              key: jumped ? key : ValueKey('cell_${rowId}_${column.id}'),
+              row: rowData,
+              rowId: rowId,
+              column: column,
+              rowIndex: row,
+            ),
+          );
+        }
 
-        nextCache[cellId] = cell;
+        if (!jumped) nextCache[cellId] = cell;
+        cellIds.add(cellId);
         children.add(cell);
       }
 
@@ -196,10 +239,12 @@ class _GridPinnedQuadrantState<T extends DataGridRow>
       ..clear()
       ..addAll(nextCache);
 
-    _contentRects = contentRects;
+    _columnSpans = columnSpans;
+    _cellIds = cellIds;
     _children = children;
   }
 
+  /// Called on every scroll frame; only rebuilds when the window actually moved.
   void _onVOffsetChanged() {
     final prevFirst = _firstRow;
     final prevLast = _lastRow;
@@ -212,8 +257,14 @@ class _GridPinnedQuadrantState<T extends DataGridRow>
   }
 
   void _onRowHeightVersionChanged() {
+    // Row geometry is resolved at layout time; the bumped rowMetricsVersion
+    // forces the relayout. Rebuild the cell list only if the window moved.
+    final prevFirst = _firstRow;
+    final prevLast = _lastRow;
     _computeRowRange();
-    setState(_rebuildCellList);
+    setState(() {
+      if (_firstRow != prevFirst || _lastRow != prevLast) _rebuildCellList();
+    });
   }
 
   // ---------------------------------------------------------------------------
@@ -227,8 +278,12 @@ class _GridPinnedQuadrantState<T extends DataGridRow>
         color: widget.backgroundColor,
         child: CustomMultiChildLayout(
           delegate: GridLayoutDelegate(
-            contentRects: _contentRects,
+            cellIds: _cellIds,
+            columnSpans: _columnSpans,
+            rowMetrics: widget.rowMetrics,
+            rowMetricsVersion: widget.rowHeightVersion?.value ?? 0,
             vOffset: widget.vOffset,
+            relayout: _relayout,
             // hOffset intentionally omitted: pinned columns don't scroll horizontally.
             measurement: widget.measurement,
           ),

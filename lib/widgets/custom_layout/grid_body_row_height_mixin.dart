@@ -39,13 +39,27 @@ mixin _GridBodyRowHeightMixin<T extends DataGridRow>
   ValueNotifier<int>? get _rowHeightVersionOrNull =>
       widget.autoRowHeight != null ? _rowHeightVersion : null;
 
-  /// Builds the [RowHeightMeasurement] hook for this frame's quadrants, or
-  /// `null` when auto row-height isn't enabled.
+  RowHeightMeasurement? _cachedRowHeightMeasurement;
+
+  /// Returns the [RowHeightMeasurement] hook for the quadrants, or `null` when
+  /// auto row-height isn't enabled.
+  ///
+  /// Memoized on the delegate and clamp: `GridLayoutDelegate.shouldRelayout`
+  /// compares the hook by identity, so a fresh instance per build would force
+  /// every quadrant to relayout on every build.
   RowHeightMeasurement? _buildRowHeightMeasurement(RowMetrics rowMetrics) {
     final autoRowHeight = widget.autoRowHeight;
-    if (autoRowHeight == null || rowMetrics is! AutoRowMetrics) return null;
+    if (autoRowHeight == null || rowMetrics is! AutoRowMetrics) {
+      return _cachedRowHeightMeasurement = null;
+    }
 
-    return RowHeightMeasurement(
+    final cached = _cachedRowHeightMeasurement;
+    if (cached != null &&
+        identical(cached.delegate, rowMetrics.delegate) &&
+        cached.maxHeightClamp == autoRowHeight.maxHeight) {
+      return cached;
+    }
+    return _cachedRowHeightMeasurement = RowHeightMeasurement(
       delegate: rowMetrics.delegate,
       maxHeightClamp: autoRowHeight.maxHeight,
       onMeasured: _onRowMeasured,
@@ -112,6 +126,11 @@ mixin _GridBodyRowHeightMixin<T extends DataGridRow>
     final wasVScrollable = _maxVScroll > 0;
     _resyncScrollExtent(delegate.totalExtent);
 
+    // Always notify quadrants, even on the full-rebuild path below: their
+    // GridLayoutDelegate only relayouts when rowMetricsVersion changes (the
+    // delegate and measurement hook keep their identity across a patch).
+    _rowHeightVersion.value++;
+
     if ((_maxVScroll > 0) != wasVScrollable) {
       // The vertical scrollbar's presence in the widget tree is gated on
       // `_maxVScroll > 0` inside CustomLayoutGridBody.build() (a conditional
@@ -121,12 +140,6 @@ mixin _GridBodyRowHeightMixin<T extends DataGridRow>
       // threshold, not on every corrective frame, so it isn't a fling-jank
       // contributor.
       setState(() {});
-      return;
     }
-
-    // Notify quadrants directly. Each has its own listener that does a local
-    // setState + _rebuildCellList()/_rebuildBandList() — this never reaches
-    // CustomLayoutGridBody's build().
-    _rowHeightVersion.value++;
   }
 }

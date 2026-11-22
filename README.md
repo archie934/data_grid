@@ -1,344 +1,244 @@
 # Flutter Data Grid
 
-A high-performance, reactive data grid for Flutter with comprehensive features including virtualization, sorting, filtering, cell editing, row selection, column pinning, and keyboard navigation.
+A fast, reactive data grid for Flutter. It supports virtualized rendering, sorting, filtering, grouping, cell editing, selection, column pinning and pagination.
 
 ![Flutter Data Grid Overview](doc/images/overview.png)
 
-## 🌐 Live Demo
+**[Live demo](https://archie934.github.io/data_grid/)**: 100k rows, WebAssembly build.
 
-Try it in your browser: [https://archie934.github.io/data_grid/](https://archie934.github.io/data_grid/) — 100k rows, WebAssembly build.
+> **Beta.** The core features are stable and tested, but the API may still change. See [Known limitations](#known-limitations).
 
-> **Early Development - Beta**: This package is in active development. While core features are stable and well-tested, some advanced features are still being refined. APIs may evolve based on community feedback. See [Known Issues & Roadmap](#-known-issues--roadmap) below for current limitations.
+## Features
 
-## ✨ Features
+- **Virtualized rendering**: only visible cells are built, so 100k+ rows scroll smoothly
+- **Columns**: resize, pin, hide/show, and a right-click header menu
+- **Sorting and filtering**: single-column sort and per-column filters, run on a background isolate for large datasets
+- **Row grouping**: nested, collapsible group header bands
+- **Selection**: row selection (checkbox column), cell and range selection, drag-select, Ctrl+C copy as CSV
+- **Cell editing**: inline editing with validation and commit callbacks
+- **Pagination**: client-side or server-side
+- **Theming, interceptors, custom events and pluggable sort/filter delegates**
+- **Headless mode**: use the controller without the widget
 
-### Core Functionality
-- ✅ **Virtualized Rendering** - Only visible rows/columns rendered for smooth 60fps scrolling
-- ✅ **Column Management** - Resize, pin, hide/show, reorder columns
-- ✅ **Column Sorting** - Single-column sorting with ascending/descending/clear cycle
-- ✅ **Column Filtering** - Customizable column filtering
-- ✅ **Row Grouping** - Group rows by one or more columns' values (nested) with collapsible, full-width group header bands
-- ✅ **Header Context Menu** - Right-click a column header for sort/group/hide actions
-- ✅ **Row Selection** - None/Single/Multiple modes with checkbox column
-- ✅ **Cell Editing** - Inline editing with validation and callbacks
-- ✅ **Pagination** - Client-side and server-side pagination with customizable page sizes
-- ✅ **Theming** - Fully customizable appearance
-- ✅ **Interceptors** - Logging, validation, custom event handling
-
-### Performance
-- **Isolate Processing** - Sorting and filtering run on background isolates for large datasets
-- **Debouncing** - Configurable debounce for sort/filter operations
-- **Efficient Updates** - Reactive state management with RxDart
-- **O(1) Viewport** - Constant-time visibility calculations
-
-## 📦 Installation
-
-Add this to your package's `pubspec.yaml` file:
+## Installation
 
 ```yaml
 dependencies:
-  flutter_data_grid: ^0.0.24
+  flutter_data_grid: ^0.1.0
 ```
-
-Then run:
-
-```bash
-flutter pub get
-```
-
-Import the package in your Dart code:
 
 ```dart
 import 'package:flutter_data_grid/data_grid.dart';
 ```
 
-## ⚠️ Known Issues & Roadmap
+Requires **Flutter 3.47+** (Dart 3.13+). The grid uses the standalone [`material_ui`](https://pub.dev/packages/material_ui) package, so your app's `MaterialApp` must come from `material_ui` too, not from `package:flutter/material.dart`.
 
-This package is in active development. Core features work well, but some advanced features are still being refined:
-
-### What Works Well ✅
-- **Row selection** - Fully implemented with none/multiple modes
-- **Cell selection** - Individual cell focus, range selection (Shift+click / Shift+Arrow), right-click drag, Ctrl+C copy as CSV
-- **Virtualized rendering** - Smooth scrolling with 100k+ rows
-- **Sorting & filtering** - Single-column sorting with background processing for large datasets
-- **Column management** - Resize, pin, hide/show columns
-- **Row grouping** - Multi-level (nested) grouping by cell value, with collapsible, indented group header bands
-- **Header context menu** - Right-click a header for sort/group/hide actions
-- **Cell editing** - Inline editing with validation (some edge cases remain)
-- **Pagination** - Client-side and server-side pagination with loading states
-- **Theming** - Comprehensive customization options
-
-### In Progress / Known Issues ⚠️
-- **Keyboard navigation** - Arrow keys work but may have issues in some scenarios
-- **Tab navigation** - Between cells needs improvement
-- **Cell editing** - Edge cases with rapid interactions being addressed
-- **Copy with grouping active** - Copied cell/row order doesn't fully match the on-screen grouped order in all cases
-
-### Planned Features 🚀
-- **Column selection** - Select entire columns
-- **Accessibility** - Improved screen reader support and ARIA labels
-- **Column reordering** - Drag-and-drop reordering
-- **Row/cell context menus** - Right-click menus beyond the current header menu
-
-### Production Use
-This package is suitable for:
-- ✅ Internal tools and dashboards
-- ✅ Admin panels and data management UIs
-- ✅ Projects willing to work around known limitations
-- ✅ Applications that can test thoroughly for their use case
-
-Consider waiting for v1.0 if you need:
-- ❌ Full accessibility compliance
-- ❌ Rock-solid keyboard navigation
-- ❌ Complete feature parity with enterprise data grids
-
-**Contributions welcome!** If you'd like to help improve any of these areas, please see the Contributing section.
-
-## 🏗️ Architecture
-
-```
-┌─────────────────────────────────────────────────┐
-│              DataGrid Widget                    │
-│  ┌──────────────┐        ┌──────────────┐      │
-│  │    Header    │        │  Scrollbars  │      │
-│  └──────────────┘        └──────────────┘      │
-│  ┌──────────────────────────────────────┐      │
-│  │         Virtualized Body             │      │
-│  │     CustomMultiChildLayout           │      │
-│  └──────────────────────────────────────┘      │
-└────────────┬────────────────────────────────────┘
-             │
-    ┌────────▼────────┐
-    │   Controller    │
-    │    (RxDart)     │
-    └────────┬────────┘
-             │
-    ┌────────▼────────────────────────┐
-    │    Event-Driven Architecture    │
-    │  • Data Events (CRUD)           │
-    │  • Sort Events                  │
-    │  • Filter Events                │
-    │  • Selection Events             │
-    │  • Edit Events                  │
-    │  • Pagination Events            │
-    │  • Keyboard Events              │
-    └─────────────────────────────────┘
-```
-
-## 📁 Project Structure
-
-```
-lib/
-├── controllers/
-│   ├── data_grid_controller.dart    # Main state controller
-│   └── grid_scroll_controller.dart  # Scroll synchronization
-│
-├── models/
-│   ├── data/
-│   │   ├── column.dart              # Column configuration
-│   │   └── row.dart                 # Row interface
-│   ├── state/
-│   │   └── grid_state.dart          # Freezed state models
-│   ├── enums/
-│   │   ├── filter_operator.dart     # Filter operators
-│   │   ├── selection_mode.dart      # Selection modes
-│   │   └── sort_direction.dart      # Sort directions
-│   └── events/
-│       ├── data_events.dart         # CRUD operations
-│       ├── sort_events.dart         # Sorting
-│       ├── filter_events.dart       # Filtering
-│       ├── selection_events.dart    # Row/cell selection
-│       ├── edit_events.dart         # Cell editing
-│       ├── keyboard_events.dart     # Keyboard navigation
-│       └── pagination_events.dart   # Pagination
-│
-├── delegates/
-│   ├── sort_delegate.dart           # Pluggable sorting
-│   └── filter_delegate.dart         # Pluggable filtering
-│
-├── interceptors/
-│   ├── data_grid_interceptor.dart   # Base interceptor
-│   ├── logging_interceptor.dart     # Event logging
-│   └── validation_interceptor.dart  # Data validation
-│
-├── theme/
-│   ├── data_grid_theme.dart         # Theme provider
-│   └── data_grid_theme_data.dart    # Theme configuration
-│
-├── utils/
-│   ├── data_indexer.dart            # Sort/filter operations
-│   ├── isolate_sort.dart            # Background sorting
-│   └── isolate_filter.dart          # Background filtering
-│
-├── widgets/
-│   ├── data_grid.dart               # Main widget
-│   ├── data_grid_header.dart        # Header row
-│   ├── data_grid_pagination.dart    # Pagination controls
-│   ├── cells/
-│   │   ├── data_grid_cell.dart      # Standard cell
-│   │   ├── data_grid_header_cell.dart # Header cell
-│   │   ├── data_grid_checkbox_cell.dart # Selection checkbox
-│   │   └── cell_scope.dart          # Per-cell InheritedWidget (CellScope)
-│   ├── custom_layout/               # CustomMultiChildLayout renderer
-│   │   ├── custom_layout_grid_body.dart  # Body widget + scroll handling
-│   │   ├── grid_unpinned_quadrant.dart   # Scrollable column region
-│   │   ├── grid_pinned_quadrant.dart     # Fixed column region
-│   │   ├── grid_layout_delegate.dart     # Layout delegate
-│   │   ├── layout_grid_cell.dart         # LayoutId wrapper
-│   │   └── external_scroll_position.dart # ScrollPosition adapter
-│   ├── filters/
-│   │   ├── filter_scope.dart        # Per-column filter InheritedWidget
-│   │   ├── default_filter_widget.dart # Default text-based filter
-│   │   └── filter_text_field.dart   # Reusable filter text field
-│   ├── overlays/
-│   │   └── loading_overlay.dart     # Loading indicator + scoped overlay
-│   ├── scroll/
-│   │   ├── horizontal_scrollbar.dart
-│   │   └── vertical_scrollbar.dart
-│   └── viewport/
-│       └── data_grid_header_viewport.dart  # Header/filter render object
-│
-└── data_grid.dart                   # Public API exports
-```
-
-## ⚡ Migration Guide
-
-### v0.0.24 → next: `groupByColumn` nests instead of replacing
-
-**Behavior change:** `GroupByColumnEvent` / `controller.groupByColumn(id)` now **appends** the column as the innermost grouping level instead of replacing the existing grouping, so grouping by a second column nests it.
+## Quick start
 
 ```dart
-// Before (v0.0.24): replaced the existing grouping
-controller.groupByColumn(2);
+// 1. A row model
+class Person extends DataGridRow {
+  String name;
+  int age;
 
-// After: to keep single-column replace semantics
-controller.groupByColumn(2, replace: true);
-// or
-controller.setGroupedColumns([2]);
-```
-
-Top-level group keys are unchanged (`'$columnId:$value'`), so stored `expandedGroups` keys from v0.0.24 still apply. Nested group keys append `'\u001F$columnId:$value'` per level.
-
-### v0.0.16 → v0.0.17: Removed TwoDimensional renderer
-
-**Breaking changes:**
-
-1. **`DataGridRendererType` enum removed** — Delete any import or usage of `DataGridRendererType`.
-
-2. **`renderer` parameter removed from `DataGrid`** — Remove the `renderer:` argument from your `DataGrid(...)` call. The grid now exclusively uses the `CustomMultiChildLayout` renderer.
-
-3. **`DataGridBody`, `DataGridScrollView`, and all viewport classes removed** — If you were importing `DataGridBody`, `DataGridScrollView`, `DataGridViewport`, `RenderDataGridViewport`, `DataGridChildDelegate`, or `DataGridVicinity` directly, remove those imports.
-
-**Migration checklist:**
-- [ ] Remove `renderer: DataGridRendererType.customLayout` (or `twoDimensional`) from all `DataGrid(...)` calls
-- [ ] Remove any `import` of `DataGridRendererType`
-- [ ] Remove direct usage of `DataGridBody` or the viewport classes if any
-
----
-
-### v0.0.11 → v0.0.12: Cell rebuild optimization & removed viewport/scroll state
-
-**Breaking changes:**
-
-1. **`ViewportState` removed from `DataGridState`** — The `viewport` field on `DataGridState` and the entire `ViewportState` freezed class have been removed. Flutter's `TwoDimensionalScrollView` already manages scroll offsets and visible range internally, so tracking them in grid state was redundant and caused unnecessary rebuilds.
-
-2. **`ViewportDelegate` removed** — `ViewportDelegate`, `DefaultViewportDelegate`, and `ViewportCalculator` have been deleted. Remove the `viewportDelegate:` parameter from your `DataGridController` constructor if you were passing one.
-
-3. **`ScrollEvent` / `ViewportResizeEvent` removed** — These events are no longer dispatched or handled. Remove any code that dispatches or listens for them.
-
-4. **`FilterRenderer` → `filterWidget` + `FilterScope`** — The `FilterRenderer` abstract class and `DataGrid.filterRenderer` parameter have been replaced by `DataGrid.filterWidget` (a plain `Widget`) paired with `FilterScope` (an `InheritedWidget`). See the v0.0.9 → v0.0.10 migration below for the pattern — the same approach now applies globally.
-
-5. **`RowRenderer` / `RenderContext` removed** — These unused renderer abstractions have been deleted.
-
-**Cell rebuild performance:**
-
-Cells no longer subscribe to global state changes via `InheritedModel`. Instead, each cell subscribes to a stream scoped to its own row/column, so only the affected cells rebuild when selection or edit state changes. This dramatically reduces unnecessary rebuilds in grids with many visible cells.
-
-**Loading overlay:**
-
-The loading overlay is now wrapped in `DataGridLoadingScope`, which subscribes only to the `loading` aspect of the grid state. This prevents loading state changes from triggering rebuilds in unrelated widgets.
-
----
-
-### v0.0.8 → v0.0.9+: `cellRenderer` → `cellWidget` + `CellScope`
-
-The `CellRenderer` interface and the `DataGrid.cellRenderer` parameter have been removed. Custom cell rendering now uses a plain `Widget` declared on each `DataGridColumn` and a `CellScope` inherited widget for per-cell data access.
-
-**Before (v0.0.8):**
-```dart
-class MyRenderer implements CellRenderer<MyRow> {
-  @override
-  Widget buildCell(RenderContext<MyRow> context) {
-    return Text(context.value.toString());
+  Person({required double id, required this.name, required this.age}) {
+    this.id = id;
   }
 }
 
-DataGrid<MyRow>(
-  controller: controller,
-  cellRenderer: MyRenderer(),
+// 2. Columns
+final columns = [
+  DataGridColumn<Person>(
+    id: 1,
+    title: 'Name',
+    width: 200,
+    valueAccessor: (row) => row.name,
+    cellValueSetter: (row, value) => row.name = value,
+    editable: true,
+  ),
+  DataGridColumn<Person>(
+    id: 2,
+    title: 'Age',
+    width: 100,
+    valueAccessor: (row) => row.age,
+  ),
+];
+
+// 3. A controller (dispose it in State.dispose())
+final controller = DataGridController<Person>(
+  initialColumns: columns,
+  initialRows: people,
+);
+
+// 4. The widget
+DataGrid<Person>(controller: controller)
+```
+
+## Usage
+
+### Columns
+
+```dart
+DataGridColumn<MyRow>(
+  id: 1,                                       // Unique id
+  title: 'Title',
+  width: 150,
+  pinned: false,                               // Freeze on the left
+  visible: true,
+  resizable: true,
+  sortable: true,
+  filterable: true,
+  groupable: true,                             // Shows grouping actions in the header menu
+  editable: true,
+  valueAccessor: (row) => row.value,
+  cellValueSetter: (row, value) => row.value = value,
+  validator: (oldValue, newValue) => newValue != null,
+  cellWidget: const MyCell(),                  // Custom cell (see below)
+  filterWidget: const MyFilter(),              // Custom filter (see below)
+  cellEditorBuilder: myEditor,
+  cellFormatter: (row, column) => 'text',
 )
 ```
 
-**After (v0.0.9+):**
+Right-clicking a header opens a menu with sort, group, pin and hide actions. You can do the same from code:
+
 ```dart
-class MyCell extends StatelessWidget {
-  const MyCell({super.key});
+controller.setColumnVisibility(columnId, false);
+controller.setColumnPinned(columnId, true);
+controller.resizeColumn(columnId, 180);
+```
+
+### Data
+
+```dart
+controller.setRows(rows);
+controller.insertRow(row, position: 0);
+controller.insertRows([row1, row2]);
+controller.updateRow(rowId, newRow);
+controller.updateCell(rowId, columnId, value);
+controller.deleteRows({id1, id2});
+
+// You changed a row object yourself, outside the grid: repaint its cells
+controller.refreshCells(rowIds: [rowId]);
+```
+
+### Sorting and filtering
+
+```dart
+controller.sortColumn(1, SortDirection.ascending);
+controller.sortColumn(1, null);                    // Clear the sort
+
+controller.filterColumn(1, FilterOperator.contains, 'smith');
+controller.clearFilter(columnId: 1);               // Or clearFilter() for all
+```
+
+Operators: `equals`, `notEquals`, `contains`, `startsWith`, `endsWith`, `greaterThan`, `lessThan`, `greaterThanOrEqual`, `lessThanOrEqual`, `isEmpty`, `isNotEmpty`. String matching ignores case and extra whitespace.
+
+Sorting a new column replaces the current sort. Sort and filter are debounced (300 ms and 500 ms by default). Above 10,000 rows they run on a background isolate. You can change both through the controller's `sortDebounce`, `filterDebounce`, `sortIsolateThreshold` and `filterIsolateThreshold`.
+
+### Selection
+
+```dart
+controller.setSelectionMode(SelectionMode.multiple);   // or SelectionMode.none
+controller.selectRow(rowId, multiSelect: true);
+controller.selectRowsRange(startId, endId);
+controller.clearSelection();
+
+controller.selection$.listen((s) => print(s.selectedRowIds));
+```
+
+You can select cells by clicking them. Shift+click and Shift+Arrow extend the selection, Ctrl+click toggles a cell, and a right-click drag selects a rectangle. Ctrl+C copies the selected cells as CSV. From code:
+
+```dart
+controller.focusCell(rowId, columnId);
+controller.shiftSelectCell(rowId, columnId);
+controller.copyCells();
+```
+
+**Keyboard shortcuts:** arrows move between rows and cells, Shift+Arrow extends the selection, Escape clears it, Ctrl/Cmd+A selects all, and Ctrl/Cmd+C copies.
+
+### Editing
+
+Double-click an editable cell, or start editing from code:
+
+```dart
+controller.startEditCell(rowId, columnId);
+controller.updateCellEditValue(newValue);
+controller.commitCellEdit();   // or cancelCellEdit()
+```
+
+To control what can be edited and saved, pass these callbacks to the controller:
+
+```dart
+DataGridController<MyRow>(
+  initialColumns: columns,
+  initialRows: rows,
+  canEditCell: (rowId, columnId) => rowId > 0,
+  onCellCommit: (rowId, columnId, oldValue, newValue) async {
+    return await save(rowId, columnId, newValue);  // false rejects the edit
+  },
+);
+```
+
+### Grouping
+
+Group from the header menu, or from code. Each call adds a nested level:
+
+```dart
+controller.groupByColumn(countryColumnId);
+controller.groupByColumn(cityColumnId);              // Country → City
+controller.groupByColumn(columnId, replace: true);   // Use this column as the only level
+controller.setGroupedColumns([]);                    // Remove all grouping
+controller.ungroupColumn(countryColumnId);
+
+controller.expandAllGroups();
+controller.collapseAllGroups();
+controller.toggleGroupExpansion(groupKey);
+```
+
+### Pagination
+
+```dart
+controller.enablePagination(true);
+controller.setPageSize(25);
+controller.nextPage();   // also previousPage, firstPage, lastPage, setPage(n)
+```
+
+For server-side pagination, supply loaders:
+
+```dart
+final controller = DataGridController<MyRow>(
+  initialColumns: columns,
+  onLoadPage: (page, pageSize) => api.fetchPage(page, pageSize),
+  onGetTotalCount: () => api.count(),
+);
+controller.enablePagination(true);
+controller.setServerSidePagination(true);
+```
+
+### Custom cells and filters
+
+A custom cell is a `const` widget that reads its data from `CellScope`. Because the widget is `const`, Flutter can skip rebuilding it. Only the widgets that call `CellScope.of` rebuild when the data changes.
+
+```dart
+class ValueCell extends StatelessWidget {
+  const ValueCell({super.key});
 
   @override
   Widget build(BuildContext context) {
     final scope = CellScope.of<MyRow>(context);
-    return Text(scope.value.toString());
+    return Text(
+      '${scope.value}',
+      style: TextStyle(color: scope.row.value > 100 ? Colors.green : Colors.red),
+    );
   }
 }
-
-// Set per-column — no global cellRenderer on DataGrid:
-DataGridColumn<MyRow>(
-  id: 1,
-  title: 'Name',
-  width: 150,
-  valueAccessor: (row) => row.name,
-  cellWidget: const MyCell(),
-)
 ```
 
-**Migration checklist:**
-- [ ] Delete any class that implements `CellRenderer<T>`
-- [ ] Remove `cellRenderer:` from your `DataGrid(...)` constructor call
-- [ ] Create a `StatelessWidget` with a `const` constructor for each custom cell
-- [ ] Inside the widget's `build`, call `CellScope.of<MyRow>(context)` to access row data
-- [ ] Set `cellWidget: const MyCell()` on each `DataGridColumn` that needs custom rendering
+`CellScope` exposes `row`, `column`, `value`, `rowIndex`, `isSelected`, `isPinned` and `controller`.
 
-**Why this change?**
-The old approach built a new renderer widget every frame, preventing Flutter from reusing element subtrees. The new `const cellWidget` + `CellScope` pattern lets Flutter preserve element identity across scrolls and rebuilds — only the `InheritedWidget` data changes, so only `CellScope.of` call sites are rebuilt.
+A custom filter works the same way, through `FilterScope`. It exposes `column`, `currentFilter`, `onChange(operator, value)` and `onClear()`:
 
-### v0.0.9 → v0.0.10+: `filterRenderer` → `filterWidget` + `FilterScope`
-
-The `FilterRenderer` abstract class and the `DataGrid.filterRenderer` / `DataGridColumn.filterRenderer` parameters have been removed. Custom filter rendering now uses a plain `Widget` on each column and a `FilterScope` inherited widget for accessing filter context.
-
-**Before (v0.0.9):**
-```dart
-class MyFilter implements FilterRenderer {
-  @override
-  Widget buildFilter(
-    BuildContext context,
-    DataGridColumn column,
-    ColumnFilter? currentFilter,
-    void Function(FilterOperator, dynamic) onChange,
-    void Function() onClear,
-  ) {
-    return TextField(onChanged: (v) => onChange(FilterOperator.contains, v));
-  }
-}
-
-DataGridColumn<MyRow>(
-  id: 1,
-  title: 'Name',
-  width: 150,
-  filterRenderer: MyFilter(),
-)
-```
-
-**After (v0.0.10+):**
 ```dart
 class MyFilter extends StatelessWidget {
   const MyFilter({super.key});
@@ -346,446 +246,24 @@ class MyFilter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scope = FilterScope.of(context);
-    return TextField(
-      onChanged: (v) => scope.onChange(FilterOperator.contains, v),
-    );
-  }
-}
-
-DataGridColumn<MyRow>(
-  id: 1,
-  title: 'Name',
-  width: 150,
-  filterWidget: const MyFilter(),
-)
-```
-
-**Migration checklist:**
-- [ ] Delete any class that implements `FilterRenderer`
-- [ ] Remove `filterRenderer:` from your `DataGrid(...)` and `DataGridColumn(...)` calls
-- [ ] Create a `StatelessWidget` with a `const` constructor for each custom filter
-- [ ] Inside the widget's `build`, call `FilterScope.of(context)` to access column, currentFilter, onChange, onClear
-- [ ] Set `filterWidget: const MyFilter()` on each `DataGridColumn` that needs a custom filter
-
-`FilterScope` provides:
-- `scope.column` — the column definition
-- `scope.currentFilter` — the active `ColumnFilter` (operator + value), or null
-- `scope.onChange(operator, value)` — dispatch a filter change
-- `scope.onClear()` — dispatch a filter clear
-
-**Why this change?**
-Same reason as the `CellScope` migration: `FilterRenderer.buildFilter()` was called every frame, creating a new widget subtree each rebuild. The `const filterWidget` + `FilterScope` pattern preserves element identity — only widgets that call `FilterScope.of` are rebuilt when filter state changes.
-
----
-
-## 🚀 Quick Start
-
-### 1. Define Your Row Model
-
-```dart
-class Person extends DataGridRow {
-  final String name;
-  final int age;
-  final String email;
-  
-  Person({required double id, required this.name, required this.age, required this.email}) {
-    this.id = id;
+    return TextField(onChanged: (v) => scope.onChange(FilterOperator.contains, v));
   }
 }
 ```
 
-### 2. Create Columns
+### Row and header height
+
+Row height is fixed by default (`rowHeight`, 48 by default). To size rows or the header to fit their content, pass `autoRowHeight` or `autoHeaderHeight`:
 
 ```dart
-final columns = <DataGridColumn<Person>>[
-  DataGridColumn<Person>(
-    id: 1,
-    title: 'Name',
-    width: 200,
-    valueAccessor: (row) => row.name,
-    cellValueSetter: (row, value) => row.name = value,
-    sortable: true,
-    filterable: true,
-    editable: true,
-    pinned: false,
-  ),
-  DataGridColumn<Person>(
-    id: 2,
-    title: 'Age',
-    width: 100,
-    valueAccessor: (row) => row.age,
-    cellValueSetter: (row, value) => row.age = value,
-  ),
-  DataGridColumn<Person>(
-    id: 3,
-    title: 'Email',
-    width: 250,
-    valueAccessor: (row) => row.email,
-    validator: (oldValue, newValue) => newValue.contains('@'),
-  ),
-];
-```
-
-### 3. Create Controller
-
-```dart
-final controller = DataGridController<Person>(
-  initialColumns: columns,
-  initialRows: rows,
-  rowHeight: 48.0,
-  sortDebounce: Duration(milliseconds: 300),
-  filterDebounce: Duration(milliseconds: 500),  // Default: 500ms
-  sortIsolateThreshold: 10000,  // Use isolate for >10k rows
-  filterIsolateThreshold: 10000,
-);
-```
-
-### 4. Use the Widget
-
-```dart
-@override
-Widget build(BuildContext context) {
-  return Scaffold(
-    body: DataGrid<Person>(
-      controller: controller,
-      headerHeight: 48.0,
-      rowHeight: 48.0,
-    ),
-  );
-}
-```
-
-## 📖 Detailed Usage
-
-### Column Configuration
-
-```dart
-DataGridColumn<MyRow>(
-  id: 1,                                  // Unique column identifier
-  title: 'Column Title',                  // Header text
-  width: 150,                             // Initial width
-  pinned: false,                          // Pin to left
-  visible: true,                          // Show/hide column
-  resizable: true,                        // Allow resize
-  sortable: true,                         // Enable sorting
-  filterable: true,                       // Enable filtering
-  groupable: true,                        // Enable grouping via header context menu
-  editable: true,                         // Allow inline editing
-  valueAccessor: (row) => row.value,      // Get cell value
-  cellValueSetter: (row, val) => row.value = val,  // Set cell value
-  validator: (old, new) => new != null,   // Validate edits
-  cellWidget: const MyCell(),             // Custom cell widget (see CellScope)
-  cellEditorBuilder: customEditor,        // Custom editor
-  cellFormatter: (row, col) => 'text',    // Format display
+DataGrid<MyRow>(
+  controller: controller,
+  autoRowHeight: const AutoRowHeight(estimatedHeight: 56, maxHeight: 200),
+  autoHeaderHeight: const AutoHeaderHeight(maxHeight: 120),
 )
 ```
 
-### Data Operations
-
-```dart
-// Load data
-controller.setRows(myRows);
-
-// Insert rows
-controller.insertRow(newRow);
-controller.insertRow(newRow, position: 0);  // Insert at index
-controller.insertRows([row1, row2, row3]);
-
-// Update data
-controller.updateRow(rowId, updatedRow);
-controller.updateCell(rowId, columnId, newValue);
-
-// Delete data
-controller.deleteRow(rowId);
-controller.deleteRows({id1, id2, id3});
-```
-
-### Sorting
-
-```dart
-// Sort by column (ascending)
-controller.addEvent(SortEvent(
-  columnId: 1,
-  direction: SortDirection.ascending,
-));
-
-// Sort by column (descending)
-controller.addEvent(SortEvent(
-  columnId: 1,
-  direction: SortDirection.descending,
-));
-
-// Clear sort
-controller.addEvent(SortEvent(
-  columnId: 1,
-  direction: null,  // Clears the sort
-));
-
-// Note: Sorting a different column replaces the current sort
-// Only single-column sorting is supported
-```
-
-### Filtering
-
-```dart
-// Apply filter
-controller.addEvent(FilterEvent(
-  columnId: 1,
-  operator: FilterOperator.contains,
-  value: 'search term',
-));
-
-// Available operators:
-// - equals, notEquals
-// - contains, startsWith, endsWith (case-insensitive, trims whitespace)
-// - greaterThan, lessThan
-// - greaterThanOrEqual, lessThanOrEqual
-// - isEmpty, isNotEmpty
-
-// String filters are sanitized:
-// - Trimmed (leading/trailing whitespace removed)
-// - Case-insensitive matching
-// - Multiple spaces normalized to single space
-
-// Clear filter
-controller.addEvent(ClearFilterEvent(columnId: 1));  // Clear one
-controller.addEvent(ClearFilterEvent());              // Clear all
-```
-
-### Selection
-
-```dart
-// Configure selection mode
-controller.setSelectionMode(SelectionMode.none);      // Disabled
-controller.setSelectionMode(SelectionMode.multiple);  // Multiple rows (checkbox column)
-
-// Or use helpers
-controller.disableSelection();
-controller.enableMultiSelect(true);
-
-// Select rows
-controller.addEvent(SelectRowEvent(rowId: 1));
-controller.addEvent(SelectRowEvent(rowId: 2, multiSelect: true));
-
-// Select range
-controller.addEvent(SelectRowsRangeEvent(
-  startRowId: 1,
-  endRowId: 5,
-));
-
-// Select all visible
-controller.addEvent(SelectAllVisibleEvent());
-
-// Clear selection
-controller.addEvent(ClearSelectionEvent());
-
-// Listen to selection
-controller.selection$.listen((selection) {
-  print('Selected: ${selection.selectedRowIds}');
-});
-```
-
-### Grouping
-
-Right-click a header cell (with `groupable: true`, the default) to open the context menu and choose **Group by This Column**. Rows are bucketed by that column's cell value, in first-appearance order, and rendered as collapsible full-width group header bands. Choosing **Add to Grouping** on another column nests it as the next level: each group is subdivided by the new column, and nested bands are indented by `DataGridPadding.groupIndentWidth` (default `20`) per level. Outer bands show their number of subgroups; innermost bands show their row count. Collapsing a group hides everything beneath it, and each group's expansion state is kept independently.
-
-```dart
-// Group by a column's value (appends as the innermost level)
-controller.groupByColumn(countryColumnId);
-controller.groupByColumn(cityColumnId); // nested: Country → City
-
-// Make a column the only grouping level
-controller.groupByColumn(columnId, replace: true);
-
-// Set (or reorder) all levels at once, outermost first; [] clears grouping
-controller.setGroupedColumns([countryColumnId, cityColumnId]);
-
-// Remove one level — deeper levels move up
-controller.ungroupColumn(countryColumnId);
-
-// Expand/collapse a specific group (groupKey comes from the group header band).
-// Keys are paths: '$columnId:$value', joined by '\u001F' for nested levels.
-controller.toggleGroupExpansion(groupKey);
-controller.expandAllGroups();
-controller.collapseAllGroups();
-
-// Listen to group state
-controller.group$.listen((group) {
-  print('Grouped columns: ${group.groupedColumnIds}');
-});
-
-// Opt a column out of the "Group by This Column" menu item
-DataGridColumn<MyRow>(
-  id: 1,
-  title: 'ID',
-  width: 80,
-  groupable: false,
-)
-```
-
-### Header Context Menu
-
-Right-clicking a column header opens a context menu (suppressing the browser's native context menu on web) with actions gated by that column's flags:
-- **Sort Ascending / Descending / Clear Sort** - shown when `sortable: true`
-- **Group by This Column / Add to Grouping / Remove Grouping** - shown when `groupable: true`
-- **Pin Column / Unpin Column** - always available; toggles `column.pinned`
-- **Hide Column** - always available; toggle a column back on via `controller.setColumnVisibility(columnId, true)`
-
-```dart
-controller.setColumnVisibility(columnId, false);  // Hide
-controller.setColumnVisibility(columnId, true);   // Show
-
-controller.setColumnPinned(columnId, true);   // Pin to the left
-controller.setColumnPinned(columnId, false);  // Unpin
-```
-
-### Pagination
-
-```dart
-// Enable pagination
-controller.enablePagination(true);
-
-// Navigate pages
-controller.setPage(5);           // Go to specific page
-controller.nextPage();           // Next page
-controller.previousPage();       // Previous page
-controller.firstPage();          // First page
-controller.lastPage();           // Last page
-
-// Change page size
-controller.setPageSize(25);      // 25 rows per page
-
-// Disable pagination
-controller.enablePagination(false);
-```
-
-#### Server-Side Pagination
-
-For server-side pagination, provide callbacks when creating the controller:
-
-```dart
-final controller = DataGridController<MyRow>(
-  initialColumns: columns,
-  initialRows: [],  // Start empty for server-side
-  onLoadPage: (page, pageSize) async {
-    // Fetch data from your API
-    final response = await api.fetchPage(page: page, limit: pageSize);
-    return response.rows;
-  },
-  onGetTotalCount: () async {
-    // Return total row count from server
-    return await api.getTotalCount();
-  },
-);
-
-// Enable server-side pagination
-controller.enablePagination(true);
-controller.setServerSidePagination(true);
-
-// For server-side, you must set total items after loading
-controller.setTotalItems(totalCount);
-```
-
-### Cell Editing
-
-```dart
-// Start editing
-controller.startEditCell(rowId, columnId);
-
-// Update value
-controller.updateCellEditValue(newValue);
-
-// Commit changes
-controller.commitCellEdit();
-
-// Cancel editing
-controller.cancelCellEdit();
-
-// With validation
-final controller = DataGridController<MyRow>(
-  columns: columns,
-  rows: rows,
-  canEditCell: (rowId, columnId) => rowId > 0,  // Custom permission
-  onCellCommit: (rowId, columnId, oldValue, newValue) async {
-    // Return true to allow, false to reject
-    return await saveToDatabase(rowId, columnId, newValue);
-  },
-);
-```
-
-### Cell Selection
-
-```dart
-// Plain click — focus a single cell
-controller.addEvent(FocusCellEvent(rowId: 1.0, columnId: 2));
-
-// Ctrl+click — toggle a cell in/out of the selection
-controller.addEvent(ToggleCellInSelectionEvent(rowId: 1.0, columnId: 2));
-
-// Shift+click — extend the selection to this cell
-controller.addEvent(ShiftSelectCellEvent(rowId: 3.0, columnId: 2));
-
-// Programmatically set a rect of cells
-controller.addEvent(SetFocusedCellsEvent(['1.0_2', '1.0_3', '2.0_2', '2.0_3']));
-
-// Clear cell focus
-controller.addEvent(ClearCellSelectionEvent());
-
-// Copy focused cells to clipboard as CSV (Ctrl+C also triggers this)
-controller.addEvent(CopyCellsEvent());
-```
-
-Right-click drag draws a selection rectangle over the grid body; releasing commits the covered cells as focused.
-
-### Keyboard Navigation
-
-Built-in keyboard shortcuts:
-- **Arrow Up/Down**: Navigate rows (or cells when a cell is focused)
-- **Arrow Left/Right**: Navigate cells
-- **Shift+Arrow**: Extend cell selection
-- **Escape**: Clear selection
-- **Ctrl+A / Cmd+A**: Select all visible rows
-- **Ctrl+C / Cmd+C**: Copy focused cells to clipboard as CSV
-
-### Custom Rendering
-
-Custom cell widgets use `CellScope` to access per-cell data. Declare a `const` widget on the column — Flutter preserves element identity across rebuilds, so only widgets that call `CellScope.of` are rebuilt when data changes.
-
-```dart
-// 1. Define a const cell widget
-class ValueCell extends StatelessWidget {
-  const ValueCell({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final scope = CellScope.of<MyRow>(context);
-    return Container(
-      color: scope.row.value > 100 ? Colors.green : Colors.red,
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      alignment: Alignment.centerLeft,
-      child: Text(scope.value.toString()),
-    );
-  }
-}
-
-// 2. Assign it to the column
-DataGridColumn<MyRow>(
-  id: 1,
-  title: 'Value',
-  width: 150,
-  valueAccessor: (row) => row.value,
-  cellWidget: const ValueCell(),  // const for maximum performance
-)
-```
-
-`CellScope<T>` provides:
-- `scope.row` — the typed row object
-- `scope.column` — the column configuration
-- `scope.value` — pre-computed value from `valueAccessor`
-- `scope.rowIndex` — zero-based visible row index
-- `scope.isSelected` — whether the row is currently selected
-- `scope.isPinned` — whether the column is pinned
-- `scope.controller` — grid controller for dispatching events
+Auto row height is slower to scroll than a fixed height. Keep `estimatedHeight` close to your real row height. Inside cells, avoid `Expanded`, `Spacer`, and `Align` without `heightFactor: 1.0`, because they make a cell fill the maximum height.
 
 ### Theming
 
@@ -794,503 +272,111 @@ DataGrid<MyRow>(
   controller: controller,
   theme: DataGridThemeData(
     colors: DataGridColors(
-      headerBackground: Colors.blue,
-      cellBackground: Colors.white,
-      selectedRow: Colors.blue.shade100,
-      gridLines: Colors.grey.shade300,
+      headerColor: Colors.blue.shade50,
+      selectionColor: Colors.blue.shade100,
     ),
-    dimensions: DataGridDimensions(
-      headerHeight: 48,
-      rowHeight: 40,
-      columnMinWidth: 50,
-    ),
-    typography: DataGridTypography(
-      headerTextStyle: TextStyle(fontWeight: FontWeight.bold),
-      cellTextStyle: TextStyle(fontSize: 14),
-    ),
+    dimensions: DataGridDimensions(headerHeight: 48, rowHeight: 40),
   ),
 )
 ```
 
-### Interceptors
+`DataGridThemeData` groups its settings into `colors`, `dimensions`, `padding`, `borders` and `overlay`. Every field is optional.
+
+### Extending the grid
+
+- **Interceptors**: subclass `DataGridInterceptor` and override `onBeforeEvent`, `onBeforeStateUpdate`, `onAfterStateUpdate` or `onError`. Register one with `controller.addInterceptor(...)`. `LoggingInterceptor` and `ValidationInterceptor` are built in.
+- **Custom events**: subclass `DataGridEvent`, implement `apply(EventContext context)` to return the new state (or `null` to keep the current one), and dispatch it with `controller.addEvent(...)`.
+- **Delegates**: pass a custom `sortDelegate` or `filterDelegate` to the controller to replace the sort or filter algorithm.
+
+## Headless usage
+
+`DataGridController` doesn't depend on widgets. You can use it for the grid's logic and render the state yourself:
 
 ```dart
-// Logging interceptor
-controller.addInterceptor(LoggingInterceptor<MyRow>());
-
-// Validation interceptor  
-controller.addInterceptor(ValidationInterceptor<MyRow>(
-  validators: {
-    'age': (value) => value >= 0 && value <= 150,
-  },
-));
-
-// Custom interceptor
-class MyInterceptor extends DataGridInterceptor<MyRow> {
-  @override
-  DataGridEvent? onBeforeEvent(DataGridEvent event, DataGridState<MyRow> state) {
-    // Modify or cancel events
-    return event;
-  }
-  
-  @override
-  DataGridState<MyRow>? onBeforeStateUpdate(
-    DataGridState<MyRow> newState,
-    DataGridState<MyRow> oldState,
-    DataGridEvent? event,
-  ) {
-    // Modify state before update
-    return newState;
-  }
-  
-  @override
-  void onAfterStateUpdate(
-    DataGridState<MyRow> newState,
-    DataGridState<MyRow> oldState,
-    DataGridEvent? event,
-  ) {
-    // React to state changes
-  }
-}
-```
-
-### Custom Events
-
-You can create custom events to extend the grid's functionality:
-
-```dart
-// 1. Define your custom event
-class ExportToCSVEvent extends DataGridEvent {
-  final String filename;
-  
-  ExportToCSVEvent({required this.filename});
-  
-  @override
-  DataGridState<T>? apply<T extends DataGridRow>(EventContext<T> context) {
-    // Access current state
-    final rows = context.state.visibleRows;
-    final columns = context.state.columns;
-    
-    // Perform your custom logic
-    _exportToCSV(rows, columns, filename);
-    
-    // Return null if no state change needed
-    // Or return modified state if needed
-    return null;
-  }
-  
-  void _exportToCSV(List rows, List columns, String filename) {
-    // Your export logic here
-    print('Exporting ${rows.length} rows to $filename');
-  }
-}
-
-// 2. Dispatch your custom event
-controller.addEvent(ExportToCSVEvent(filename: 'data.csv'));
-
-// 3. More complex example with state changes
-class HighlightRowsAboveThresholdEvent extends DataGridEvent {
-  final int threshold;
-  
-  HighlightRowsAboveThresholdEvent(this.threshold);
-  
-  @override
-  DataGridState<T>? apply<T extends DataGridRow>(EventContext<T> context) {
-    // Find rows that meet criteria
-    final highlightedIds = <double>{};
-    for (final row in context.state.visibleRows) {
-      // Assuming row has a 'value' property
-      if ((row as dynamic).value > threshold) {
-        highlightedIds.add(row.id);
-      }
-    }
-    
-    // Update selection to highlight these rows
-    return context.state.copyWith(
-      selection: context.state.selection.copyWith(
-        selectedRowIds: highlightedIds,
-      ),
-    );
-  }
-}
-
-// Usage
-controller.addEvent(HighlightRowsAboveThresholdEvent(100));
-
-// 4. Async custom event example
-class FetchAndAppendDataEvent extends DataGridEvent {
-  final String apiEndpoint;
-  
-  FetchAndAppendDataEvent(this.apiEndpoint);
-  
-  @override
-  bool shouldShowLoading(DataGridState state) => true;
-  
-  @override
-  String? loadingMessage() => 'Fetching data from API...';
-  
-  @override
-  Future<DataGridState<T>?> apply<T extends DataGridRow>(EventContext<T> context) async {
-    try {
-      // Fetch data from API
-      final newRows = await _fetchFromAPI(apiEndpoint);
-      
-      // Append to existing data
-      final updatedRowsById = Map<double, T>.from(context.state.rowsById);
-      for (final row in newRows) {
-        updatedRowsById[row.id] = row as T;
-      }
-      
-      final updatedDisplayOrder = [
-        ...context.state.displayOrder,
-        ...newRows.map((r) => r.id),
-      ];
-      
-      return context.state.copyWith(
-        rowsById: updatedRowsById,
-        displayOrder: updatedDisplayOrder,
-        isLoading: false,
-      );
-    } catch (e) {
-      print('Error fetching data: $e');
-      return context.state.copyWith(isLoading: false);
-    }
-  }
-  
-  Future<List<DataGridRow>> _fetchFromAPI(String endpoint) async {
-    // Your API call here
-    await Future.delayed(Duration(seconds: 2));
-    return [];
-  }
-}
-
-// Usage
-controller.addEvent(FetchAndAppendDataEvent('https://api.example.com/data'));
-```
-
-### Delegates (Advanced)
-
-```dart
-// Custom sort delegate
-class MySortDelegate extends SortDelegate<MyRow> {
-  @override
-  Future<SortResult?> handleSort(
-    SortEvent event,
-    DataGridState<MyRow> state,
-    void Function(SortResult) onComplete,
-  ) async {
-    // Custom sorting logic
-  }
-}
-
-final controller = DataGridController<MyRow>(
-  columns: columns,
-  rows: rows,
-  sortDelegate: MySortDelegate(),
-  filterDelegate: MyFilterDelegate(),
-);
-```
-
-## 🧩 Headless Usage
-
-`DataGridController` has no dependency on widgets or `BuildContext`. You can use it on its own for the grid's logic (sorting, filtering, selection, cell focus, editing, pagination, grouping, column state) and render the result however you like, or not render it at all. Create a controller, never pass it to a `DataGrid`, and call `dispose()` when you're done.
-
-**Read state** from the synchronous `controller.state` snapshot, or subscribe to:
-
-| Stream | Emits |
-|--------|-------|
-| `state$` | Every state change |
-| `selection$` / `sort$` / `filter$` / `group$` | Only that slice, deduplicated |
-| `cellValueChanges` | In-place cell edits (`updateCell` / `commitCellEdit`), which don't emit a new `state` |
-
-**Send commands** with the controller's methods:
-
-| Domain | Methods |
-|--------|---------|
-| Data | `setRows`, `insertRow(s)`, `updateRow`, `updateCell`, `deleteRow(s)`, `setColumns` |
-| Sort / filter | `sortColumn`, `filterColumn`, `clearFilter` |
-| Row selection | `setSelectionMode`, `selectRow`, `selectRowsRange`, `selectAllRows`, `clearSelection` |
-| Cell selection | `focusCell`, `shiftSelectCell`, `toggleCellInSelection`, `navigateCell`, `clearCellSelection`, `copyCells` |
-| Editing | `startEditCell`, `updateCellEditValue`, `commitCellEdit`, `cancelCellEdit` |
-| Pagination | `setPage`, `setPageSize`, `nextPage`, `previousPage`, `firstPage`, `lastPage`, `enablePagination` |
-| Grouping / columns | `groupByColumn`, `ungroupColumn`, `toggleGroupExpansion`, `setColumnVisibility`, `setColumnPinned`, `resizeColumn`, `reorderColumn` |
-
-`addEvent(...)` is still available for anything else, including your own custom events.
-
-**Custom UI example:**
-
-```dart
-final controller = DataGridController<Person>(
-  initialColumns: columns,
-  initialRows: people,
-)..setSelectionMode(SelectionMode.multiple);
-
 StreamBuilder<DataGridState<Person>>(
   stream: controller.state$,
   initialData: controller.state,
   builder: (context, snapshot) {
     final state = snapshot.data!;
-    return ListView.builder(
-      itemCount: state.displayOrder.length,
-      itemBuilder: (context, index) {
-        final person = state.rowsById[state.displayOrder[index]]!;
-        return ListTile(
-          title: Text(person.name),
-          selected: state.selection.isRowSelected(person.id),
-          onTap: () => controller.selectRow(person.id, multiSelect: true),
-        );
-      },
+    return ListView(
+      children: [
+        for (final id in state.displayOrder)
+          ListTile(title: Text(state.rowsById[id]!.name)),
+      ],
     );
   },
 );
-
-// Elsewhere, e.g. from your own header buttons:
-controller.sortColumn(1, SortDirection.ascending);
-controller.filterColumn(2, FilterOperator.greaterThan, 30);
 ```
 
-**Non-visual example (CSV export):**
+Read the current state from `controller.state`, or listen to `state$`. To get only one part of the state, listen to `selection$`, `sort$`, `filter$` or `group$`. Edits made with `updateCell` and `commitCellEdit` change the row in place and don't emit a new state. They're reported on `cellValueChanges` instead.
+
+Sorting and filtering are asynchronous, so don't read `state` straight after calling them. For scripts and tests, set the debounces to `Duration.zero` and wait for the matching stream:
 
 ```dart
-final controller = DataGridController<Person>(
-  initialColumns: columns,
-  initialRows: people,
-  sortDebounce: Duration.zero,
-);
-
 controller.sortColumn(2, SortDirection.descending);
 await controller.sort$.firstWhere((s) => s.hasSort);
-
-final state = controller.state;
-final csv = state.displayOrder
-    .map((id) => state.rowsById[id]!)
-    .map((p) => '${p.name},${p.age}')
-    .join('\n');
-controller.dispose();
 ```
 
-**Notes:**
-- Sort and filter are **asynchronous**. They are debounced (`sortDebounce` 300ms, `filterDebounce` 500ms by default) and run in a background isolate above `sortIsolateThreshold`/`filterIsolateThreshold` rows. For batch or scripted use, set the debounces to `Duration.zero` and await the relevant stream rather than reading `state` straight after the call.
-- You don't need `GridScrollController`. It only drives the built-in widget's scrolling; a plain `ScrollController` works fine in a custom UI.
-- `copyCells()` writes to the system clipboard via Flutter's `Clipboard`.
-- Column `cellWidget`, `filterWidget` and `cellEditorBuilder` are only used by the built-in widget; leave them `null` in headless use.
+## Performance tips
 
-## 🎯 Performance Tips
+- Keep `valueAccessor` cheap, and make custom `cellWidget`s `const`.
+- Pin only the columns that need it.
+- Use a fixed `rowHeight` unless your rows really need to size to their content.
+- Always call `controller.dispose()`.
+- **On the web, test performance in a release or WebAssembly build** (`flutter run -d chrome --release` or `--wasm`). Debug builds on Chrome are much slower.
 
-1. **Use isolate thresholds wisely**: Default 10,000 rows works well for most cases
-2. **Set appropriate debounce**: 500ms for filters (default), 300ms for sort
-3. **Implement valueAccessor efficiently**: Avoid heavy computations
-4. **Use pinned columns sparingly**: Too many pinned columns affect performance
-5. **Dispose controllers**: Always call `controller.dispose()` in `State.dispose()`
-6. **Prefer a fixed `rowHeight` over `autoRowHeight` when you can**: auto row height can noticeably impact scroll performance. Each row's cells must be laid out once with loose constraints to measure them, and every height correction shifts the rows below it and updates the scroll extent. This cost is heaviest on fast flings and scrollbar-thumb drags into unmeasured regions. To reduce it:
-   - Set `AutoRowHeight.estimatedHeight` close to your typical row height, so fewer corrections are needed.
-   - Keep the default `cacheExtent`, so rows are measured just before they scroll into view.
-   - Keep `measureAheadExtent` (default 2000px), so rows near the viewport are measured in the background while scrolling is idle.
-   - Keep `cellWidget`s cheap to lay out.
+## Known limitations
 
-### Web / Chrome Performance
+- Keyboard navigation and Tab between cells still have rough edges.
+- Cell editing has some edge cases with rapid input.
+- When grouping is on, copied cells aren't always in the same order as on screen.
+- Only one column can be sorted at a time.
+- Column widths aren't saved. Store them yourself if you need them to persist.
 
-**Debug mode on Chrome (without `--release` or `--wasm`) will have poor performance.** This is expected — Flutter's debug mode includes extra assertions, disables optimizations, and the Dart-to-JS compilation is unoptimized. The data grid automatically caps `cacheExtent` to 500px in debug builds to mitigate this, but scrolling will still feel sluggish compared to release builds.
+**Planned:** drag-and-drop column reordering, accessibility (screen reader) support, row and cell context menus, CSV/Excel export, column auto-sizing, frozen rows.
 
-For accurate performance testing on the web, always use one of:
+## Troubleshooting
+
+- **Sort or filter doesn't apply in tests.** Set `sortDebounce` and `filterDebounce` to `Duration.zero`. Before asserting, let the async work finish with `await tester.runAsync(() => Future.delayed(const Duration(milliseconds: 50)))`.
+- **"No Material widget found" or "No MaterialLocalizations found".** Your `MaterialApp` comes from `package:flutter/material.dart`. Import it from `material_ui` instead.
+- **Clicking doesn't select rows.** Check that the selection mode isn't `SelectionMode.none`.
+
+## Migration guide
+
+### v0.1.0 → next: `groupByColumn` adds a nested level
+
+`groupByColumn(id)` used to replace the current grouping. It now adds the column as the innermost level. To keep the old behavior, call `groupByColumn(id, replace: true)` or `setGroupedColumns([id])`. Top-level group keys (`'$columnId:$value'`) haven't changed. Each nested level appends `'\u001F$columnId:$value'`.
+
+### v0.0.25 → v0.1.0: `material_ui`
+
+The package now imports `package:material_ui/material_ui.dart` and requires Flutter 3.47+. The public API is unchanged. To migrate:
+
+1. Run `flutter pub add material_ui`.
+2. Run `dart fix --apply --code=migrate_design_widgets`.
+3. Make sure the `MaterialApp`, `Scaffold` and `Theme` above each `DataGrid` come from `material_ui`.
+
+### Older releases
+
+| Version | Change |
+|---------|--------|
+| v0.0.16 → v0.0.17 | Removed `DataGridRendererType` and the `renderer:` parameter. Removed `DataGridBody`, `DataGridScrollView` and the viewport classes. |
+| v0.0.11 → v0.0.12 | Removed `ViewportState`, `ViewportDelegate`, `ScrollEvent`, `ViewportResizeEvent`, `RowRenderer` and `RenderContext`. Replaced `filterRenderer` with `filterWidget` and `FilterScope`. |
+| v0.0.9 → v0.0.10 | Replaced `FilterRenderer` with a `const filterWidget` that reads `FilterScope.of(context)`. |
+| v0.0.8 → v0.0.9 | Replaced `CellRenderer` and `DataGrid.cellRenderer` with a per-column `const cellWidget` that reads `CellScope.of<T>(context)`. |
+
+## Contributing
+
+Contributions are welcome. Accessibility, keyboard navigation and tests need the most help.
 
 ```bash
-# Release mode (recommended for testing)
-flutter run -d chrome --release
-
-# WebAssembly (best performance)
-flutter run -d chrome --wasm
-```
-
-## 📊 Performance Benchmarks
-
-- **100,000 rows**: Smooth 60fps scrolling
-- **Initial render**: <100ms
-- **Sorting**: Non-blocking with isolate (background thread)
-- **Selection**: <16ms (instant feedback)
-- **Column resize**: Instant visual feedback
-
-## 🧪 Testing
-
-Comprehensive test suite included:
-- Widget tests for all major features (140 passing tests)
-- State management tests
-- Selection mode tests
-- Edit workflow tests
-- Keyboard navigation tests
-
-Run tests:
-```bash
-flutter test
-```
-
-## 📝 Event Reference
-
-### Data Events
-- `LoadDataEvent` - Load rows
-- `InsertRowEvent` / `InsertRowsEvent` - Add rows
-- `DeleteRowEvent` / `DeleteRowsEvent` - Remove rows
-- `UpdateRowEvent` / `UpdateCellEvent` - Modify data
-
-### Sort Events
-- `SortEvent` - Apply/modify sort
-- `SortCompleteEvent` - Sort finished (internal)
-
-### Filter Events
-- `FilterEvent` - Apply filter
-- `ClearFilterEvent` - Remove filters
-
-### Selection Events
-- `SelectRowEvent` - Select row
-- `SelectRowsRangeEvent` - Select range
-- `SelectAllRowsEvent` / `SelectAllVisibleEvent` - Select all
-- `ClearSelectionEvent` - Clear selection
-- `SetSelectionModeEvent` - Change mode
-
-### Edit Events
-- `StartCellEditEvent` - Begin editing
-- `UpdateCellEditValueEvent` - Update value
-- `CommitCellEditEvent` - Save changes
-- `CancelCellEditEvent` - Discard changes
-
-### Pagination Events
-- `EnablePaginationEvent` - Enable/disable pagination
-- `SetServerSidePaginationEvent` - Toggle server-side mode
-- `SetPageEvent` - Go to specific page
-- `SetPageSizeEvent` - Change rows per page
-- `NextPageEvent` / `PreviousPageEvent` - Navigate pages
-- `FirstPageEvent` / `LastPageEvent` - Jump to start/end
-- `SetTotalItemsEvent` - Set total count (server-side)
-
-### Keyboard Events
-- `NavigateUpEvent` / `NavigateDownEvent` - Move selection
-- `NavigateLeftEvent` / `NavigateRightEvent` - Navigate columns
-
-### Column Events
-- `ColumnResizeEvent` - Resize column
-- `SetColumnWidthEvent` - Set exact width
-- `SetColumnVisibilityEvent` - Show/hide column
-- `SetColumnPinnedEvent` - Pin/unpin column
-
-### Group Events
-- `GroupByColumnEvent` - Group rows by a column's value, appended as the innermost level (`replace: true` to make it the only level)
-- `UngroupColumnEvent` - Remove a column's grouping level; deeper levels move up
-- `SetGroupedColumnsEvent` - Set all grouping levels at once, outermost first
-- `ToggleGroupExpansionEvent` - Expand/collapse a specific group
-- `ExpandAllGroupsEvent` / `CollapseAllGroupsEvent` - Expand/collapse every group at every level
-
-## 🔧 Troubleshooting
-
-**Q: Blank cells while scrolling?**  
-A: This is normal virtualization behavior. Cells render as they become visible.
-
-**Q: Sorting/filtering not working in tests?**  
-A: Use `sortDebounce: Duration.zero` and `filterDebounce: Duration.zero` for tests.
-Also use `await tester.runAsync(() => Future.delayed(Duration(milliseconds: 50)))` before assertions to allow async stream operations to complete.
-
-**Q: Selection not working?**  
-A: Ensure `SelectionMode` is not set to `none`.
-
-**Q: Column resize not persisting?**  
-A: Column widths are in-memory. Persist to storage if needed.
-
-**Q: Build errors after changes?**  
-A: Run: `dart run build_runner build --delete-conflicting-outputs`
-
-## 📚 Dependencies
-
-```yaml
-dependencies:
-  flutter:
-    sdk: flutter
-  rxdart: ^0.28.0
-  collection: ^1.18.0
-  freezed_annotation: ^2.4.4
-
-dev_dependencies:
-  build_runner: ^2.4.12
-  freezed: ^2.5.7
-```
-
-## 🚧 Roadmap & Future Enhancements
-
-### High Priority (Addressing Limitations)
-- [x] **Cell selection** - Individual cell selection, ranges, drag-select, Ctrl+C copy
-- [ ] **Improved keyboard navigation** - Reliable arrow key navigation and Tab support
-- [ ] **Accessibility improvements** - Screen reader support, ARIA labels, focus management
-- [ ] **Column reordering** - Drag-and-drop column reordering
-- [ ] **Stable cell editing** - Fix edge cases and improve UX
-
-### Medium Priority
-- [ ] **Context menus** - Right-click menus for rows/cells/headers
-- [x] **Copy** - Ctrl+C copies focused cells as CSV
-- [ ] **Row grouping UI** - Visual grouping with expand/collapse
-- [x] **Pagination** - Built-in pagination controls (added in v0.0.3)
-- [ ] **Export functionality** - CSV/Excel export
-- [ ] **Column auto-sizing** - Fit content or fit header
-- [ ] **Frozen rows** - Pin rows to top/bottom
-
-### Low Priority
-- [x] **Header viewport optimization** - Custom RenderObject for header/filter scrolling (no widget rebuilds)
-- [ ] **Advanced layout logic** - More flexible positioning and z-ordering for overlays
-- [ ] **Touch gestures** - Swipe actions, pinch-to-zoom
-- [ ] **Undo/redo** - Action history
-- [ ] **Advanced filtering UI** - Filter builder with AND/OR logic
-- [ ] **Conditional formatting** - Rule-based cell styling
-
-## 👥 Contributing
-
-Contributions are welcome! This is an experimental project and could benefit from community input.
-
-### Areas Needing Help
-1. **Accessibility** - Making the grid work with screen readers
-2. **Keyboard Navigation** - Improving reliability and coverage
-3. **Accessibility** - Making the grid work with screen readers
-4. **Testing** - Adding more test coverage
-5. **Documentation** - Improving examples and API docs
-6. **Performance** - Optimizing for even larger datasets
-
-### How to Contribute
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Make your changes
-4. Add tests if applicable
-5. Run tests: `flutter test`
-6. Commit your changes (`git commit -m 'Add amazing feature'`)
-7. Push to the branch (`git push origin feature/amazing-feature`)
-8. Open a Pull Request
-
-### Development Setup
-```bash
-# Clone the repo
 git clone https://github.com/archie934/data_grid.git
 cd data_grid
-
-# Install dependencies
 flutter pub get
-
-# Run code generation (for Freezed models)
-dart run build_runner build --delete-conflicting-outputs
-
-# Run tests
+dart run build_runner build --delete-conflicting-outputs   # after editing Freezed models
 flutter test
-
-# Run the example app
-cd example
-flutter pub get
-flutter run
+cd example && flutter pub get && flutter run
 ```
 
-## 📄 License
+## License
 
-See LICENSE file.
-
-## 🙏 Acknowledgments
-
-- Built with Flutter's **CustomMultiChildLayout** for efficient virtualization
-- Uses **RxDart** for reactive state management
-- Uses **Freezed** for immutable state models
-- Inspired by data grid implementations in AG Grid, Handsontable, and Excel
-
-
-**Built with Flutter 💙**
+See [LICENSE](LICENSE).

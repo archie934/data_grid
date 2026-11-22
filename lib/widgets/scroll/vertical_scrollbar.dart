@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_data_grid/theme/data_grid_theme.dart';
 
 /// Vertical scrollbar driven by a [ScrollController].

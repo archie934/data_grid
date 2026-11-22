@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_data_grid/models/data/grid_display_row.dart';
 import 'package:flutter_data_grid/models/data/row.dart';
 import 'package:flutter_data_grid/widgets/custom_layout/grid_layout_delegate.dart';
@@ -56,8 +56,17 @@ class _FullWidthRowBandLayerState<T extends DataGridRow>
   int _firstRow = 0;
   int _lastRow = 0;
 
+  /// Caches band widget instances by row, so a range shift reuses the identical
+  /// instance for carry-over bands and Flutter skips their [build] entirely —
+  /// the same trick the cell quadrants use for [LayoutGridCell].
+  final Map<CellLayoutId, Widget> _bandCache = {};
+
   List<Widget> _children = const [];
-  Map<CellLayoutId, Rect> _contentRects = const {};
+  List<CellLayoutId> _cellIds = const [];
+  Map<int, ColumnSpan> _columnSpans = const {};
+
+  /// See the equivalent field in GridUnpinnedQuadrant.
+  late Listenable _relayout;
 
   @override
   void initState() {
@@ -66,6 +75,7 @@ class _FullWidthRowBandLayerState<T extends DataGridRow>
     _rebuildBandList();
     widget.vOffset.addListener(_onVOffsetChanged);
     widget.rowHeightVersion?.addListener(_onRowHeightVersionChanged);
+    _relayout = GridLayoutDelegate.buildRelayout(vOffset: widget.vOffset);
   }
 
   @override
@@ -80,17 +90,26 @@ class _FullWidthRowBandLayerState<T extends DataGridRow>
       old.rowHeightVersion?.removeListener(_onRowHeightVersionChanged);
       widget.rowHeightVersion?.addListener(_onRowHeightVersionChanged);
     }
-
-    if (old.viewportHeight != widget.viewportHeight ||
-        old.viewportWidth != widget.viewportWidth ||
-        old.rowMetrics != widget.rowMetrics ||
-        old.cacheExtent != widget.cacheExtent ||
-        !identical(old.rows, widget.rows) ||
-        !identical(old.bandBuilder, widget.bandBuilder)) {
-      _computeRowRange();
+    if (!identical(old.vOffset, widget.vOffset)) {
+      _relayout = GridLayoutDelegate.buildRelayout(vOffset: widget.vOffset);
     }
 
-    _rebuildBandList();
+    final contentChanged =
+        !identical(old.rows, widget.rows) ||
+        !identical(old.bandBuilder, widget.bandBuilder);
+    if (contentChanged) {
+      _bandCache.clear();
+    }
+
+    final geometryChanged =
+        old.viewportHeight != widget.viewportHeight ||
+        old.viewportWidth != widget.viewportWidth ||
+        old.rowMetrics != widget.rowMetrics ||
+        old.cacheExtent != widget.cacheExtent;
+    if (geometryChanged || contentChanged) {
+      _computeRowRange();
+      _rebuildBandList();
+    }
   }
 
   @override
@@ -116,28 +135,41 @@ class _FullWidthRowBandLayerState<T extends DataGridRow>
   }
 
   void _rebuildBandList() {
-    final contentRects = <CellLayoutId, Rect>{};
+    final cellIds = <CellLayoutId>[];
+    final nextCache = <CellLayoutId, Widget>{};
     final children = <Widget>[];
 
     for (int row = _firstRow; row < _lastRow; row++) {
       if (row < 0 || row >= widget.rows.length) continue;
-      final band = widget.bandBuilder(widget.rows[row], row);
-      if (band == null) continue;
 
       final cellId = CellLayoutId(row, 0);
-      contentRects[cellId] = Rect.fromLTWH(
-        0,
-        widget.rowMetrics.offsetOf(row),
-        widget.viewportWidth,
-        widget.rowMetrics.heightOf(row),
-      );
-      children.add(LayoutId(key: ValueKey(cellId), id: cellId, child: band));
+
+      // Reuse the cached instance for carry-over bands; only rows newly
+      // entering the window are handed to bandBuilder.
+      var entry = _bandCache[cellId];
+      if (entry == null) {
+        final band = widget.bandBuilder(widget.rows[row], row);
+        if (band == null) continue;
+        entry = LayoutId(key: ValueKey(cellId), id: cellId, child: band);
+      }
+
+      nextCache[cellId] = entry;
+      cellIds.add(cellId);
+      children.add(entry);
     }
 
-    _contentRects = contentRects;
+    _bandCache
+      ..clear()
+      ..addAll(nextCache);
+
+    // Bands span the full viewport width and don't scroll horizontally, so a
+    // single span covers every one of them.
+    _columnSpans = {0: ColumnSpan(0, widget.viewportWidth)};
+    _cellIds = cellIds;
     _children = children;
   }
 
+  /// Called on every scroll frame; only rebuilds when the window actually moved.
   void _onVOffsetChanged() {
     final newFirst = _firstRow;
     final newLast = _lastRow;
@@ -148,8 +180,14 @@ class _FullWidthRowBandLayerState<T extends DataGridRow>
   }
 
   void _onRowHeightVersionChanged() {
+    // Band positions are resolved at layout time; the bumped
+    // rowMetricsVersion forces the relayout. Rebuild only if the window moved.
+    final prevFirst = _firstRow;
+    final prevLast = _lastRow;
     _computeRowRange();
-    setState(_rebuildBandList);
+    setState(() {
+      if (_firstRow != prevFirst || _lastRow != prevLast) _rebuildBandList();
+    });
   }
 
   @override
@@ -159,8 +197,12 @@ class _FullWidthRowBandLayerState<T extends DataGridRow>
     return ClipRect(
       child: CustomMultiChildLayout(
         delegate: GridLayoutDelegate(
-          contentRects: _contentRects,
+          cellIds: _cellIds,
+          columnSpans: _columnSpans,
+          rowMetrics: widget.rowMetrics,
+          rowMetricsVersion: widget.rowHeightVersion?.value ?? 0,
           vOffset: widget.vOffset,
+          relayout: _relayout,
         ),
         children: _children,
       ),

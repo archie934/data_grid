@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:flutter_data_grid/controllers/data_grid_controller.dart';
 import 'package:flutter_data_grid/models/data/row.dart';
@@ -120,9 +120,10 @@ class _DataGridCheckboxHeaderCellState<T extends DataGridRow>
             ),
             padding: theme.padding.checkboxPadding,
             // Align explicitly (with heightFactor: 1.0) rather than via
-            // Container's `alignment` param — see DataGridCell's
-            // _DefaultTextCell for why plain Align/Center needs this under
-            // DataGrid.autoHeaderHeight's loose measurement pass.
+            // Container's `alignment` param: a plain Align/Center expands to
+            // fill any bounded incoming height, so under
+            // DataGrid.autoHeaderHeight's loose measurement pass it would
+            // report maxHeight as the header's measured height.
             child: Align(
               alignment: Alignment.center,
               heightFactor: 1.0,
