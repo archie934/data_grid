@@ -112,12 +112,18 @@ class FixedRowMetrics implements RowMetrics {
 ///
 /// A thin adapter: [CustomLayoutGridBody] owns the long-lived [delegate] and
 /// creates a fresh [AutoRowMetrics] wrapping it on every build (equality is
-/// delegate-identity-based, so `didUpdateWidget` change checks still work
-/// correctly despite the new wrapper instance).
+/// based on delegate identity plus [generation], so `didUpdateWidget` change
+/// checks still work correctly despite the new wrapper instance).
 class AutoRowMetrics implements RowMetrics {
-  const AutoRowMetrics(this.delegate);
+  const AutoRowMetrics(this.delegate, {this.generation = 0});
 
   final RowHeightDelegate delegate;
+
+  /// Bumped by the grid whenever auto row height is toggled or reconfigured.
+  /// The same [delegate] instance can be reused across that (a
+  /// consumer-supplied one), so without this the quadrants would see "same
+  /// metrics" and keep the layout and measurement hook from before the reset.
+  final int generation;
 
   @override
   double heightOf(int row) => delegate.heightOf(row);
@@ -158,8 +164,10 @@ class AutoRowMetrics implements RowMetrics {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is AutoRowMetrics && identical(delegate, other.delegate);
+      other is AutoRowMetrics &&
+          identical(delegate, other.delegate) &&
+          generation == other.generation;
 
   @override
-  int get hashCode => identityHashCode(delegate);
+  int get hashCode => Object.hash(identityHashCode(delegate), generation);
 }

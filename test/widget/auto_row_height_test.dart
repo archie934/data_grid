@@ -228,5 +228,199 @@ void main() {
         expect(delegate.isMeasured(30), isFalse);
       });
     });
+
+    testWidgets(
+      'toggling autoRowHeight off and on repeatedly keeps rows laid out '
+      '(regression: re-enabled delegate was never rebuilt because the '
+      'structural-change refs still matched)',
+      (tester) async {
+        final rows = [
+          for (int i = 0; i < 5; i++)
+            _Row(id: i.toDouble(), label: 'r$i', contentHeight: 20),
+        ];
+        final controller = _makeController(
+          rows: rows,
+          estimatedHeight: 48,
+          maxHeight: 300,
+        );
+        addTearDown(controller.dispose);
+
+        Widget build(bool auto) => MaterialApp(
+          home: Scaffold(
+            body: DataGrid<_Row>(
+              controller: controller,
+              showPagination: false,
+              cacheExtent: 1000,
+              autoRowHeight: auto
+                  ? const AutoRowHeight(
+                      estimatedHeight: 48,
+                      minHeight: 10,
+                      maxHeight: 300,
+                    )
+                  : null,
+            ),
+          ),
+        );
+
+        Future<void> pumpGrid(bool auto) async {
+          await tester.pumpWidget(build(auto));
+          await tester.pumpAndSettle();
+          await tester.pump();
+          await tester.pumpAndSettle();
+        }
+
+        for (final auto in [true, false, true, false, true]) {
+          await pumpGrid(auto);
+          double? lastBottom;
+          for (int i = 0; i < rows.length; i++) {
+            final finder = find.byKey(ValueKey('cell_${i.toDouble()}_1'));
+            expect(finder, findsOneWidget,
+                reason: 'row $i should be built (auto=$auto)');
+            final rect = tester.getRect(finder);
+            expect(rect.height, greaterThan(0),
+                reason: 'row $i must have a height (auto=$auto)');
+            if (lastBottom != null) {
+              expect(rect.top, closeTo(lastBottom, 0.5),
+                  reason: 'row $i must sit directly below row ${i - 1} '
+                      '(auto=$auto)');
+            }
+            lastBottom = rect.bottom;
+          }
+        }
+      },
+    );
+
+    for (final rapid in [false, true]) {
+      testWidgets(
+        'toggling autoRowHeight many times (rapid=$rapid, paginated, '
+        'like the example app) always leaves rows on screen',
+        (tester) async {
+          tester.view.physicalSize = const Size(1200, 900);
+          tester.view.devicePixelRatio = 1;
+          addTearDown(tester.view.reset);
+
+          final rows = [
+            for (int i = 0; i < 3000; i++)
+              _Row(id: i.toDouble(), label: 'r$i', contentHeight: 20.0 + (i % 4) * 40),
+          ];
+          // Columns wide enough for the pagination bar to fit.
+          final controller = DataGridController<_Row>(
+            initialColumns: [
+              DataGridColumn<_Row>(
+                id: 1,
+                title: 'Label',
+                width: 400,
+                valueAccessor: (r) => r.label,
+              ),
+              DataGridColumn<_Row>(
+                id: 2,
+                title: 'Content',
+                width: 400,
+                cellWidget: const _FixedHeightCell(),
+              ),
+            ],
+            initialRows: rows,
+            sortDebounce: Duration.zero,
+            filterDebounce: Duration.zero,
+          );
+          addTearDown(controller.dispose);
+          controller.enablePagination(true);
+
+          Widget build(bool auto) => MaterialApp(
+            home: Scaffold(
+              body: DataGrid<_Row>(
+                controller: controller,
+                cacheExtent: auto ? 800 : 0,
+                autoRowHeight: auto
+                    ? const AutoRowHeight(
+                        estimatedHeight: 48,
+                        minHeight: 40,
+                        maxHeight: 260,
+                      )
+                    : null,
+                autoHeaderHeight: auto ? const AutoHeaderHeight() : null,
+              ),
+            ),
+          );
+
+          await tester.pumpWidget(build(true));
+          await tester.pumpAndSettle();
+
+          bool auto = true;
+          for (int toggle = 0; toggle < 12; toggle++) {
+            auto = !auto;
+            await tester.pumpWidget(build(auto));
+            if (rapid) {
+              await tester.pump(const Duration(milliseconds: 16));
+            } else {
+              for (int i = 0; i < 5; i++) {
+                await tester.pump(const Duration(milliseconds: 50));
+              }
+            }
+          }
+          await tester.pumpAndSettle();
+
+          for (int i = 0; i < 5; i++) {
+            final finder = find.byKey(ValueKey('cell_${i.toDouble()}_1'));
+            expect(finder, findsOneWidget, reason: 'row $i must be built');
+            expect(tester.getRect(finder).height, greaterThan(0));
+          }
+        },
+      );
+    }
+
+    testWidgets(
+      'changing the AutoRowHeight config while enabled repopulates the '
+      'delegate instead of keeping the old one',
+      (tester) async {
+        final rows = [
+          for (int i = 0; i < 20; i++)
+            _Row(id: i.toDouble(), label: 'r$i', contentHeight: 20),
+        ];
+        final controller = _makeController(
+          rows: rows,
+          estimatedHeight: 48,
+          maxHeight: 300,
+        );
+        addTearDown(controller.dispose);
+        final first = IndexedRowHeightDelegate();
+        final second = IndexedRowHeightDelegate();
+
+        Widget build(RowHeightDelegate delegate, double minHeight) =>
+            MaterialApp(
+              home: Scaffold(
+                body: DataGrid<_Row>(
+                  controller: controller,
+                  showPagination: false,
+                  cacheExtent: 1000,
+                  autoRowHeight: AutoRowHeight(
+                    estimatedHeight: 48,
+                    minHeight: minHeight,
+                    maxHeight: 300,
+                    delegate: delegate,
+                  ),
+                ),
+              ),
+            );
+
+        await tester.pumpWidget(build(first, 10));
+        await tester.pumpAndSettle();
+        expect(first.totalExtent, greaterThan(0));
+
+        // Swapped delegate: the new one must be populated.
+        await tester.pumpWidget(build(second, 10));
+        await tester.pumpAndSettle();
+        expect(second.totalExtent, greaterThan(0));
+        expect(find.byKey(const ValueKey('cell_0.0_1')), findsOneWidget);
+
+        // Same delegate, new clamp: re-measured under the new minimum.
+        await tester.pumpWidget(build(second, 90));
+        await tester.pumpAndSettle();
+        await tester.pump();
+        await tester.pumpAndSettle();
+        final rect = tester.getRect(find.byKey(const ValueKey('cell_0.0_1')));
+        expect(rect.height, closeTo(90, 0.5));
+      },
+    );
   });
 }

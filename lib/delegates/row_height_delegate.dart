@@ -16,6 +16,13 @@ abstract interface class RowHeightDelegate {
   /// previously-measured heights by matching `rowId`.
   void rebuild(List<double?> rowIds, {required double estimatedHeight});
 
+  /// Forgets every measured height, including the per-`rowId` cache that
+  /// [rebuild] recovers from. The grid calls this when auto row height is
+  /// toggled or reconfigured (e.g. new min/max clamps), since heights
+  /// measured under the old settings no longer apply. Takes effect on the
+  /// next [rebuild].
+  void clearMeasurements();
+
   /// The current height of the row at [index].
   double heightOf(int index);
 
@@ -53,6 +60,9 @@ class IndexedRowHeightDelegate implements RowHeightDelegate {
   List<bool> _measuredFlags = const [];
   List<double> _fenwick = const [];
   double _estimatedHeight = 48.0;
+
+  @override
+  void clearMeasurements() => _measuredByRowId.clear();
 
   @override
   void rebuild(List<double?> rowIds, {required double estimatedHeight}) {

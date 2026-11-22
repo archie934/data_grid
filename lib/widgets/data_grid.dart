@@ -243,6 +243,9 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
 
   // -- Auto row height ---------------------------------------------------
   RowHeightDelegate? _rowHeightDelegate;
+
+  /// See [AutoRowMetrics.generation].
+  int _rowHeightGeneration = 0;
   List<double>? _lastDisplayOrderRef;
   GroupState? _lastGroupStateRef;
   Map<double, T>? _lastRowsByIdRef;
@@ -298,6 +301,38 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
     if (!identical(widget.theme, oldWidget.theme)) {
       _themeData = widget.theme ?? DataGridThemeData.defaultTheme();
     }
+    if (!_sameAutoRowHeight(oldWidget.autoRowHeight, widget.autoRowHeight)) {
+      // A consumer-supplied delegate may be handed back on re-enable, so its
+      // cached measurements (taken under the old settings) must go too.
+      _rowHeightDelegate?.clearMeasurements();
+      oldWidget.autoRowHeight?.delegate?.clearMeasurements();
+      _resetRowHeightTracking();
+      _rowHeightGeneration++;
+    }
+  }
+
+  /// Whether two [AutoRowHeight] configs can share one populated
+  /// [RowHeightDelegate]: both off, or both on with the same delegate and the
+  /// same estimate/clamps (measurements are clamped to min/max, and unmeasured
+  /// rows are seeded with the estimate).
+  static bool _sameAutoRowHeight(AutoRowHeight? a, AutoRowHeight? b) {
+    if (a == null || b == null) return a == null && b == null;
+    return identical(a.delegate, b.delegate) &&
+        a.estimatedHeight == b.estimatedHeight &&
+        a.minHeight == b.minHeight &&
+        a.maxHeight == b.maxHeight;
+  }
+
+  /// Drops the row-height delegate and every reference derived from it, so
+  /// the next build creates a fresh delegate and repopulates it from the
+  /// current rows. Called whenever auto row height is toggled or
+  /// reconfigured — keeping any of these across a toggle is what left a
+  /// re-enabled grid with an empty delegate (zero rows, zero extent).
+  void _resetRowHeightTracking() {
+    _rowHeightDelegate = null;
+    _lastDisplayOrderRef = null;
+    _lastGroupStateRef = null;
+    _lastRowsByIdRef = null;
   }
 
   @override
@@ -481,9 +516,10 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
 
           final autoRowHeight = widget.autoRowHeight;
           if (autoRowHeight != null) {
-            final delegate =
-                _rowHeightDelegate ??=
-                    autoRowHeight.delegate ?? IndexedRowHeightDelegate();
+            // A fresh delegate after _resetRowHeightTracking has null refs, so
+            // the check below always populates it on its first build.
+            final delegate = _rowHeightDelegate ??=
+                autoRowHeight.delegate ?? IndexedRowHeightDelegate();
             final structuralChange =
                 !identical(_lastDisplayOrderRef, _displayOrderView) ||
                 !identical(_lastGroupStateRef, state.group) ||
@@ -501,9 +537,12 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
                 estimatedHeight: autoRowHeight.estimatedHeight,
               );
             }
-            _rowMetrics = AutoRowMetrics(delegate);
+            _rowMetrics = AutoRowMetrics(
+              delegate,
+              generation: _rowHeightGeneration,
+            );
           } else {
-            _rowHeightDelegate = null;
+            _resetRowHeightTracking();
             _rowMetrics = FixedRowMetrics(effectiveRowHeight);
           }
 

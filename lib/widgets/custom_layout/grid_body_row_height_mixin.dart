@@ -34,6 +34,16 @@ mixin _GridBodyRowHeightMixin<T extends DataGridRow>
 
   void _rowHeightMixinDispose() => _rowHeightVersion.dispose();
 
+  /// Auto row height was toggled, reconfigured or its delegate replaced
+  /// (the metrics differ — see [AutoRowMetrics.generation]): drop everything
+  /// tied to the previous setup. Pending measurements were taken under the
+  /// old settings, and the cached hook still points at the old delegate.
+  void _rowHeightDidUpdateWidget(CustomLayoutGridBody<T> oldWidget) {
+    if (oldWidget.rowMetrics == widget.rowMetrics) return;
+    _pendingRowMeasurements.clear();
+    _cachedRowHeightMeasurement = null;
+  }
+
   /// Exposed to quadrants only when auto mode is active — mirrors
   /// [_buildRowHeightMeasurement]'s null-when-disabled pattern.
   ValueNotifier<int>? get _rowHeightVersionOrNull =>

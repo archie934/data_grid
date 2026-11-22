@@ -66,6 +66,12 @@ class _CustomLayoutGridBodyState<T extends DataGridRow>
   }
 
   @override
+  void didUpdateWidget(covariant CustomLayoutGridBody<T> oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _rowHeightDidUpdateWidget(oldWidget);
+  }
+
+  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     _scrollDidChangeDependencies();
