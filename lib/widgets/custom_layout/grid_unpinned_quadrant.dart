@@ -69,6 +69,13 @@ class GridUnpinnedQuadrant<T extends DataGridRow> extends StatefulWidget {
   final ValueNotifier<double> vOffset;
   final RowHeightMeasurement? measurement;
 
+  /// Bumped whenever a batch of row-height measurements has been applied to
+  /// [rowMetrics]'s underlying delegate. Non-null only when auto row height
+  /// is enabled. Unlike [hOffset]/[vOffset], a bump always forces a full
+  /// local rebuild — a row-height patch can shift offsets *within* an
+  /// unchanged visible range, not just at its boundary.
+  final ValueNotifier<int>? rowHeightVersion;
+
   const GridUnpinnedQuadrant({
     super.key,
     required this.columns,
@@ -84,6 +91,7 @@ class GridUnpinnedQuadrant<T extends DataGridRow> extends StatefulWidget {
     required this.hOffset,
     required this.vOffset,
     this.measurement,
+    this.rowHeightVersion,
   });
 
   @override
@@ -112,6 +120,7 @@ class _GridUnpinnedQuadrantState<T extends DataGridRow>
     _rebuildCellList();
     widget.hOffset.addListener(_onOffsetChanged);
     widget.vOffset.addListener(_onOffsetChanged);
+    widget.rowHeightVersion?.addListener(_onRowHeightVersionChanged);
   }
 
   @override
@@ -125,6 +134,10 @@ class _GridUnpinnedQuadrantState<T extends DataGridRow>
     if (!identical(old.vOffset, widget.vOffset)) {
       old.vOffset.removeListener(_onOffsetChanged);
       widget.vOffset.addListener(_onOffsetChanged);
+    }
+    if (!identical(old.rowHeightVersion, widget.rowHeightVersion)) {
+      old.rowHeightVersion?.removeListener(_onRowHeightVersionChanged);
+      widget.rowHeightVersion?.addListener(_onRowHeightVersionChanged);
     }
 
     // Clear cache when content-affecting parameters change.
@@ -156,6 +169,7 @@ class _GridUnpinnedQuadrantState<T extends DataGridRow>
   void dispose() {
     widget.hOffset.removeListener(_onOffsetChanged);
     widget.vOffset.removeListener(_onOffsetChanged);
+    widget.rowHeightVersion?.removeListener(_onRowHeightVersionChanged);
     super.dispose();
   }
 
@@ -298,6 +312,17 @@ class _GridUnpinnedQuadrantState<T extends DataGridRow>
     }
     // else: same cells, different position — GridLayoutDelegate.relayout
     // fires markNeedsLayout on the render object (no widget rebuild).
+  }
+
+  void _onRowHeightVersionChanged() {
+    // Unlike _onOffsetChanged, this always rebuilds: the visible row *range*
+    // may be unchanged while heights/offsets *within* that range shifted (a
+    // measured row was just patched), so _contentRects must be recomputed
+    // unconditionally.
+    setState(() {
+      _visibleRange = _computeRange();
+      _rebuildCellList();
+    });
   }
 
   // ---------------------------------------------------------------------------

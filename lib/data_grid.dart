@@ -8,6 +8,9 @@ export 'models/data/cell_value_change.dart';
 export 'models/data/column.dart';
 export 'models/data/grid_display_row.dart';
 export 'models/data/row.dart';
+export 'models/enums/filter_operator.dart';
+export 'models/enums/selection_mode.dart';
+export 'models/enums/sort_direction.dart';
 export 'models/state/grid_state.dart';
 export 'models/events/grid_events.dart';
 

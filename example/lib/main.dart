@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_data_grid/data_grid.dart';
-import 'package:flutter_data_grid/models/enums/selection_mode.dart';
 import 'package:flutter_data_grid_example/config/theme.dart';
 
 import 'models/product_row.dart';

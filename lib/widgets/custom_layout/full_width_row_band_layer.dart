@@ -28,6 +28,12 @@ class FullWidthRowBandLayer<T extends DataGridRow> extends StatefulWidget {
   final ValueNotifier<double> vOffset;
   final RowBandBuilder<T> bandBuilder;
 
+  /// Bumped whenever a batch of row-height measurements has been applied.
+  /// Non-null only when auto row height is enabled. Bands are fixed-height
+  /// themselves, but their *position* shifts when rows above them change
+  /// height, so this layer needs to react too, not just the cell quadrants.
+  final ValueNotifier<int>? rowHeightVersion;
+
   const FullWidthRowBandLayer({
     super.key,
     required this.rows,
@@ -37,6 +43,7 @@ class FullWidthRowBandLayer<T extends DataGridRow> extends StatefulWidget {
     required this.cacheExtent,
     required this.vOffset,
     required this.bandBuilder,
+    this.rowHeightVersion,
   });
 
   @override
@@ -58,6 +65,7 @@ class _FullWidthRowBandLayerState<T extends DataGridRow>
     _computeRowRange();
     _rebuildBandList();
     widget.vOffset.addListener(_onVOffsetChanged);
+    widget.rowHeightVersion?.addListener(_onRowHeightVersionChanged);
   }
 
   @override
@@ -67,6 +75,10 @@ class _FullWidthRowBandLayerState<T extends DataGridRow>
     if (!identical(old.vOffset, widget.vOffset)) {
       old.vOffset.removeListener(_onVOffsetChanged);
       widget.vOffset.addListener(_onVOffsetChanged);
+    }
+    if (!identical(old.rowHeightVersion, widget.rowHeightVersion)) {
+      old.rowHeightVersion?.removeListener(_onRowHeightVersionChanged);
+      widget.rowHeightVersion?.addListener(_onRowHeightVersionChanged);
     }
 
     if (old.viewportHeight != widget.viewportHeight ||
@@ -84,6 +96,7 @@ class _FullWidthRowBandLayerState<T extends DataGridRow>
   @override
   void dispose() {
     widget.vOffset.removeListener(_onVOffsetChanged);
+    widget.rowHeightVersion?.removeListener(_onRowHeightVersionChanged);
     super.dispose();
   }
 
@@ -132,6 +145,11 @@ class _FullWidthRowBandLayerState<T extends DataGridRow>
     if (_firstRow != newFirst || _lastRow != newLast) {
       setState(_rebuildBandList);
     }
+  }
+
+  void _onRowHeightVersionChanged() {
+    _computeRowRange();
+    setState(_rebuildBandList);
   }
 
   @override

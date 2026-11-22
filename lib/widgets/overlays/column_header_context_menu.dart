@@ -41,6 +41,7 @@ void showColumnHeaderContextMenu<T extends DataGridRow>({
         _GroupByMenuItem(
           columnId: column.id,
           isGrouped: isGrouped,
+          hasOtherGroups: groupState.hasGroups,
           controller: controller,
         ),
       if (hasSortItems || hasGroupItem) const PopupMenuDivider(),
@@ -60,9 +61,7 @@ class _SortAscendingMenuItem extends PopupMenuItem<void> {
     required int columnId,
     required DataGridController controller,
   }) : super(
-         onTap: () => controller.addEvent(
-           SortEvent(columnId: columnId, direction: SortDirection.ascending),
-         ),
+         onTap: () => controller.sortColumn(columnId, SortDirection.ascending),
          child: const Text('Sort Ascending'),
        );
 }
@@ -72,9 +71,7 @@ class _SortDescendingMenuItem extends PopupMenuItem<void> {
     required int columnId,
     required DataGridController controller,
   }) : super(
-         onTap: () => controller.addEvent(
-           SortEvent(columnId: columnId, direction: SortDirection.descending),
-         ),
+         onTap: () => controller.sortColumn(columnId, SortDirection.descending),
          child: const Text('Sort Descending'),
        );
 }
@@ -84,7 +81,7 @@ class _ClearSortMenuItem extends PopupMenuItem<void> {
     required int columnId,
     required DataGridController controller,
   }) : super(
-         onTap: () => controller.addEvent(SortEvent(columnId: columnId)),
+         onTap: () => controller.sortColumn(columnId, null),
          child: const Text('Clear Sort'),
        );
 }
@@ -93,6 +90,7 @@ class _GroupByMenuItem extends PopupMenuItem<void> {
   _GroupByMenuItem({
     required int columnId,
     required bool isGrouped,
+    required bool hasOtherGroups,
     required DataGridController controller,
   }) : super(
          onTap: () => controller.addEvent(
@@ -100,7 +98,13 @@ class _GroupByMenuItem extends PopupMenuItem<void> {
                ? UngroupColumnEvent(columnId: columnId)
                : GroupByColumnEvent(columnId: columnId),
          ),
-         child: Text(isGrouped ? 'Remove Grouping' : 'Group by This Column'),
+         child: Text(
+           isGrouped
+               ? 'Remove Grouping'
+               : hasOtherGroups
+               ? 'Add to Grouping'
+               : 'Group by This Column',
+         ),
        );
 }
 
@@ -110,9 +114,7 @@ class _PinColumnMenuItem extends PopupMenuItem<void> {
     required bool isPinned,
     required DataGridController controller,
   }) : super(
-         onTap: () => controller.addEvent(
-           SetColumnPinnedEvent(columnId: columnId, pinned: !isPinned),
-         ),
+         onTap: () => controller.setColumnPinned(columnId, !isPinned),
          child: Text(isPinned ? 'Unpin Column' : 'Pin Column'),
        );
 }
@@ -122,9 +124,7 @@ class _HideColumnMenuItem extends PopupMenuItem<void> {
     required int columnId,
     required DataGridController controller,
   }) : super(
-         onTap: () => controller.addEvent(
-           SetColumnVisibilityEvent(columnId: columnId, visible: false),
-         ),
+         onTap: () => controller.setColumnVisibility(columnId, false),
          child: const Text('Hide Column'),
        );
 }

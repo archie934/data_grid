@@ -17,9 +17,14 @@ final class GridDataRow<T extends DataGridRow> extends GridDisplayRow<T> {
 /// A slot rendering a collapsible group header band.
 final class GridGroupHeaderRow<T extends DataGridRow>
     extends GridDisplayRow<T> {
-  /// Deterministic key, e.g. `'$columnId:$value'`. Passed to
-  /// `ToggleGroupExpansionEvent` and used as the `GroupState.expandedGroups` key.
+  /// Deterministic path key. A top-level group is `'$columnId:$value'`; a
+  /// nested group appends its own segment to its parent's key, joined by
+  /// `\u001F`. Passed to `ToggleGroupExpansionEvent` and used as the
+  /// `GroupState.expandedGroups` key.
   final String groupKey;
+
+  /// Nesting level, 0 for the outermost grouped column.
+  final int depth;
 
   /// The id of the column rows are grouped by.
   final int columnId;
@@ -33,14 +38,20 @@ final class GridGroupHeaderRow<T extends DataGridRow>
   /// Formatted label shown in the band.
   final String displayLabel;
 
-  /// Number of rows in this group, regardless of expansion state.
+  /// Number of data rows in this group at any depth, regardless of expansion
+  /// state.
   final int rowCount;
 
-  /// Whether this group's rows are currently shown below the band.
+  /// Number of direct child groups, or `null` for the innermost level.
+  final int? subgroupCount;
+
+  /// Whether this group's contents are currently shown below the band.
   final bool isExpanded;
 
   const GridGroupHeaderRow({
     required this.groupKey,
+    this.depth = 0,
+    this.subgroupCount,
     required this.columnId,
     required this.columnTitle,
     required this.value,

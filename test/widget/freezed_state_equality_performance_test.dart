@@ -15,9 +15,6 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_data_grid/data_grid.dart';
-import 'package:flutter_data_grid/models/enums/selection_mode.dart';
-import 'package:flutter_data_grid/models/enums/sort_direction.dart';
-import 'package:flutter_data_grid/models/enums/filter_operator.dart';
 
 /// Row shape approximating the README/example "100k rows" live demo
 /// (example/lib/models/product_row.dart), so per-row footprint is realistic

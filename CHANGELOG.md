@@ -1,3 +1,14 @@
+## Unreleased
+
+* Added multi-level (nested) row grouping. **Behavior change:** `GroupByColumnEvent` / `controller.groupByColumn` now appends the column as the innermost level instead of replacing the existing grouping; pass `replace: true` for the old behavior (see README Migration Guide).
+* Added `SetGroupedColumnsEvent` / `controller.setGroupedColumns`, `ExpandAllGroupsEvent` / `controller.expandAllGroups`, `CollapseAllGroupsEvent` / `controller.collapseAllGroups`
+* `UngroupColumnEvent` on an outer level moves deeper levels up and prunes that level's expansion keys
+* `GridGroupHeaderRow` gained `depth` and `subgroupCount`; outer group bands show their subgroup count and are indented by the new `DataGridPadding.groupIndentWidth` (default `20`)
+* Header context menu shows **Add to Grouping** when another column is already grouped
+* Added headless usage support: `DataGridController` can drive a fully custom UI, or no UI, without the `DataGrid` widget. See the new README "Headless Usage" section.
+* Added controller methods for events that previously needed `addEvent`: `sortColumn` (`SortEvent`), `filterColumn`/`clearFilter` (`FilterEvent`/`ClearFilterEvent`), `selectRow`/`selectRowsRange`/`selectAllRows`/`clearSelection` (`SelectRowEvent`/`SelectRowsRangeEvent`/`SelectAllRowsEvent`/`ClearSelectionEvent`), `focusCell`/`shiftSelectCell`/`toggleCellInSelection`/`clearCellSelection`/`navigateCell`/`copyCells` (`FocusCellEvent`/`ShiftSelectCellEvent`/`ToggleCellInSelectionEvent`/`ClearCellSelectionEvent`/`NavigateCellEvent`/`CopyCellsEvent`), `resizeColumn`/`reorderColumn` (`ColumnResizeEvent`/`ColumnReorderEvent`)
+* `package:flutter_data_grid/data_grid.dart` now exports `SortDirection`, `FilterOperator` and `SelectionMode`; separate `models/enums/...` imports are no longer needed
+
 ## 0.0.24 - 2026-08-22
 
 * Added row grouping: group by a column's value with collapsible, full-width group header bands (`GroupByColumnEvent`, `UngroupColumnEvent`, `ToggleGroupExpansionEvent`, `controller.groupByColumn`/`ungroupColumn`/`toggleGroupExpansion`). v1 supports a single active grouped column. Groups default to **collapsed**.

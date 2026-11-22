@@ -297,35 +297,27 @@ class _DataGridState<T extends DataGridRow> extends State<DataGrid<T>> {
         HardwareKeyboard.instance.isMetaPressed;
 
     if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
-      widget.controller.addEvent(
-        NavigateCellEvent(CellNavDirection.up, extend: isShift),
-      );
+      widget.controller.navigateCell(CellNavDirection.up, extend: isShift);
       return KeyEventResult.handled;
     } else if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
-      widget.controller.addEvent(
-        NavigateCellEvent(CellNavDirection.down, extend: isShift),
-      );
+      widget.controller.navigateCell(CellNavDirection.down, extend: isShift);
       return KeyEventResult.handled;
     } else if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
-      widget.controller.addEvent(
-        NavigateCellEvent(CellNavDirection.left, extend: isShift),
-      );
+      widget.controller.navigateCell(CellNavDirection.left, extend: isShift);
       return KeyEventResult.handled;
     } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
-      widget.controller.addEvent(
-        NavigateCellEvent(CellNavDirection.right, extend: isShift),
-      );
+      widget.controller.navigateCell(CellNavDirection.right, extend: isShift);
       return KeyEventResult.handled;
     } else if (event.logicalKey == LogicalKeyboardKey.escape) {
-      widget.controller.addEvent(ClearCellSelectionEvent());
-      widget.controller.addEvent(ClearSelectionEvent());
+      widget.controller.clearCellSelection();
+      widget.controller.clearSelection();
       return KeyEventResult.handled;
     } else if (isCtrlOrMeta && event.logicalKey == LogicalKeyboardKey.keyA) {
       widget.controller.addEvent(SelectAllVisibleEvent());
       return KeyEventResult.handled;
     } else if (isCtrlOrMeta && event.logicalKey == LogicalKeyboardKey.keyC) {
       if (widget.controller.state.selection.focusedCells.isNotEmpty) {
-        widget.controller.addEvent(CopyCellsEvent());
+        widget.controller.copyCells();
         return KeyEventResult.handled;
       }
     } else if (event.logicalKey == LogicalKeyboardKey.enter) {

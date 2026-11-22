@@ -3,17 +3,43 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_data_grid/data_grid.dart';
-import 'package:flutter_data_grid/models/enums/selection_mode.dart';
 import 'package:flutter_data_grid/utils/grid_display_rows.dart';
 
 class TestRow extends DataGridRow {
   final String category;
   final String name;
+  final String origin;
 
-  TestRow({required double id, required this.category, required this.name}) {
+  TestRow({
+    required double id,
+    required this.category,
+    required this.name,
+    this.origin = 'Local',
+  }) {
     this.id = id;
   }
 }
+
+const _sep = '\u001F';
+
+List<DataGridColumn<TestRow>> _buildNestedColumns() => [
+  ..._buildColumns(),
+  DataGridColumn<TestRow>(
+    id: 3,
+    title: 'Origin',
+    width: 150,
+    valueAccessor: (row) => row.origin,
+  ),
+];
+
+// Fruit → Local [1, 5], Imported [3]; Vegetable → Imported [2], Local [4].
+List<TestRow> _buildNestedRows() => [
+  TestRow(id: 1, category: 'Fruit', name: 'Apple', origin: 'Local'),
+  TestRow(id: 2, category: 'Vegetable', name: 'Carrot', origin: 'Imported'),
+  TestRow(id: 3, category: 'Fruit', name: 'Banana', origin: 'Imported'),
+  TestRow(id: 4, category: 'Vegetable', name: 'Pea', origin: 'Local'),
+  TestRow(id: 5, category: 'Fruit', name: 'Cherry', origin: 'Local'),
+];
 
 List<DataGridColumn<TestRow>> _buildColumns() => [
   DataGridColumn<TestRow>(
@@ -165,6 +191,203 @@ void main() {
     });
   });
 
+  group('computeDisplayRows (nested)', () {
+    final columns = _buildNestedColumns();
+    final rows = _buildNestedRows();
+    final rowsById = {for (final r in rows) r.id: r};
+    final displayOrder = rows.map((r) => r.id).toList();
+
+    List<GridDisplayRow<TestRow>> compute(
+      Map<String, bool> expanded, {
+      List<int> groupedColumnIds = const [1, 3],
+    }) => computeDisplayRows<TestRow>(
+      displayOrder: displayOrder,
+      rowsById: rowsById,
+      columns: columns,
+      group: GroupState(
+        groupedColumnIds: groupedColumnIds,
+        expandedGroups: expanded,
+      ),
+    );
+
+    String describe(GridDisplayRow<TestRow> r) => switch (r) {
+      GridGroupHeaderRow(:final depth, :final displayLabel) =>
+        'H$depth:$displayLabel',
+      GridDataRow(:final rowId) => 'R${rowId.toInt()}',
+    };
+
+    test('fully expanded emits nested headers in first-appearance order', () {
+      final result = compute({
+        '1:Fruit': true,
+        '1:Fruit${_sep}3:Local': true,
+        '1:Fruit${_sep}3:Imported': true,
+        '1:Vegetable': true,
+        '1:Vegetable${_sep}3:Imported': true,
+        '1:Vegetable${_sep}3:Local': true,
+      });
+
+      expect(result.map(describe).toList(), [
+        'H0:Fruit',
+        'H1:Local',
+        'R1',
+        'R5',
+        'H1:Imported',
+        'R3',
+        'H0:Vegetable',
+        'H1:Imported',
+        'R2',
+        'H1:Local',
+        'R4',
+      ]);
+
+      final fruit = result[0] as GridGroupHeaderRow<TestRow>;
+      expect(fruit.subgroupCount, 2);
+      expect(fruit.rowCount, 3);
+      final fruitLocal = result[1] as GridGroupHeaderRow<TestRow>;
+      expect(fruitLocal.groupKey, '1:Fruit${_sep}3:Local');
+      expect(fruitLocal.subgroupCount, isNull);
+      expect(fruitLocal.rowCount, 2);
+    });
+
+    test('same child value under different parents has independent state', () {
+      final result = compute({
+        '1:Fruit': true,
+        '1:Vegetable': true,
+        '1:Fruit${_sep}3:Local': true,
+      });
+
+      expect(result.map(describe).toList(), [
+        'H0:Fruit',
+        'H1:Local',
+        'R1',
+        'R5',
+        'H1:Imported',
+        'H0:Vegetable',
+        'H1:Imported',
+        'H1:Local',
+      ]);
+      final vegLocal = result.last as GridGroupHeaderRow<TestRow>;
+      expect(vegLocal.groupKey, '1:Vegetable${_sep}3:Local');
+      expect(vegLocal.isExpanded, false);
+    });
+
+    test('collapsed parent hides descendants even if they are expanded', () {
+      final result = compute({'1:Fruit${_sep}3:Local': true});
+      expect(result.map(describe).toList(), ['H0:Fruit', 'H0:Vegetable']);
+    });
+
+    test('grouped ids for missing columns are skipped', () {
+      final result = compute({'1:Fruit': true}, groupedColumnIds: [99, 1]);
+      expect(result.map(describe).toList(), [
+        'H0:Fruit',
+        'R1',
+        'R3',
+        'R5',
+        'H0:Vegetable',
+      ]);
+      expect(
+        (result.first as GridGroupHeaderRow<TestRow>).subgroupCount,
+        isNull,
+      );
+    });
+
+    test('collectGroupKeys returns every key at every level', () {
+      final keys = collectGroupKeys<TestRow>(
+        displayOrder: displayOrder,
+        rowsById: rowsById,
+        columns: columns,
+        group: const GroupState(groupedColumnIds: [1, 3], expandedGroups: {}),
+      );
+      expect(keys, [
+        '1:Fruit',
+        '1:Fruit${_sep}3:Local',
+        '1:Fruit${_sep}3:Imported',
+        '1:Vegetable',
+        '1:Vegetable${_sep}3:Imported',
+        '1:Vegetable${_sep}3:Local',
+      ]);
+    });
+  });
+
+  group('Nested grouped rendering', () {
+    testWidgets(
+      'parent bands show subgroup counts; children are indented by depth',
+      (tester) async {
+        final controller = DataGridController<TestRow>(
+          initialColumns: _buildNestedColumns(),
+          initialRows: _buildNestedRows(),
+          sortDebounce: Duration.zero,
+          filterDebounce: Duration.zero,
+        );
+        addTearDown(controller.dispose);
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: DataGrid<TestRow>(controller: controller, rowHeight: 40),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        controller.setGroupedColumns([1, 3]);
+        await tester.pumpAndSettle();
+
+        // Fruit has 3 rows but 2 subgroups; Vegetable has 2 subgroups.
+        expect(find.text('(2)'), findsNWidgets(2));
+        expect(find.text('(3)'), findsNothing);
+        expect(find.textContaining('Origin:'), findsNothing);
+
+        final parentChevron = tester.getTopLeft(
+          find.byIcon(Icons.chevron_right).first,
+        );
+        await tester.tap(find.byIcon(Icons.chevron_right).first);
+        await tester.pumpAndSettle();
+
+        expect(find.textContaining('Origin: Local'), findsOneWidget);
+        expect(find.textContaining('Origin: Imported'), findsOneWidget);
+        expect(find.text('Apple'), findsNothing);
+
+        final childChevron = tester.getTopLeft(
+          find.byIcon(Icons.chevron_right).first,
+        );
+        expect(childChevron.dx - parentChevron.dx, 20.0);
+
+        await tester.tap(find.textContaining('Origin: Local'));
+        await tester.pumpAndSettle();
+        expect(find.text('Apple'), findsOneWidget);
+        expect(find.text('Cherry'), findsOneWidget);
+        expect(find.text('Banana'), findsNothing);
+      },
+    );
+
+    testWidgets('arrow-down follows nested visual order', (tester) async {
+      final controller = DataGridController<TestRow>(
+        initialColumns: _buildNestedColumns(),
+        initialRows: _buildNestedRows(),
+        sortDebounce: Duration.zero,
+        filterDebounce: Duration.zero,
+      );
+      addTearDown(controller.dispose);
+
+      controller.setGroupedColumns([1, 3]);
+      controller.expandAllGroups();
+      await tester.pump();
+
+      // Visual order: 1, 5, 3, 2, 4.
+      controller.addEvent(FocusCellEvent(rowId: 1, columnId: 2));
+      await tester.pump();
+
+      final visited = <String?>[];
+      for (var i = 0; i < 4; i++) {
+        controller.addEvent(NavigateCellEvent(CellNavDirection.down));
+        await tester.pump();
+        visited.add(controller.state.selection.activeCellId);
+      }
+      expect(visited, ['5.0_2', '3.0_2', '2.0_2', '4.0_2']);
+    });
+  });
+
   group('Group events', () {
     late DataGridController<TestRow> controller;
 
@@ -179,7 +402,7 @@ void main() {
 
     tearDown(() => controller.dispose());
 
-    testWidgets('grouping a second column replaces, not appends', (
+    testWidgets('grouping a second column appends it as a nested level', (
       tester,
     ) async {
       controller.addEvent(GroupByColumnEvent(columnId: 1));
@@ -188,7 +411,72 @@ void main() {
 
       controller.addEvent(GroupByColumnEvent(columnId: 2));
       await tester.pump();
+      expect(controller.state.group.groupedColumnIds, [1, 2]);
+
+      controller.addEvent(GroupByColumnEvent(columnId: 1));
+      await tester.pump();
+      expect(controller.state.group.groupedColumnIds, [1, 2]);
+    });
+
+    testWidgets('replace: true makes the column the only grouping level', (
+      tester,
+    ) async {
+      controller.groupByColumn(1);
+      controller.groupByColumn(2, replace: true);
+      await tester.pump();
       expect(controller.state.group.groupedColumnIds, [2]);
+    });
+
+    testWidgets(
+      'ungrouping an outer level promotes deeper levels and prunes its keys',
+      (tester) async {
+        controller.setGroupedColumns([1, 2]);
+        await tester.pump();
+        controller.toggleGroupExpansion('1:Fruit');
+        controller.toggleGroupExpansion('1:Fruit${_sep}2:Apple');
+        controller.toggleGroupExpansion('2:Apple');
+        await tester.pump();
+
+        controller.ungroupColumn(1);
+        await tester.pump();
+
+        expect(controller.state.group.groupedColumnIds, [2]);
+        expect(controller.state.group.expandedGroups, {'2:Apple': true});
+      },
+    );
+
+    testWidgets('setGroupedColumns reorders levels and resets expansion', (
+      tester,
+    ) async {
+      controller.setGroupedColumns([1, 2]);
+      controller.toggleGroupExpansion('1:Fruit');
+      await tester.pump();
+
+      controller.setGroupedColumns([2, 1]);
+      await tester.pump();
+      expect(controller.state.group.groupedColumnIds, [2, 1]);
+      expect(controller.state.group.expandedGroups, isEmpty);
+
+      controller.setGroupedColumns([]);
+      await tester.pump();
+      expect(controller.state.group.hasGroups, false);
+    });
+
+    testWidgets('expandAllGroups expands every level; collapseAll resets', (
+      tester,
+    ) async {
+      controller.setGroupedColumns([1, 2]);
+      controller.expandAllGroups();
+      await tester.pump();
+
+      final expanded = controller.state.group.expandedGroups;
+      expect(expanded.length, 6); // 2 categories + 4 names
+      expect(expanded.values.every((v) => v), true);
+      expect(expanded['1:Vegetable${_sep}2:Pea'], true);
+
+      controller.collapseAllGroups();
+      await tester.pump();
+      expect(controller.state.group.expandedGroups, isEmpty);
     });
 
     testWidgets('ungrouping the active column empties the list', (

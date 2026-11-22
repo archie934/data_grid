@@ -32,8 +32,10 @@ abstract interface class RowHeightDelegate {
   /// carrying the estimate).
   bool isMeasured(int index);
 
-  /// Records a real measured height for the row at [index]. Returns `true`
-  /// iff the recorded height changed by more than a sub-pixel epsilon.
+  /// Records a real measured height for the row at [index] and marks it
+  /// [isMeasured] — even when the height is unchanged, since unmeasured rows
+  /// are re-measured on every layout pass. Returns `true` iff the recorded
+  /// height changed by more than a sub-pixel epsilon.
   bool reportMeasured(int index, double measuredHeight);
 }
 
@@ -138,14 +140,17 @@ class IndexedRowHeightDelegate implements RowHeightDelegate {
   bool reportMeasured(int index, double measuredHeight) {
     if (index < 0 || index >= _heights.length) return false;
     final current = _heights[index];
-    if ((measuredHeight - current).abs() < 0.5) return false;
+    final changed = (measuredHeight - current).abs() >= 0.5;
+    if (changed) {
+      _add(index, measuredHeight - current);
+      _heights[index] = measuredHeight;
+    }
 
-    _add(index, measuredHeight - current);
-    _heights[index] = measuredHeight;
+    // Flag even when unchanged: an unflagged row is re-measured on every
+    // scroll frame, and rows matching the estimate would otherwise never flag.
     _measuredFlags[index] = true;
-
     final id = _order[index];
-    if (id != null) _measuredByRowId[id] = measuredHeight;
-    return true;
+    if (id != null) _measuredByRowId[id] = _heights[index];
+    return changed;
   }
 }

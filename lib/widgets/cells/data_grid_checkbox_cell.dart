@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:flutter_data_grid/controllers/data_grid_controller.dart';
 import 'package:flutter_data_grid/models/data/row.dart';
-import 'package:flutter_data_grid/models/events/selection_events.dart';
 import 'package:flutter_data_grid/widgets/data_grid_inherited.dart';
 import 'package:flutter_data_grid/theme/data_grid_theme.dart';
 
@@ -30,8 +29,7 @@ class DataGridCheckboxCell<T extends DataGridRow> extends StatelessWidget {
         .isRowSelected(rowId);
 
     return GestureDetector(
-      onTap: () =>
-          controller.addEvent(SelectRowEvent(rowId: rowId, multiSelect: true)),
+      onTap: () => controller.selectRow(rowId, multiSelect: true),
       child: DecoratedBox(
         decoration: theme.cellDecorations.forCheckbox(
           isEven: rowIndex % 2 == 0,
@@ -45,9 +43,8 @@ class DataGridCheckboxCell<T extends DataGridRow> extends StatelessWidget {
             heightFactor: 1.0,
             child: Checkbox(
               value: isSelected,
-              onChanged: (value) => controller.addEvent(
-                SelectRowEvent(rowId: rowId, multiSelect: true),
-              ),
+              onChanged: (value) =>
+                  controller.selectRow(rowId, multiSelect: true),
             ),
           ),
         ),
@@ -57,7 +54,12 @@ class DataGridCheckboxCell<T extends DataGridRow> extends StatelessWidget {
 }
 
 class DataGridCheckboxHeaderCell<T extends DataGridRow> extends StatefulWidget {
-  const DataGridCheckboxHeaderCell({super.key});
+  /// When provided, overrides the default [DataGridBorders.headerBorder]
+  /// for this cell's container decoration (e.g. to suppress the right border
+  /// when the outer pinned wrapper already draws it).
+  final Border? borderOverride;
+
+  const DataGridCheckboxHeaderCell({super.key, this.borderOverride});
 
   @override
   State<DataGridCheckboxHeaderCell<T>> createState() =>
@@ -102,21 +104,19 @@ class _DataGridCheckboxHeaderCellState<T extends DataGridRow>
           checked: headerState.allVisibleSelected,
           onTap: () {
             if (headerState.allVisibleSelected || headerState.someSelected) {
-              controller.addEvent(ClearSelectionEvent());
+              controller.clearSelection();
             } else {
-              controller.addEvent(
-                SelectAllRowsEvent(
-                  rowIds: headerState.visibleRowIds.isEmpty
-                      ? null
-                      : headerState.visibleRowIds,
-                ),
+              controller.selectAllRows(
+                rowIds: headerState.visibleRowIds.isEmpty
+                    ? null
+                    : headerState.visibleRowIds,
               );
             }
           },
           child: Container(
             decoration: BoxDecoration(
               color: theme.colors.headerColor,
-              border: theme.borders.headerBorder,
+              border: widget.borderOverride ?? theme.borders.headerBorder,
             ),
             padding: theme.padding.checkboxPadding,
             // Align explicitly (with heightFactor: 1.0) rather than via
@@ -134,14 +134,12 @@ class _DataGridCheckboxHeaderCellState<T extends DataGridRow>
                 onChanged: (value) {
                   if (headerState.allVisibleSelected ||
                       headerState.someSelected) {
-                    controller.addEvent(ClearSelectionEvent());
+                    controller.clearSelection();
                   } else {
-                    controller.addEvent(
-                      SelectAllRowsEvent(
-                        rowIds: headerState.visibleRowIds.isEmpty
-                            ? null
-                            : headerState.visibleRowIds,
-                      ),
+                    controller.selectAllRows(
+                      rowIds: headerState.visibleRowIds.isEmpty
+                          ? null
+                          : headerState.visibleRowIds,
                     );
                   }
                 },

@@ -16,6 +16,7 @@ import 'package:flutter_data_grid/widgets/custom_layout/full_width_row_band_laye
 import 'package:flutter_data_grid/widgets/custom_layout/grid_layout_delegate.dart';
 import 'package:flutter_data_grid/widgets/custom_layout/grid_pinned_quadrant.dart';
 import 'package:flutter_data_grid/widgets/custom_layout/grid_unpinned_quadrant.dart';
+import 'package:flutter_data_grid/widgets/custom_layout/offstage_row_measurer.dart';
 import 'package:flutter_data_grid/widgets/custom_layout/row_metrics.dart';
 import 'package:flutter_data_grid/widgets/overlays/group_header_band.dart';
 import 'package:flutter_data_grid/widgets/scroll/vertical_scrollbar.dart';
@@ -73,6 +74,7 @@ class _CustomLayoutGridBodyState<T extends DataGridRow>
   @override
   void dispose() {
     _scrollDispose();
+    _rowHeightMixinDispose();
     super.dispose();
   }
 
@@ -157,6 +159,7 @@ class _CustomLayoutGridBodyState<T extends DataGridRow>
         final totalHeight = rowMetrics.offsetOf(rowCount);
         final scrollableViewportWidth = viewportWidth - pinnedWidth;
         final rowHeightMeasurement = _buildRowHeightMeasurement(rowMetrics);
+        final rowHeightVersion = _rowHeightVersionOrNull;
 
         _syncScrollDimensions(
           scrollableViewportWidth: scrollableViewportWidth,
@@ -179,6 +182,21 @@ class _CustomLayoutGridBodyState<T extends DataGridRow>
           onPointerPanZoomEnd: _onPointerPanZoomEnd,
           child: Stack(
             children: [
+              if (rowHeightMeasurement != null &&
+                  widget.autoRowHeight!.measureAheadExtent > 0)
+                Positioned.fill(
+                  child: OffstageRowMeasurer<T>(
+                    columns: columns,
+                    columnIndices: [...pinnedIndices, ...unpinnedIndices],
+                    rows: rows,
+                    rowsById: state.rowsById,
+                    measurement: rowHeightMeasurement,
+                    vOffset: _vOffset,
+                    viewportHeight: viewportHeight,
+                    measureAheadExtent:
+                        widget.autoRowHeight!.measureAheadExtent,
+                  ),
+                ),
               Positioned.fill(
                 child: GridUnpinnedQuadrant<T>(
                   columns: columns,
@@ -194,6 +212,7 @@ class _CustomLayoutGridBodyState<T extends DataGridRow>
                   hOffset: _hOffset,
                   vOffset: _vOffset,
                   measurement: rowHeightMeasurement,
+                  rowHeightVersion: rowHeightVersion,
                 ),
               ),
               if (pinnedWidth > 0)
@@ -214,6 +233,7 @@ class _CustomLayoutGridBodyState<T extends DataGridRow>
                     backgroundColor: theme.colors.evenRowColor,
                     vOffset: _vOffset,
                     measurement: rowHeightMeasurement,
+                    rowHeightVersion: rowHeightVersion,
                   ),
                 ),
               if (state.group.hasGroups)
@@ -225,6 +245,7 @@ class _CustomLayoutGridBodyState<T extends DataGridRow>
                     rowMetrics: rowMetrics,
                     cacheExtent: widget.cacheExtent,
                     vOffset: _vOffset,
+                    rowHeightVersion: rowHeightVersion,
                     bandBuilder: (entry, rowIndex) {
                       if (entry is GridGroupHeaderRow<T>) {
                         return GroupHeaderBand<T>(

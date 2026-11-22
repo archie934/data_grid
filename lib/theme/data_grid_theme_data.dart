@@ -296,6 +296,9 @@ class DataGridPadding {
   /// Inset of the scrollbar thumb from the track.
   final double scrollbarThumbInset;
 
+  /// Horizontal indent applied per nesting level to group header bands.
+  final double groupIndentWidth;
+
   DataGridPadding({
     EdgeInsets? cellPadding,
     EdgeInsets? editorPadding,
@@ -305,7 +308,9 @@ class DataGridPadding {
     EdgeInsets? filterInputPadding,
     double? iconSpacing,
     double? scrollbarThumbInset,
-  }) : cellPadding =
+    double? groupIndentWidth,
+  }) : groupIndentWidth = groupIndentWidth ?? 20.0,
+       cellPadding =
            cellPadding ??
            const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
        editorPadding =
@@ -337,8 +342,10 @@ class DataGridPadding {
     EdgeInsets? filterInputPadding,
     double? iconSpacing,
     double? scrollbarThumbInset,
+    double? groupIndentWidth,
   }) {
     return DataGridPadding(
+      groupIndentWidth: groupIndentWidth ?? this.groupIndentWidth,
       cellPadding: cellPadding ?? this.cellPadding,
       editorPadding: editorPadding ?? this.editorPadding,
       checkboxPadding: checkboxPadding ?? this.checkboxPadding,

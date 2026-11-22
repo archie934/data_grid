@@ -6,7 +6,6 @@ import 'package:flutter_data_grid/models/data/cell_value_change.dart';
 import 'package:flutter_data_grid/models/data/row.dart';
 import 'package:flutter_data_grid/models/data/column.dart';
 import 'package:flutter_data_grid/models/state/grid_state.dart';
-import 'package:flutter_data_grid/models/events/cell_selection_events.dart';
 import 'package:flutter_data_grid/widgets/data_grid_inherited.dart';
 import 'package:flutter_data_grid/theme/data_grid_theme.dart';
 import 'package:flutter_data_grid/widgets/cells/cell_scope.dart';
@@ -235,23 +234,11 @@ class _DataGridCellState<T extends DataGridRow> extends State<DataGridCell<T>> {
             HardwareKeyboard.instance.isControlPressed ||
             HardwareKeyboard.instance.isMetaPressed;
         if (isShift) {
-          controller.addEvent(
-            ShiftSelectCellEvent(
-              rowId: widget.rowId,
-              columnId: widget.column.id,
-            ),
-          );
+          controller.shiftSelectCell(widget.rowId, widget.column.id);
         } else if (isCtrl) {
-          controller.addEvent(
-            ToggleCellInSelectionEvent(
-              rowId: widget.rowId,
-              columnId: widget.column.id,
-            ),
-          );
+          controller.toggleCellInSelection(widget.rowId, widget.column.id);
         } else {
-          controller.addEvent(
-            FocusCellEvent(rowId: widget.rowId, columnId: widget.column.id),
-          );
+          controller.focusCell(widget.rowId, widget.column.id);
         }
       },
       onDoubleTap: widget.column.editable

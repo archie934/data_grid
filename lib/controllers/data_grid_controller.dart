@@ -7,6 +7,8 @@ import 'package:flutter_data_grid/models/events/grid_events.dart';
 import 'package:flutter_data_grid/models/events/event_context.dart';
 import 'package:flutter_data_grid/models/events/edit_events.dart';
 import 'package:flutter_data_grid/models/enums/selection_mode.dart';
+import 'package:flutter_data_grid/models/enums/sort_direction.dart';
+import 'package:flutter_data_grid/models/enums/filter_operator.dart';
 import 'package:flutter_data_grid/utils/data_indexer.dart';
 import 'package:flutter_data_grid/delegates/sort_delegate.dart';
 import 'package:flutter_data_grid/delegates/default_sort_delegate.dart';
@@ -393,6 +395,56 @@ class DataGridController<T extends DataGridRow> {
     setSelectionMode(SelectionMode.none);
   }
 
+  /// Selects or toggles the row identified by [rowId].
+  void selectRow(double rowId, {bool multiSelect = false}) {
+    addEvent(SelectRowEvent(rowId: rowId, multiSelect: multiSelect));
+  }
+
+  /// Selects every row between [startRowId] and [endRowId] inclusive.
+  void selectRowsRange(double startRowId, double endRowId) {
+    addEvent(SelectRowsRangeEvent(startRowId: startRowId, endRowId: endRowId));
+  }
+
+  /// Clears all row and cell selections.
+  void clearSelection() {
+    addEvent(ClearSelectionEvent());
+  }
+
+  /// Selects all rows, or only [rowIds] if provided.
+  void selectAllRows({Set<double>? rowIds}) {
+    addEvent(SelectAllRowsEvent(rowIds: rowIds));
+  }
+
+  /// Focuses the cell at [rowId] / [columnId], replacing the focused-cells path.
+  void focusCell(double rowId, int columnId) {
+    addEvent(FocusCellEvent(rowId: rowId, columnId: columnId));
+  }
+
+  /// Appends the cell at [rowId] / [columnId] to the focused-cells path.
+  void shiftSelectCell(double rowId, int columnId) {
+    addEvent(ShiftSelectCellEvent(rowId: rowId, columnId: columnId));
+  }
+
+  /// Toggles the cell at [rowId] / [columnId] in or out of the focused-cells path.
+  void toggleCellInSelection(double rowId, int columnId) {
+    addEvent(ToggleCellInSelectionEvent(rowId: rowId, columnId: columnId));
+  }
+
+  /// Clears the focused-cells path.
+  void clearCellSelection() {
+    addEvent(ClearCellSelectionEvent());
+  }
+
+  /// Moves cell focus one step in [direction]; [extend] grows/shrinks the path.
+  void navigateCell(CellNavDirection direction, {bool extend = false}) {
+    addEvent(NavigateCellEvent(direction, extend: extend));
+  }
+
+  /// Copies the focused cells to the system clipboard.
+  void copyCells() {
+    addEvent(CopyCellsEvent());
+  }
+
   /// Begins inline editing for the cell at [rowId] / [columnId].
   void startEditCell(double rowId, int columnId) {
     addEvent(StartCellEditEvent(rowId: rowId, columnId: columnId));
@@ -411,6 +463,21 @@ class DataGridController<T extends DataGridRow> {
   /// Cancels the current cell edit, discarding changes.
   void cancelCellEdit() {
     addEvent(CancelCellEditEvent());
+  }
+
+  /// Sorts by [columnId] in [direction]; `null` clears the sort on that column.
+  void sortColumn(int columnId, SortDirection? direction) {
+    addEvent(SortEvent(columnId: columnId, direction: direction));
+  }
+
+  /// Filters [columnId] with [operator] against [value].
+  void filterColumn(int columnId, FilterOperator operator, dynamic value) {
+    addEvent(FilterEvent(columnId: columnId, operator: operator, value: value));
+  }
+
+  /// Clears the filter on [columnId], or all filters if [columnId] is null.
+  void clearFilter({int? columnId}) {
+    addEvent(ClearFilterEvent(columnId: columnId));
   }
 
   /// Navigates to the given [page] number (1-based).
@@ -453,14 +520,31 @@ class DataGridController<T extends DataGridRow> {
     addEvent(SetServerSidePaginationEvent(serverSide: serverSide));
   }
 
-  /// Groups rows by [columnId] (v1 supports a single active grouped column).
-  void groupByColumn(int columnId) {
-    addEvent(GroupByColumnEvent(columnId: columnId));
+  /// Groups rows by [columnId], appending it as the innermost grouping level.
+  /// With [replace], [columnId] becomes the only grouped column.
+  void groupByColumn(int columnId, {bool replace = false}) {
+    addEvent(GroupByColumnEvent(columnId: columnId, replace: replace));
   }
 
-  /// Removes grouping for [columnId].
+  /// Removes the grouping level for [columnId]; deeper levels move up.
   void ungroupColumn(int columnId) {
     addEvent(UngroupColumnEvent(columnId: columnId));
+  }
+
+  /// Sets the grouped columns, outermost level first. An empty list clears
+  /// grouping.
+  void setGroupedColumns(List<int> columnIds) {
+    addEvent(SetGroupedColumnsEvent(columnIds: columnIds));
+  }
+
+  /// Expands every group at every level.
+  void expandAllGroups() {
+    addEvent(ExpandAllGroupsEvent());
+  }
+
+  /// Collapses every group at every level.
+  void collapseAllGroups() {
+    addEvent(CollapseAllGroupsEvent());
   }
 
   /// Toggles the expanded/collapsed state of the row group identified by
@@ -477,6 +561,16 @@ class DataGridController<T extends DataGridRow> {
   /// Pins or unpins the column identified by [columnId].
   void setColumnPinned(int columnId, bool pinned) {
     addEvent(SetColumnPinnedEvent(columnId: columnId, pinned: pinned));
+  }
+
+  /// Resizes the column identified by [columnId] to [newWidth].
+  void resizeColumn(int columnId, double newWidth) {
+    addEvent(ColumnResizeEvent(columnId: columnId, newWidth: newWidth));
+  }
+
+  /// Moves the column at [oldIndex] to [newIndex].
+  void reorderColumn(int oldIndex, int newIndex) {
+    addEvent(ColumnReorderEvent(oldIndex: oldIndex, newIndex: newIndex));
   }
 
   /// Registers [rowId] as currently rendered in the viewport.

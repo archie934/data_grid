@@ -14,10 +14,30 @@ part of 'custom_layout_grid_body.dart';
 /// single [_vOffset] adjustment, so on-screen content doesn't visibly jump.
 /// Rows at or below the viewport are left to reflow (expected — the same way
 /// a web page reflows when an image loads).
+///
+/// Notifying quadrants after a patch is dispatched via [_rowHeightVersion],
+/// a targeted [ValueNotifier] each quadrant listens to directly and reacts
+/// to with its own local `setState` — never via a `setState` on
+/// [CustomLayoutGridBody] itself. That keeps this path consistent with the
+/// two-layer scroll trick (see AGENTS.md): most frames still touch no widget
+/// tree at all, and even a frame that does needs a patch only rebuilds the
+/// quadrants that are actually listening, not the whole grid body.
 mixin _GridBodyRowHeightMixin<T extends DataGridRow>
     on State<CustomLayoutGridBody<T>>, _GridBodyScrollMixin<T> {
   final Map<int, double> _pendingRowMeasurements = {};
   bool _rowMeasurementScheduled = false;
+
+  /// Bumped once per applied measurement batch (auto mode only). Quadrants
+  /// listen directly and do their own local setState + cell/band-list
+  /// rebuild — this never triggers [CustomLayoutGridBody]'s `build()`.
+  final ValueNotifier<int> _rowHeightVersion = ValueNotifier(0);
+
+  void _rowHeightMixinDispose() => _rowHeightVersion.dispose();
+
+  /// Exposed to quadrants only when auto mode is active — mirrors
+  /// [_buildRowHeightMeasurement]'s null-when-disabled pattern.
+  ValueNotifier<int>? get _rowHeightVersionOrNull =>
+      widget.autoRowHeight != null ? _rowHeightVersion : null;
 
   /// Builds the [RowHeightMeasurement] hook for this frame's quadrants, or
   /// `null` when auto row-height isn't enabled.
@@ -87,9 +107,26 @@ mixin _GridBodyRowHeightMixin<T extends DataGridRow>
       );
     }
 
-    // Re-run build(): recomputes totalHeight/_maxVScroll from the just-patched
-    // delegate and forces every quadrant's didUpdateWidget (which always
-    // rebuilds _contentRects) to pick up the new offsets/heights.
-    setState(() {});
+    // Refresh _maxVScroll/scrollbar dimensions from the freshly-patched
+    // delegate without re-running CustomLayoutGridBody's LayoutBuilder.
+    final wasVScrollable = _maxVScroll > 0;
+    _resyncScrollExtent(delegate.totalExtent);
+
+    if ((_maxVScroll > 0) != wasVScrollable) {
+      // The vertical scrollbar's presence in the widget tree is gated on
+      // `_maxVScroll > 0` inside CustomLayoutGridBody.build() (a conditional
+      // Positioned child, not something a relayout listener can toggle) — so
+      // this is the one case that still needs a full body rebuild. It only
+      // fires when total content height crosses the viewport-height
+      // threshold, not on every corrective frame, so it isn't a fling-jank
+      // contributor.
+      setState(() {});
+      return;
+    }
+
+    // Notify quadrants directly. Each has its own listener that does a local
+    // setState + _rebuildCellList()/_rebuildBandList() — this never reaches
+    // CustomLayoutGridBody's build().
+    _rowHeightVersion.value++;
   }
 }

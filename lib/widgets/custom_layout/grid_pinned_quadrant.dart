@@ -27,6 +27,13 @@ class GridPinnedQuadrant<T extends DataGridRow> extends StatefulWidget {
   final ValueNotifier<double> vOffset;
   final RowHeightMeasurement? measurement;
 
+  /// Bumped whenever a batch of row-height measurements has been applied to
+  /// [rowMetrics]'s underlying delegate. Non-null only when auto row height
+  /// is enabled. Unlike [vOffset], a bump always forces a full local
+  /// rebuild — a row-height patch can shift offsets *within* an unchanged
+  /// visible range, not just at its boundary.
+  final ValueNotifier<int>? rowHeightVersion;
+
   const GridPinnedQuadrant({
     super.key,
     required this.columns,
@@ -40,6 +47,7 @@ class GridPinnedQuadrant<T extends DataGridRow> extends StatefulWidget {
     required this.backgroundColor,
     required this.vOffset,
     this.measurement,
+    this.rowHeightVersion,
   });
 
   @override
@@ -67,6 +75,7 @@ class _GridPinnedQuadrantState<T extends DataGridRow>
     _computeRowRange();
     _rebuildCellList();
     widget.vOffset.addListener(_onVOffsetChanged);
+    widget.rowHeightVersion?.addListener(_onRowHeightVersionChanged);
   }
 
   @override
@@ -76,6 +85,10 @@ class _GridPinnedQuadrantState<T extends DataGridRow>
     if (!identical(old.vOffset, widget.vOffset)) {
       old.vOffset.removeListener(_onVOffsetChanged);
       widget.vOffset.addListener(_onVOffsetChanged);
+    }
+    if (!identical(old.rowHeightVersion, widget.rowHeightVersion)) {
+      old.rowHeightVersion?.removeListener(_onRowHeightVersionChanged);
+      widget.rowHeightVersion?.addListener(_onRowHeightVersionChanged);
     }
 
     // Clear cache when content-affecting parameters change.
@@ -102,6 +115,7 @@ class _GridPinnedQuadrantState<T extends DataGridRow>
   @override
   void dispose() {
     widget.vOffset.removeListener(_onVOffsetChanged);
+    widget.rowHeightVersion?.removeListener(_onRowHeightVersionChanged);
     super.dispose();
   }
 
@@ -195,6 +209,11 @@ class _GridPinnedQuadrantState<T extends DataGridRow>
     }
     // else: same rows, different position — GridLayoutDelegate.relayout
     // fires markNeedsLayout without touching the widget tree.
+  }
+
+  void _onRowHeightVersionChanged() {
+    _computeRowRange();
+    setState(_rebuildCellList);
   }
 
   // ---------------------------------------------------------------------------

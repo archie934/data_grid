@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_data_grid/data_grid.dart';
-import 'package:flutter_data_grid/models/enums/selection_mode.dart';
 
 /// Minimal row type for rebuild tests.
 class TestRow extends DataGridRow {

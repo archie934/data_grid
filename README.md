@@ -17,7 +17,7 @@ Try it in your browser: [https://archie934.github.io/data_grid/](https://archie9
 - ✅ **Column Management** - Resize, pin, hide/show, reorder columns
 - ✅ **Column Sorting** - Single-column sorting with ascending/descending/clear cycle
 - ✅ **Column Filtering** - Customizable column filtering
-- ✅ **Row Grouping** - Group rows by a column's value with collapsible, full-width group header bands
+- ✅ **Row Grouping** - Group rows by one or more columns' values (nested) with collapsible, full-width group header bands
 - ✅ **Header Context Menu** - Right-click a column header for sort/group/hide actions
 - ✅ **Row Selection** - None/Single/Multiple modes with checkbox column
 - ✅ **Cell Editing** - Inline editing with validation and callbacks
@@ -62,7 +62,7 @@ This package is in active development. Core features work well, but some advance
 - **Virtualized rendering** - Smooth scrolling with 100k+ rows
 - **Sorting & filtering** - Single-column sorting with background processing for large datasets
 - **Column management** - Resize, pin, hide/show columns
-- **Row grouping** - Single-column grouping by cell value, with collapsible group header bands
+- **Row grouping** - Multi-level (nested) grouping by cell value, with collapsible, indented group header bands
 - **Header context menu** - Right-click a header for sort/group/hide actions
 - **Cell editing** - Inline editing with validation (some edge cases remain)
 - **Pagination** - Client-side and server-side pagination with loading states
@@ -78,7 +78,6 @@ This package is in active development. Core features work well, but some advance
 - **Column selection** - Select entire columns
 - **Accessibility** - Improved screen reader support and ARIA labels
 - **Column reordering** - Drag-and-drop reordering
-- **Multi-level grouping** - Group by more than one column at a time
 - **Row/cell context menus** - Right-click menus beyond the current header menu
 
 ### Production Use
@@ -203,6 +202,22 @@ lib/
 ```
 
 ## ⚡ Migration Guide
+
+### v0.0.24 → next: `groupByColumn` nests instead of replacing
+
+**Behavior change:** `GroupByColumnEvent` / `controller.groupByColumn(id)` now **appends** the column as the innermost grouping level instead of replacing the existing grouping, so grouping by a second column nests it.
+
+```dart
+// Before (v0.0.24): replaced the existing grouping
+controller.groupByColumn(2);
+
+// After: to keep single-column replace semantics
+controller.groupByColumn(2, replace: true);
+// or
+controller.setGroupedColumns([2]);
+```
+
+Top-level group keys are unchanged (`'$columnId:$value'`), so stored `expandedGroups` keys from v0.0.24 still apply. Nested group keys append `'\u001F$columnId:$value'` per level.
 
 ### v0.0.16 → v0.0.17: Removed TwoDimensional renderer
 
@@ -572,17 +587,27 @@ controller.selection$.listen((selection) {
 
 ### Grouping
 
-Right-click a header cell (with `groupable: true`, the default) to open the context menu and choose **Group by This Column**. Rows are bucketed by that column's cell value, in first-appearance order, and rendered as collapsible full-width group header bands with a row count. v1 supports a single active grouped column — grouping by a new column replaces the previous grouping rather than nesting.
+Right-click a header cell (with `groupable: true`, the default) to open the context menu and choose **Group by This Column**. Rows are bucketed by that column's cell value, in first-appearance order, and rendered as collapsible full-width group header bands. Choosing **Add to Grouping** on another column nests it as the next level: each group is subdivided by the new column, and nested bands are indented by `DataGridPadding.groupIndentWidth` (default `20`) per level. Outer bands show their number of subgroups; innermost bands show their row count. Collapsing a group hides everything beneath it, and each group's expansion state is kept independently.
 
 ```dart
-// Group by a column's value
-controller.groupByColumn(columnId);
+// Group by a column's value (appends as the innermost level)
+controller.groupByColumn(countryColumnId);
+controller.groupByColumn(cityColumnId); // nested: Country → City
 
-// Remove grouping
-controller.ungroupColumn(columnId);
+// Make a column the only grouping level
+controller.groupByColumn(columnId, replace: true);
 
-// Expand/collapse a specific group (groupKey comes from the group header band)
+// Set (or reorder) all levels at once, outermost first; [] clears grouping
+controller.setGroupedColumns([countryColumnId, cityColumnId]);
+
+// Remove one level — deeper levels move up
+controller.ungroupColumn(countryColumnId);
+
+// Expand/collapse a specific group (groupKey comes from the group header band).
+// Keys are paths: '$columnId:$value', joined by '\u001F' for nested levels.
 controller.toggleGroupExpansion(groupKey);
+controller.expandAllGroups();
+controller.collapseAllGroups();
 
 // Listen to group state
 controller.group$.listen((group) {
@@ -602,7 +627,7 @@ DataGridColumn<MyRow>(
 
 Right-clicking a column header opens a context menu (suppressing the browser's native context menu on web) with actions gated by that column's flags:
 - **Sort Ascending / Descending / Clear Sort** - shown when `sortable: true`
-- **Group by This Column / Remove Grouping** - shown when `groupable: true`
+- **Group by This Column / Add to Grouping / Remove Grouping** - shown when `groupable: true`
 - **Pin Column / Unpin Column** - always available; toggles `column.pinned`
 - **Hide Column** - always available; toggle a column back on via `controller.setColumnVisibility(columnId, true)`
 
@@ -966,6 +991,90 @@ final controller = DataGridController<MyRow>(
 );
 ```
 
+## 🧩 Headless Usage
+
+`DataGridController` has no dependency on widgets or `BuildContext`. You can use it on its own for the grid's logic (sorting, filtering, selection, cell focus, editing, pagination, grouping, column state) and render the result however you like, or not render it at all. Create a controller, never pass it to a `DataGrid`, and call `dispose()` when you're done.
+
+**Read state** from the synchronous `controller.state` snapshot, or subscribe to:
+
+| Stream | Emits |
+|--------|-------|
+| `state$` | Every state change |
+| `selection$` / `sort$` / `filter$` / `group$` | Only that slice, deduplicated |
+| `cellValueChanges` | In-place cell edits (`updateCell` / `commitCellEdit`), which don't emit a new `state` |
+
+**Send commands** with the controller's methods:
+
+| Domain | Methods |
+|--------|---------|
+| Data | `setRows`, `insertRow(s)`, `updateRow`, `updateCell`, `deleteRow(s)`, `setColumns` |
+| Sort / filter | `sortColumn`, `filterColumn`, `clearFilter` |
+| Row selection | `setSelectionMode`, `selectRow`, `selectRowsRange`, `selectAllRows`, `clearSelection` |
+| Cell selection | `focusCell`, `shiftSelectCell`, `toggleCellInSelection`, `navigateCell`, `clearCellSelection`, `copyCells` |
+| Editing | `startEditCell`, `updateCellEditValue`, `commitCellEdit`, `cancelCellEdit` |
+| Pagination | `setPage`, `setPageSize`, `nextPage`, `previousPage`, `firstPage`, `lastPage`, `enablePagination` |
+| Grouping / columns | `groupByColumn`, `ungroupColumn`, `toggleGroupExpansion`, `setColumnVisibility`, `setColumnPinned`, `resizeColumn`, `reorderColumn` |
+
+`addEvent(...)` is still available for anything else, including your own custom events.
+
+**Custom UI example:**
+
+```dart
+final controller = DataGridController<Person>(
+  initialColumns: columns,
+  initialRows: people,
+)..setSelectionMode(SelectionMode.multiple);
+
+StreamBuilder<DataGridState<Person>>(
+  stream: controller.state$,
+  initialData: controller.state,
+  builder: (context, snapshot) {
+    final state = snapshot.data!;
+    return ListView.builder(
+      itemCount: state.displayOrder.length,
+      itemBuilder: (context, index) {
+        final person = state.rowsById[state.displayOrder[index]]!;
+        return ListTile(
+          title: Text(person.name),
+          selected: state.selection.isRowSelected(person.id),
+          onTap: () => controller.selectRow(person.id, multiSelect: true),
+        );
+      },
+    );
+  },
+);
+
+// Elsewhere, e.g. from your own header buttons:
+controller.sortColumn(1, SortDirection.ascending);
+controller.filterColumn(2, FilterOperator.greaterThan, 30);
+```
+
+**Non-visual example (CSV export):**
+
+```dart
+final controller = DataGridController<Person>(
+  initialColumns: columns,
+  initialRows: people,
+  sortDebounce: Duration.zero,
+);
+
+controller.sortColumn(2, SortDirection.descending);
+await controller.sort$.firstWhere((s) => s.hasSort);
+
+final state = controller.state;
+final csv = state.displayOrder
+    .map((id) => state.rowsById[id]!)
+    .map((p) => '${p.name},${p.age}')
+    .join('\n');
+controller.dispose();
+```
+
+**Notes:**
+- Sort and filter are **asynchronous**. They are debounced (`sortDebounce` 300ms, `filterDebounce` 500ms by default) and run in a background isolate above `sortIsolateThreshold`/`filterIsolateThreshold` rows. For batch or scripted use, set the debounces to `Duration.zero` and await the relevant stream rather than reading `state` straight after the call.
+- You don't need `GridScrollController`. It only drives the built-in widget's scrolling; a plain `ScrollController` works fine in a custom UI.
+- `copyCells()` writes to the system clipboard via Flutter's `Clipboard`.
+- Column `cellWidget`, `filterWidget` and `cellEditorBuilder` are only used by the built-in widget; leave them `null` in headless use.
+
 ## 🎯 Performance Tips
 
 1. **Use isolate thresholds wisely**: Default 10,000 rows works well for most cases
@@ -973,6 +1082,11 @@ final controller = DataGridController<MyRow>(
 3. **Implement valueAccessor efficiently**: Avoid heavy computations
 4. **Use pinned columns sparingly**: Too many pinned columns affect performance
 5. **Dispose controllers**: Always call `controller.dispose()` in `State.dispose()`
+6. **Prefer a fixed `rowHeight` over `autoRowHeight` when you can**: auto row height can noticeably impact scroll performance. Each row's cells must be laid out once with loose constraints to measure them, and every height correction shifts the rows below it and updates the scroll extent. This cost is heaviest on fast flings and scrollbar-thumb drags into unmeasured regions. To reduce it:
+   - Set `AutoRowHeight.estimatedHeight` close to your typical row height, so fewer corrections are needed.
+   - Keep the default `cacheExtent`, so rows are measured just before they scroll into view.
+   - Keep `measureAheadExtent` (default 2000px), so rows near the viewport are measured in the background while scrolling is idle.
+   - Keep `cellWidget`s cheap to lay out.
 
 ### Web / Chrome Performance
 
@@ -1059,9 +1173,11 @@ flutter test
 - `SetColumnPinnedEvent` - Pin/unpin column
 
 ### Group Events
-- `GroupByColumnEvent` - Group rows by a column's value (replaces any existing grouping)
-- `UngroupColumnEvent` - Remove grouping for a column
+- `GroupByColumnEvent` - Group rows by a column's value, appended as the innermost level (`replace: true` to make it the only level)
+- `UngroupColumnEvent` - Remove a column's grouping level; deeper levels move up
+- `SetGroupedColumnsEvent` - Set all grouping levels at once, outermost first
 - `ToggleGroupExpansionEvent` - Expand/collapse a specific group
+- `ExpandAllGroupsEvent` / `CollapseAllGroupsEvent` - Expand/collapse every group at every level
 
 ## 🔧 Troubleshooting
 

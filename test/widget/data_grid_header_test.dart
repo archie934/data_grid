@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_data_grid/data_grid.dart';
-import 'package:flutter_data_grid/models/enums/sort_direction.dart';
 import 'package:flutter_data_grid/widgets/viewport/data_grid_header_viewport.dart';
 
 class TestRow extends DataGridRow {
@@ -813,5 +812,69 @@ void main() {
       controller.dispose();
       scrollController.dispose();
     });
+  });
+
+  group('DataGrid with autoHeaderHeight and multi-select', () {
+    testWidgets(
+      'header height is not blown out to maxHeight by the auto-generated '
+      'selection column '
+      '(regression: its header cell used to be a SizedBox.expand() '
+      'placeholder, which under a loose auto-height measurement pass '
+      'always resolves to the incoming maxHeight)',
+      (tester) async {
+        final columns = [
+          DataGridColumn<TestRow>(
+            id: 1,
+            title: 'Name',
+            width: 150,
+            valueAccessor: (r) => r.name,
+          ),
+        ];
+        final rows = [TestRow(id: 1, name: 'Alice')];
+        final controller = DataGridController<TestRow>(
+          initialColumns: columns,
+          initialRows: rows,
+        );
+        controller.setSelectionMode(SelectionMode.multiple);
+        addTearDown(controller.dispose);
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: SizedBox(
+                width: 500,
+                height: 300,
+                child: DataGrid<TestRow>(
+                  controller: controller,
+                  showPagination: false,
+                  autoHeaderHeight: const AutoHeaderHeight(
+                    estimatedHeight: 48,
+                    minHeight: 10,
+                    maxHeight: 300,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+
+        await tester.pumpAndSettle();
+        // Extra pump lets the post-frame height-changed callback land.
+        await tester.pump();
+        await tester.pumpAndSettle();
+
+        final headerHeight = tester
+            .getSize(find.byType(DataGridHeaderViewport<TestRow>).first)
+            .height;
+
+        expect(
+          headerHeight,
+          lessThan(100),
+          reason:
+              'the header should size to its actual text content, not the '
+              'AutoHeaderHeight.maxHeight clamp (300px)',
+        );
+      },
+    );
   });
 }

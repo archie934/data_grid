@@ -27,6 +27,14 @@ mixin _GridBodyScrollMixin<T extends DataGridRow>
   double _maxHScroll = 0;
   double _maxVScroll = 0;
 
+  // Dimensions captured by the most recent real _syncScrollDimensions call
+  // (i.e. the last time CustomLayoutGridBody's LayoutBuilder actually ran).
+  // Lets _resyncScrollExtent refresh the scroll extent from a freshly
+  // patched row-height delegate without re-running the LayoutBuilder.
+  double _lastScrollableViewportWidth = 0;
+  double _lastViewportHeight = 0;
+  double _lastUnpinnedWidth = 0;
+
   /// External scroll positions bridging the internal offsets to [GridScrollController].
   late final ExternalScrollPosition _hScrollPosition;
   late final ExternalScrollPosition _vScrollPosition;
@@ -217,6 +225,10 @@ mixin _GridBodyScrollMixin<T extends DataGridRow>
     required double unpinnedWidth,
     required double totalHeight,
   }) {
+    _lastScrollableViewportWidth = scrollableViewportWidth;
+    _lastViewportHeight = viewportHeight;
+    _lastUnpinnedWidth = unpinnedWidth;
+
     _maxVScroll = (totalHeight - viewportHeight).clamp(0.0, double.infinity);
     _maxHScroll = (unpinnedWidth - scrollableViewportWidth).clamp(
       0.0,
@@ -233,6 +245,22 @@ mixin _GridBodyScrollMixin<T extends DataGridRow>
     _vScrollPosition.syncDimensions(
       viewportExtent: viewportHeight,
       maxScrollExtent: _maxVScroll,
+    );
+  }
+
+  /// Re-syncs `_maxVScroll`/`_maxHScroll`/scrollbar dimensions using the
+  /// viewport/column dimensions captured by the most recent real
+  /// [_syncScrollDimensions] call, combined with a freshly supplied
+  /// [totalHeight]. Lets the row-height-measurement correction path
+  /// (`_GridBodyRowHeightMixin`) refresh the scroll extent after patching the
+  /// row-height delegate without re-running `CustomLayoutGridBody`'s
+  /// `LayoutBuilder`.
+  void _resyncScrollExtent(double totalHeight) {
+    _syncScrollDimensions(
+      scrollableViewportWidth: _lastScrollableViewportWidth,
+      viewportHeight: _lastViewportHeight,
+      unpinnedWidth: _lastUnpinnedWidth,
+      totalHeight: totalHeight,
     );
   }
 

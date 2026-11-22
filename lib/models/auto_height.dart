@@ -33,6 +33,7 @@ class AutoRowHeight {
     this.estimatedHeight = 48.0,
     this.minHeight = 0.0,
     this.maxHeight = 500.0,
+    this.measureAheadExtent = 2000.0,
     this.delegate,
   });
 
@@ -42,6 +43,12 @@ class AutoRowHeight {
 
   final double minHeight;
   final double maxHeight;
+
+  /// How far above and below the viewport, in pixels, rows are measured in
+  /// the background while scrolling is idle, so they already have their real
+  /// height when scrolled into view. Measuring pauses during any scroll
+  /// (drag, fling, scrollbar thumb, wheel). Set to `0` to disable.
+  final double measureAheadExtent;
 
   /// Swappable row-offset/height indexing strategy. Defaults to
   /// [IndexedRowHeightDelegate] (exact, Fenwick-tree-backed) when null.

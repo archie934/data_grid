@@ -17,10 +17,15 @@ class GroupHeaderBand<T extends DataGridRow> extends StatelessWidget {
     final theme = DataGridTheme.of(context);
     final controller = context.dataGridController<T>();
 
+    final subgroupCount = header.subgroupCount;
+    final countLabel = subgroupCount != null
+        ? '$subgroupCount groups'
+        : '${header.rowCount} rows';
+
     return Semantics(
       label:
           '${header.columnTitle}: ${header.displayLabel}, '
-          '${header.rowCount} rows, '
+          '$countLabel, '
           '${header.isExpanded ? 'expanded' : 'collapsed'}',
       button: true,
       child: InkWell(
@@ -35,6 +40,7 @@ class GroupHeaderBand<T extends DataGridRow> extends StatelessWidget {
           padding: theme.padding.headerPadding,
           child: Row(
             children: [
+              SizedBox(width: header.depth * theme.padding.groupIndentWidth),
               Icon(
                 header.isExpanded ? Icons.expand_more : Icons.chevron_right,
                 size: 20,
@@ -49,7 +55,7 @@ class GroupHeaderBand<T extends DataGridRow> extends StatelessWidget {
               ),
               SizedBox(width: theme.padding.iconSpacing),
               Text(
-                '(${header.rowCount})',
+                '(${subgroupCount ?? header.rowCount})',
                 style: TextStyle(color: Colors.grey[600]),
               ),
             ],

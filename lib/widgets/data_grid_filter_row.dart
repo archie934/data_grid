@@ -2,7 +2,6 @@ import 'package:flutter_data_grid/widgets/data_grid_inherited.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_data_grid/models/data/row.dart';
 import 'package:flutter_data_grid/models/data/column.dart';
-import 'package:flutter_data_grid/models/events/grid_events.dart';
 import 'package:flutter_data_grid/widgets/viewport/data_grid_header_viewport.dart';
 import 'package:flutter_data_grid/widgets/filters/filter_scope.dart';
 import 'package:flutter_data_grid/theme/data_grid_theme.dart';
@@ -86,12 +85,10 @@ class _FilterCell<T extends DataGridRow> extends StatelessWidget {
             ? Border(bottom: theme.borders.filterBorder.bottom)
             : null,
         onChange: (operator, value) {
-          controller.addEvent(
-            FilterEvent(columnId: column.id, operator: operator, value: value),
-          );
+          controller.filterColumn(column.id, operator, value);
         },
         onClear: () {
-          controller.addEvent(ClearFilterEvent(columnId: column.id));
+          controller.clearFilter(columnId: column.id);
         },
         child: effectiveWidget,
       );

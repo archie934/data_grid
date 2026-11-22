@@ -3,7 +3,7 @@ import 'package:flutter_data_grid/models/auto_height.dart';
 import 'package:flutter_data_grid/models/data/row.dart';
 import 'package:flutter_data_grid/models/data/column.dart';
 import 'package:flutter_data_grid/models/state/grid_state.dart';
-import 'package:flutter_data_grid/models/events/grid_events.dart';
+import 'package:flutter_data_grid/widgets/cells/data_grid_checkbox_cell.dart';
 import 'package:flutter_data_grid/widgets/cells/data_grid_header_cell.dart';
 import 'package:flutter_data_grid/widgets/data_grid_filter_row.dart';
 import 'package:flutter_data_grid/widgets/data_grid_inherited.dart';
@@ -129,16 +129,16 @@ class _HeaderCellWrapper<T extends DataGridRow> extends StatelessWidget {
     final controller = context.dataGridController<T>()!;
     final theme = DataGridTheme.of(context);
 
+    // For pinned columns suppress the inner right border — the outer
+    // wrapper Container already draws pinnedBorder on the right edge.
+    final effectiveBorder = column.pinned
+        ? Border(bottom: theme.borders.headerBorder.bottom)
+        : null;
+
     Widget cell;
     if (column.id == kSelectionColumnId) {
-      cell = const SizedBox.expand();
+      cell = DataGridCheckboxHeaderCell<T>(borderOverride: effectiveBorder);
     } else {
-      // For pinned columns suppress the inner right border — the outer
-      // wrapper Container already draws pinnedBorder on the right edge.
-      final effectiveBorder = column.pinned
-          ? Border(bottom: theme.borders.headerBorder.bottom)
-          : null;
-
       cell = GestureDetector(
         onSecondaryTapDown: (details) => showColumnHeaderContextMenu<T>(
           context: context,
@@ -153,15 +153,11 @@ class _HeaderCellWrapper<T extends DataGridRow> extends StatelessWidget {
           sortState: sortState,
           borderOverride: effectiveBorder,
           onSort: (direction) {
-            controller.addEvent(
-              SortEvent(columnId: column.id, direction: direction),
-            );
+            controller.sortColumn(column.id, direction);
           },
           // newWidth is already clamped by the cell — just dispatch the event.
           onResize: (newWidth) {
-            controller.addEvent(
-              ColumnResizeEvent(columnId: column.id, newWidth: newWidth),
-            );
+            controller.resizeColumn(column.id, newWidth);
           },
         ),
       );

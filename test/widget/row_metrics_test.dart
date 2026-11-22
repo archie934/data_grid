@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_data_grid/delegates/row_height_delegate.dart';
 import 'package:flutter_data_grid/widgets/custom_layout/row_metrics.dart';
 
 /// The exact formula every quadrant used inline before [RowMetrics] existed.
@@ -139,6 +140,41 @@ void main() {
         }
       },
     );
+  });
+
+  group('IndexedRowHeightDelegate', () {
+    test('measuring at the estimate still caches the row as measured', () {
+      final delegate = IndexedRowHeightDelegate()
+        ..rebuild([1, 2, 3], estimatedHeight: 48.0);
+
+      expect(delegate.reportMeasured(1, 48.2), isFalse);
+      expect(delegate.isMeasured(1), isTrue);
+      expect(delegate.heightOf(1), 48.0);
+      expect(delegate.totalExtent, 144.0);
+    });
+
+    test('changed measurement updates height and offsets', () {
+      final delegate = IndexedRowHeightDelegate()
+        ..rebuild([1, 2, 3], estimatedHeight: 48.0);
+
+      expect(delegate.reportMeasured(0, 100.0), isTrue);
+      expect(delegate.isMeasured(0), isTrue);
+      expect(delegate.offsetOf(1), 100.0);
+      expect(delegate.totalExtent, 196.0);
+    });
+
+    test('measured flag survives rebuild by rowId', () {
+      final delegate = IndexedRowHeightDelegate()
+        ..rebuild([1, 2, 3], estimatedHeight: 48.0)
+        ..reportMeasured(0, 48.0)
+        ..reportMeasured(2, 80.0)
+        ..rebuild([3, null, 1], estimatedHeight: 48.0);
+
+      expect(delegate.isMeasured(0), isTrue);
+      expect(delegate.heightOf(0), 80.0);
+      expect(delegate.isMeasured(1), isFalse);
+      expect(delegate.isMeasured(2), isTrue);
+    });
   });
 
   group('VisibleRowRange', () {

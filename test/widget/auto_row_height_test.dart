@@ -164,5 +164,69 @@ void main() {
         expect(shortRowSize.height, closeTo(48, 0.5));
       },
     );
+
+    group('measure ahead', () {
+      Future<IndexedRowHeightDelegate> pumpGrid(
+        WidgetTester tester, {
+        required double measureAheadExtent,
+      }) async {
+        final rows = List.generate(
+          500,
+          (i) => _Row(
+            id: i.toDouble(),
+            label: 'row $i',
+            contentHeight: i == 30 ? 120 : 20,
+          ),
+        );
+        final controller = _makeController(
+          rows: rows,
+          estimatedHeight: 48,
+          maxHeight: 300,
+        );
+        addTearDown(controller.dispose);
+        final delegate = IndexedRowHeightDelegate();
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: DataGrid<_Row>(
+                controller: controller,
+                showPagination: false,
+                cacheExtent: 0,
+                autoRowHeight: AutoRowHeight(
+                  estimatedHeight: 48,
+                  minHeight: 10,
+                  maxHeight: 300,
+                  measureAheadExtent: measureAheadExtent,
+                  delegate: delegate,
+                ),
+              ),
+            ),
+          ),
+        );
+
+        for (int i = 0; i < 30; i++) {
+          await tester.pump(const Duration(milliseconds: 200));
+        }
+        return delegate;
+      }
+
+      testWidgets('measures rows below the viewport while idle', (
+        tester,
+      ) async {
+        final delegate = await pumpGrid(tester, measureAheadExtent: 2000);
+
+        expect(delegate.isMeasured(30), isTrue);
+        expect(delegate.heightOf(30), closeTo(120, 1.0));
+        // Far beyond the look-ahead window (>= 4990px down even at minHeight).
+        expect(delegate.isMeasured(499), isFalse);
+      });
+
+      testWidgets('measureAheadExtent: 0 disables it', (tester) async {
+        final delegate = await pumpGrid(tester, measureAheadExtent: 0);
+
+        expect(delegate.isMeasured(30), isFalse);
+      });
+    });
   });
 }
